@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/overview/overview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -11,11 +12,38 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Chat extends StatelessWidget {
+const CHAT_SETTINGS_TEXT = "Settings/Members";
+
+class Chat extends StatefulWidget {
   final String peerId;
   final String peerAvatar;
 
   Chat({Key key, @required this.peerId, @required this.peerAvatar}) : super(key: key);
+
+
+  @override
+  State createState() => new ChatState(peerId: peerId, peerAvatar: peerAvatar);
+}
+
+class ChatState extends State<Chat> {
+  final String peerId;
+  final String peerAvatar;
+
+  ChatState({Key key, @required this.peerId, @required this.peerAvatar});
+
+  List<Choice> choices = const <Choice>[
+    const Choice(title: CHAT_SETTINGS_TEXT, icon: Icons.settings),
+  ];
+
+
+  void onItemMenuPress(Choice choice) {
+    if (choice.title == CHAT_SETTINGS_TEXT) {
+
+    } else {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => null));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +54,32 @@ class Chat extends StatelessWidget {
           style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: <Widget>[
+          PopupMenuButton<Choice>(
+            onSelected: onItemMenuPress,
+            itemBuilder: (BuildContext context) {
+              return choices.map((Choice choice) {
+                return PopupMenuItem<Choice>(
+                    value: choice,
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          choice.icon,
+                          color: primaryColor,
+                        ),
+                        Container(
+                          width: 10.0,
+                        ),
+                        Text(
+                          choice.title,
+                          style: TextStyle(color: primaryColor),
+                        ),
+                      ],
+                    ));
+              }).toList();
+            },
+          ),
+        ],
       ),
       body: new ChatScreen(
         peerId: peerId,
@@ -64,6 +118,7 @@ class ChatScreenState extends State<ChatScreen> {
   final TextEditingController textEditingController = new TextEditingController();
   final ScrollController listScrollController = new ScrollController();
   final FocusNode focusNode = new FocusNode();
+
 
   @override
   void initState() {
