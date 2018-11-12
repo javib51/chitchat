@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/chat/chatSettings.dart';
 import 'package:chitchat/overview/overview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -38,10 +39,10 @@ class ChatState extends State<Chat> {
 
   void onItemMenuPress(Choice choice) {
     if (choice.title == CHAT_SETTINGS_TEXT) {
-
-    } else {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => null));
+          context, MaterialPageRoute(builder: (context) => ChatSettings()));
+    } else {
+
     }
   }
 
