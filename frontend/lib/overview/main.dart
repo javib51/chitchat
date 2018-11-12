@@ -5,10 +5,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:chitchat/chat.dart';
+import 'package:chitchat/chat/chat.dart';
 import 'package:chitchat/const.dart';
-import 'package:chitchat/login.dart';
-import 'package:chitchat/settings.dart';
+import 'package:chitchat/login/login.dart';
+import 'package:chitchat/settings/settings.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 
