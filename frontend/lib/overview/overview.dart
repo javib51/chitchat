@@ -224,7 +224,7 @@ class MainScreenState extends State<MainScreen> {
       await googleSignIn.disconnect();
       await googleSignIn.signOut();
     }
-    
+
     this.setState(() {
       isLoading = false;
     });

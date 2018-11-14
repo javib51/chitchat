@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:chitchat/login/register.dart';
+import 'package:chitchat/login/welcome.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -110,7 +111,7 @@ class LoginScreenState extends State<LoginScreen> {
             .setData({
           'nickname': firebaseUser.displayName,
           'photoUrl': firebaseUser.photoUrl,
-          'id': firebaseUser.uid
+          'id': firebaseUser.uid,
         });
 
         // Write data to local
@@ -118,25 +119,41 @@ class LoginScreenState extends State<LoginScreen> {
         await prefs.setString('id', currentUser.uid);
         await prefs.setString('nickname', currentUser.displayName);
         await prefs.setString('photoUrl', currentUser.photoUrl);
+
+        Fluttertoast.showToast(msg: "Sign in success");
+        this.setState(() {
+          isLoading = false;
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => WelcomeScreen(
+                currentUserId: firebaseUser.uid,
+              )),
+        );
+
       } else {
         // Write data to local
         await prefs.setString('id', documents[0]['id']);
         await prefs.setString('nickname', documents[0]['nickname']);
         await prefs.setString('photoUrl', documents[0]['photoUrl']);
         await prefs.setString('aboutMe', documents[0]['aboutMe']);
-      }
-      Fluttertoast.showToast(msg: "Sign in success");
-      this.setState(() {
-        isLoading = false;
-      });
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => MainScreen(
-              currentUserId: firebaseUser.uid,
-            )),
-      );
+        Fluttertoast.showToast(msg: "Sign in success");
+        this.setState(() {
+          isLoading = false;
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => MainScreen(
+                currentUserId: firebaseUser.uid,
+              )),
+        );
+      }
+
     } else {
       Fluttertoast.showToast(msg: "Sign in fail");
       this.setState(() {

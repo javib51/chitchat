@@ -1,3 +1,4 @@
+import 'package:chitchat/login/welcome.dart';
 import 'package:chitchat/overview/overview.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -41,7 +42,14 @@ class NickPhotoScreenState extends State<NickPhotoScreen> {
         .document(currentUser.uid)
         .setData({
       'nickname': nickController.text,
+      'photoUrl': null,
+      'id': currentUser.uid
     });
+
+
+    await prefs.setString('id', currentUser.uid);
+    await prefs.setString('nickname', currentUser.displayName);
+    await prefs.setString('photoUrl', currentUser.photoUrl);
 
     Navigator.push(
       context,
@@ -164,12 +172,25 @@ class RegisterScreenState extends State<RegisterScreen> {
       print(e.toString());
       return;
     }
+
+    Firestore.instance
+        .collection('users')
+        .document(firebaseUser.uid)
+        .setData({
+      'nickname': "Unknown",
+      'photoUrl': null,
+      'id': firebaseUser.uid,
+    });
+
+    await prefs.clear();
+    await prefs.setString('id', firebaseUser.uid);
+
     Fluttertoast.showToast(msg: "Register succes");
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => NickPhotoScreen(
-            currentUser: firebaseUser,
+          builder: (context) => WelcomeScreen(
+            currentUserId: firebaseUser.uid,
           )),
     );
   }
