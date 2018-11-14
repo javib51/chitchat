@@ -13,3 +13,4 @@ build/
 *.ipr
 *.iws
 .idea/
+frontend/pubspec\.lock
