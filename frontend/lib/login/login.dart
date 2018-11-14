@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:chitchat/login/register.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +14,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chat Demo',
+      title: 'ChitChat',
       theme: new ThemeData(
         primaryColor: themeColor,
       ),
-      home: LoginScreen(title: 'CHAT DEMO'),
+      home: LoginScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -35,6 +36,9 @@ class LoginScreen extends StatefulWidget {
 class LoginScreenState extends State<LoginScreen> {
   final GoogleSignIn googleSignIn = new GoogleSignIn();
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  final emailController = TextEditingController();
+  final passController = TextEditingController();
+
   SharedPreferences prefs;
 
   bool isLoading = false;
@@ -69,19 +73,28 @@ class LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future<Null> handleSignIn() async {
+  Future<Null> handleSignIn(String logintype) async {
     prefs = await SharedPreferences.getInstance();
 
     this.setState(() {
       isLoading = true;
     });
-
-    GoogleSignInAccount googleUser = await googleSignIn.signIn();
-    GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-    FirebaseUser firebaseUser = await firebaseAuth.signInWithGoogle(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+    FirebaseUser firebaseUser;
+    if(logintype == 'google') {
+      GoogleSignInAccount googleUser = await googleSignIn.signIn();
+      GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      firebaseUser = await firebaseAuth.signInWithGoogle(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+    }
+    else {
+      firebaseUser = await firebaseAuth.signInWithEmailAndPassword(
+          email: emailController.text, password: passController.text)
+          .catchError((e) {
+        Fluttertoast.showToast(msg: "Sign in fail");
+      });
+    }
     if (firebaseUser != null) {
       // Check is already sign up
       final QuerySnapshot result = await Firestore.instance
@@ -121,8 +134,8 @@ class LoginScreenState extends State<LoginScreen> {
         context,
         MaterialPageRoute(
             builder: (context) => MainScreen(
-                  currentUserId: firebaseUser.uid,
-                )),
+              currentUserId: firebaseUser.uid,
+            )),
       );
     } else {
       Fluttertoast.showToast(msg: "Sign in fail");
@@ -134,44 +147,88 @@ class LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.title,
-            style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-        ),
-        body: Stack(
-          children: <Widget>[
-            Center(
-              child: FlatButton(
-                  onPressed: handleSignIn,
-                  child: Text(
-                    'SIGN IN WITH GOOGLE',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                  color: Color(0xffdd4b39),
-                  highlightColor: Color(0xffff7f7f),
-                  splashColor: Colors.transparent,
-                  textColor: Colors.white,
-                  padding: EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0)),
-            ),
 
-            // Loading
-            Positioned(
-              child: isLoading
-                  ? Container(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                        ),
-                      ),
-                      color: Colors.white.withOpacity(0.8),
-                    )
-                  : Container(),
-            ),
+    final email = TextFormField(
+      controller: emailController,
+      keyboardType: TextInputType.emailAddress,
+      autofocus: false,
+      decoration: InputDecoration(
+        hintText: 'Email',
+        contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+      ),
+    );
+
+    final password = TextFormField(
+      controller: passController,
+      autofocus: false,
+      obscureText: true,
+      decoration: InputDecoration(
+        hintText: 'Password',
+        contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+      ),
+    );
+
+    final loginButton = Padding(
+      padding: EdgeInsets.symmetric(vertical: 16.0),
+      child: FlatButton(
+          onPressed: () => handleSignIn('email'),
+          child: Text(
+            'SIGN IN',
+            style: TextStyle(fontSize: 16.0, color: Colors.black),
+          ),
+          color: Colors.amber,
+          highlightColor: Colors.blueGrey,
+          splashColor: Colors.transparent,
+          textColor: Colors.white,
+          padding: EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0)),
+    );
+
+    final GoogleLogin = Padding(
+      padding: EdgeInsets.symmetric(vertical: 0.0),
+      child: FlatButton(
+          onPressed: () => handleSignIn('google'),
+          child: Text(
+            'CONNECT WITH GOOGLE',
+            style: TextStyle(fontSize: 16.0, color: Colors.black),
+          ),
+          color: Colors.blueGrey,
+          highlightColor: Colors.white30,
+          splashColor: Colors.transparent,
+          textColor: Colors.white,
+          padding: EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0)),
+    );
+
+    final registerButton = FlatButton(
+        child: Text(
+          'Create Account',
+          style: TextStyle(color: Colors.black54),
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => RegisterScreen()),
+          );
+        }
+
+    );
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: ListView(
+          shrinkWrap: true,
+          padding: EdgeInsets.only(left: 24.0, right: 24.0),
+          children: <Widget>[
+            email,
+            SizedBox(height: 8.0),
+            password,
+            SizedBox(height: 24.0),
+            loginButton,
+            GoogleLogin,
+            registerButton,
           ],
-        ));
+        ),
+      ),
+    );
   }
 }

@@ -13,3 +13,6 @@ build/
 *.ipr
 *.iws
 .idea/
+
+backend/image_thumbnail/package-lock.json
+frontend/pubspec.lock

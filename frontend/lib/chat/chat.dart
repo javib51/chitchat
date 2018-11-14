@@ -4,12 +4,14 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/chat/chatSettings.dart';
 import 'package:chitchat/overview/overview.dart';
+import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -186,9 +188,14 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Future uploadFile() async {
+    String contentType = lookupMimeType(imageFile.path);
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
     StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(imageFile);
+    StorageUploadTask uploadTask = reference.putFile(imageFile, StorageMetadata(
+        contentType: contentType,
+        customMetadata: {
+      "resolution": ImageResolution.full.toString().split('.').last,
+    }));
     StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
     imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
     setState(() {
