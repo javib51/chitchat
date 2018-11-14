@@ -114,6 +114,7 @@ class ChatScreenState extends State<ChatScreen> {
   File imageFile;
   bool isLoading;
   bool isShowSticker;
+  bool isShowEmoji;
   String imageUrl;
 
   final TextEditingController textEditingController = new TextEditingController();
@@ -130,6 +131,7 @@ class ChatScreenState extends State<ChatScreen> {
 
     isLoading = false;
     isShowSticker = false;
+    isShowEmoji = false;
     imageUrl = '';
 
     readLocal();
@@ -172,6 +174,14 @@ class ChatScreenState extends State<ChatScreen> {
     focusNode.unfocus();
     setState(() {
       isShowSticker = !isShowSticker;
+    });
+  }
+
+  void getEmoji() {
+    // Hide keyboard when sticker appear
+    focusNode.unfocus();
+    setState(() {
+      isShowEmoji = !isShowEmoji;
     });
   }
 
@@ -440,7 +450,8 @@ class ChatScreenState extends State<ChatScreen> {
 
               // Sticker
               (isShowSticker ? buildSticker() : Container()),
-
+              //Emoji
+              (isShowEmoji ? buildEmoji() : Container()),
               // Input content
               buildInput(),
             ],
@@ -559,6 +570,116 @@ class ChatScreenState extends State<ChatScreen> {
       ),
       decoration: new BoxDecoration(
           border: new Border(top: new BorderSide(color: greyColor2, width: 0.5)), color: Colors.white),
+      padding: EdgeInsets.all(5.0),
+      height: 180.0,
+    );
+  }
+
+  Widget buildEmoji() {
+    return Container(
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              FlatButton(
+                onPressed: () => onSendMessage('mimi1', 2),
+                child: new Image.asset(
+                  'images/mimi1.gif',
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              FlatButton(
+                onPressed: () => onSendMessage('mimi2', 2),
+                child: new Image.asset(
+                  'images/mimi2.gif',
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              FlatButton(
+                onPressed: () => onSendMessage('mimi3', 2),
+                child: new Image.asset(
+                  'images/mimi3.gif',
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              )
+            ],
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          ),
+          Row(
+            children: <Widget>[
+              FlatButton(
+                onPressed: () => onSendMessage('mimi4', 2),
+                child: new Image.asset(
+                  'images/mimi4.gif',
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              FlatButton(
+                onPressed: () => onSendMessage('mimi5', 2),
+                child: new Image.asset(
+                  'images/mimi5.gif',
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              FlatButton(
+                onPressed: () => onSendMessage('mimi6', 2),
+                child: new Image.asset(
+                  'images/mimi6.gif',
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              )
+            ],
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          ),
+          Row(
+            children: <Widget>[
+              FlatButton(
+                onPressed: () => onSendMessage('mimi7', 2),
+                child: new Image.asset(
+                  'images/mimi7.gif',
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              FlatButton(
+                onPressed: () => onSendMessage('mimi8', 2),
+                child: new Image.asset(
+                  'images/mimi8.gif',
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              FlatButton(
+                onPressed: () => onSendMessage('mimi9', 2),
+                child: new Image.asset(
+                  'images/mimi9.gif',
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                ),
+              )
+            ],
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          )
+        ],
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      ),
+      decoration: new BoxDecoration(
+          border: new Border(bottom: new BorderSide(color: greyColor2, width: 0.5)), color: Colors.white),
       padding: EdgeInsets.all(5.0),
       height: 180.0,
     );
