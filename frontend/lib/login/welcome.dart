@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/overview/overview.dart';
-import 'package:chitchat/settings/settings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -100,12 +99,21 @@ class WelcomeScreenState extends State<WelcomeScreen> {
       isLoading = true;
     });
 
+    if (nickController.text.trim().length == 0) {
+      Fluttertoast.showToast(msg: "Please provide NickName");
+      return;
+    }
+
+    if (nickController.text.trim().length == 0){
+      nickController.text = "available";
+    }
+
     Firestore.instance
         .collection('users')
         .document(id)
-        .updateData({'nickname': nickController.text, 'aboutMe': aboutController.text, 'photoUrl': photoUrl}).then((data) async {
-      await prefs.setString('nickname', nickController.text);
-      await prefs.setString('aboutMe', aboutController.text);
+        .updateData({'nickname': nickController.text.trim(), 'aboutMe': aboutController.text.trim(), 'photoUrl': photoUrl}).then((data) async {
+      await prefs.setString('nickname', nickController.text.trim());
+      await prefs.setString('aboutMe', aboutController.text.trim());
       await prefs.setString('photoUrl', photoUrl);
 
       setState(() {

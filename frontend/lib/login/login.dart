@@ -116,6 +116,7 @@ class LoginScreenState extends State<LoginScreen> {
 
         // Write data to local
         currentUser = firebaseUser;
+        await prefs.clear();
         await prefs.setString('id', currentUser.uid);
         await prefs.setString('nickname', currentUser.displayName);
         await prefs.setString('photoUrl', currentUser.photoUrl);
