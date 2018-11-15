@@ -50,15 +50,6 @@ class RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    Firestore.instance
-        .collection('users')
-        .document(firebaseUser.uid)
-        .setData({
-      'nickname': "Unknown",
-      'photoUrl': null,
-      'id': firebaseUser.uid,
-    });
-
     await prefs.clear();
     await prefs.setString('id', firebaseUser.uid);
 

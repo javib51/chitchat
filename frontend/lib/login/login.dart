@@ -112,6 +112,7 @@ class LoginScreenState extends State<LoginScreen> {
           'nickname': firebaseUser.displayName,
           'photoUrl': firebaseUser.photoUrl,
           'id': firebaseUser.uid,
+          'aboutMe': null,
         });
 
         // Write data to local
@@ -125,6 +126,7 @@ class LoginScreenState extends State<LoginScreen> {
         this.setState(() {
           isLoading = false;
         });
+
 
         Navigator.push(
           context,
@@ -146,13 +148,24 @@ class LoginScreenState extends State<LoginScreen> {
           isLoading = false;
         });
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => MainScreen(
-                currentUserId: firebaseUser.uid,
-              )),
-        );
+        if (documents[0]['nickname'].toString().length == 0) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => WelcomeScreen(
+                  currentUserId: firebaseUser.uid,
+                )),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    MainScreen(
+                      currentUserId: firebaseUser.uid,
+                    )),
+          );
+        }
       }
 
     } else {
