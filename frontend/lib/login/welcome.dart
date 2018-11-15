@@ -1,9 +1,10 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/overview/overview.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
   WelcomeScreenState({Key key, @required this.currentUserId});
   var nickController = TextEditingController();
   var aboutController = TextEditingController();
+  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
   final String currentUserId;
   String id = '';
@@ -73,48 +75,68 @@ class WelcomeScreenState extends State<WelcomeScreen> {
     StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
     StorageUploadTask uploadTask = reference.putFile(avatarImageFile);
     StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
-    photoUrl = await storageTaskSnapshot.ref.getDownloadURL();
-    Firestore.instance
-        .collection('users')
-        .document(id)
-        .updateData({'nickname': nickname, 'aboutMe': aboutMe, 'photoUrl': photoUrl}).then((data) async {
-      await prefs.setString('photoUrl', photoUrl);
-      setState(() {
-        isLoading = false;
-      });
 
-      Fluttertoast.showToast(msg: "Upload success");
-    }).catchError((err) {
-      setState(() {
-        isLoading = false;
-      });
+    try {
+      photoUrl = await storageTaskSnapshot.ref.getDownloadURL();
+    } catch (e) {
+      Fluttertoast.showToast(msg: "Upload fail");
+      print(e.toString());
+      return;
+    }
 
-      Fluttertoast.showToast(msg: err.toString());
+    setState(() {
+      isLoading = false;
     });
-  }
+      Fluttertoast.showToast(msg: "Upload success");
+    }
 
-  void handleUpdateData() {
-
+  Future handleUpdateData() async {
     setState(() {
       isLoading = true;
     });
 
-    if (nickController.text.trim().length == 0) {
+    if (nickController.text
+        .trim()
+        .length == 0) {
       Fluttertoast.showToast(msg: "Please provide NickName");
       return;
     }
 
-    if (nickController.text.trim().length == 0){
+    if (nickController.text
+        .trim()
+        .length == 0) {
       nickController.text = "available";
     }
 
-    Firestore.instance
+    final QuerySnapshot result = await Firestore.instance
         .collection('users')
-        .document(id)
-        .updateData({'nickname': nickController.text.trim(), 'aboutMe': aboutController.text.trim(), 'photoUrl': photoUrl}).then((data) async {
-      await prefs.setString('nickname', nickController.text.trim());
-      await prefs.setString('aboutMe', aboutController.text.trim());
-      await prefs.setString('photoUrl', photoUrl);
+        .where('id', isEqualTo: currentUserId)
+        .getDocuments();
+    final List<DocumentSnapshot> documents = result.documents;
+    if (documents.length == 0) {
+      // Update data to server if new user
+      Firestore.instance
+          .collection('users')
+          .document(currentUserId)
+          .setData({
+        'nickname': nickController.text.trim(),
+        'photoUrl': photoUrl,
+        'id': currentUserId,
+        'aboutMe': aboutController.text.trim(),
+      });
+    } else {
+      Firestore.instance
+          .collection('users')
+          .document(id)
+          .updateData({
+        'nickname': nickController.text.trim(),
+        'aboutMe': aboutController.text.trim(),
+        'photoUrl': photoUrl
+      }).then((data) async {
+        await prefs.setString('nickname', nickController.text.trim());
+        await prefs.setString('aboutMe', aboutController.text.trim());
+        await prefs.setString('photoUrl', photoUrl);
+      });
 
       setState(() {
         isLoading = false;
@@ -124,18 +146,12 @@ class WelcomeScreenState extends State<WelcomeScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => MainScreen(
-              currentUserId: currentUserId,
-            )),
+            builder: (context) =>
+                MainScreen(
+                  currentUserId: currentUserId,
+                )),
       );
-
-    }).catchError((err) {
-      setState(() {
-        isLoading = false;
-      });
-
-      Fluttertoast.showToast(msg: err.toString());
-    });
+    }
   }
 
   @override
