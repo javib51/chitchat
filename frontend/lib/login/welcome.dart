@@ -102,10 +102,12 @@ class WelcomeScreenState extends State<WelcomeScreen> {
       return;
     }
 
-    if (nickController.text
+    String abouttext = "available";
+
+    if (aboutController.text
         .trim()
-        .length == 0) {
-      nickController.text = "available";
+        .length > 0) {
+      abouttext = aboutController.text.trim();
     }
 
     final QuerySnapshot result = await Firestore.instance
@@ -122,7 +124,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         'nickname': nickController.text.trim(),
         'photoUrl': photoUrl,
         'id': currentUserId,
-        'aboutMe': aboutController.text.trim(),
+        'aboutMe': abouttext,
       });
     } else {
       Firestore.instance
@@ -130,11 +132,11 @@ class WelcomeScreenState extends State<WelcomeScreen> {
           .document(id)
           .updateData({
         'nickname': nickController.text.trim(),
-        'aboutMe': aboutController.text.trim(),
+        'aboutMe': abouttext,
         'photoUrl': photoUrl
       }).then((data) async {
         await prefs.setString('nickname', nickController.text.trim());
-        await prefs.setString('aboutMe', aboutController.text.trim());
+        await prefs.setString('aboutMe', abouttext);
         await prefs.setString('photoUrl', photoUrl);
       });
 
