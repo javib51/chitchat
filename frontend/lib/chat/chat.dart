@@ -3,12 +3,12 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/chat/chatSettings.dart';
-import 'package:chitchat/overview/overview.dart';
+import 'package:chitchat/main_content/main_screen.dart';
 import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:chitchat/const.dart';
+import 'package:chitchat/common/const.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
@@ -33,11 +33,6 @@ class ChatState extends State<Chat> {
   final String peerAvatar;
 
   ChatState({Key key, @required this.peerId, @required this.peerAvatar});
-
-  List<Choice> choices = const <Choice>[
-    const Choice(title: CHAT_SETTINGS_TEXT, icon: Icons.settings),
-  ];
-
 
   void onItemMenuPress(Choice choice) {
     if (choice.title == CHAT_SETTINGS_TEXT) {
