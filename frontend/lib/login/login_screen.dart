@@ -11,7 +11,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 enum _LoginType {
   emailPassword, google
@@ -20,10 +19,10 @@ enum _LoginType {
 class LoginScreen extends StatefulWidget {
 
   @override
-  LoginScreenState createState() => LoginScreenState();
+  _LoginScreenState createState() => _LoginScreenState();
 }
 
-class LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
 
   final GoogleSignIn _googleSignIn = new GoogleSignIn();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -39,14 +38,14 @@ class LoginScreenState extends State<LoginScreen> {
       contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0)
     );
 
-    final email = TextFormField(
+    final emailFormField = TextFormField(
       controller: this._emailController,
       keyboardType: TextInputType.emailAddress,
       autofocus: false,
       decoration: formFieldDecoration("Email")
     );
 
-    final password = TextFormField(
+    final passwordFormField = TextFormField(
       controller: _passController,
       autofocus: false,
       obscureText: true,
@@ -56,7 +55,7 @@ class LoginScreenState extends State<LoginScreen> {
     final regularLoginButton = Padding(
       padding: EdgeInsets.symmetric(vertical: 16.0),
       child: FlatButton(
-          onPressed: () => this.handleSignIn(_LoginType.emailPassword),
+          onPressed: () => this._handleLogin(_LoginType.emailPassword),
           child: Text(
             'SIGN IN',
             style: TextStyle(fontSize: 16.0, color: Colors.black),
@@ -71,7 +70,7 @@ class LoginScreenState extends State<LoginScreen> {
     final googleLoginButton = Padding(
       padding: EdgeInsets.symmetric(vertical: 0.0),
       child: FlatButton(
-          onPressed: () => this.handleSignIn(_LoginType.google),
+          onPressed: () => this._handleLogin(_LoginType.google),
           child: Text(
             'CONNECT WITH GOOGLE',
             style: TextStyle(fontSize: 16.0, color: Colors.black),
@@ -104,9 +103,9 @@ class LoginScreenState extends State<LoginScreen> {
           shrinkWrap: true,
           padding: EdgeInsets.only(left: 24.0, right: 24.0),
           children: <Widget>[
-            email,
+            emailFormField,
             SizedBox(height: 8.0),
-            password,
+            passwordFormField,
             SizedBox(height: 24.0),
             regularLoginButton,
             googleLoginButton,
@@ -117,20 +116,20 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> handleSignIn(_LoginType loginType) async {
+  Future<void> _handleLogin(_LoginType loginType) async {
     FirebaseUser firebaseUser;
 
     try {
       switch (loginType) {
         case _LoginType.google:
           {
-            firebaseUser = await this.handleGoogleSignIn();
+            firebaseUser = await this._handleGoogleLogin();
           }
           break;
 
         case _LoginType.emailPassword:
           {
-            firebaseUser = await this.handleRegularSingIn();
+            firebaseUser = await this._handleRegularLogin();
           }
           break;
       }
@@ -153,7 +152,7 @@ class LoginScreenState extends State<LoginScreen> {
       User currentUser = User(nickname: firebaseUser.displayName,
           uid: firebaseUser.uid,
           pictureURL: firebaseUser.photoUrl);
-      this._loginManager.saveUser(user: currentUser, forced: true);
+      this._loginManager.setUserLogged(user: currentUser, forced: true);
 
       Fluttertoast.showToast(msg: "Sign in success");
 
@@ -167,11 +166,10 @@ class LoginScreenState extends State<LoginScreen> {
       User newUser = User(nickname: documents[0]['nickname'],
           uid: documents[0]['id'],
           pictureURL: documents[0]['photoUrl']);
-      this._loginManager.saveUser(user: newUser, forced: true);
+      this._loginManager.setUserLogged(user: newUser, forced: true);
 
       Fluttertoast.showToast(msg: "Sign in success");
 
-      //???
       if (documents[0]['nickname']
           .toString()
           .isEmpty) {
@@ -190,7 +188,7 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<FirebaseUser> handleGoogleSignIn() async {
+  Future<FirebaseUser> _handleGoogleLogin() async {
     GoogleSignInAccount googleUser = await _googleSignIn.signIn();
     GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
@@ -200,10 +198,14 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<FirebaseUser> handleRegularSingIn() async {
+  Future<FirebaseUser> _handleRegularLogin() async {
     return await _firebaseAuth.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passController.text
     );
+  }
+
+  Future<bool> isUserSignedUp({@required String userID}) async {
+
   }
 }

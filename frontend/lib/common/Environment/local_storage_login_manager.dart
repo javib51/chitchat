@@ -10,11 +10,12 @@ class LocalStorageLoginManager implements LoginManager {
 
   LocalStorageLoginManager._internal();
 
-  SharedPreferences _prefs;
   static LocalStorageLoginManager _instance;
 
-  //Singleton getter accessible as LoginManager.shared
-  static Future<LoginManager> get shared async {
+  SharedPreferences _prefs;
+
+  //Singleton getter accessible as LocalStorageLoginManager.shared
+  static Future<LocalStorageLoginManager> get shared async {
     if (!LocalStorageLoginManager._isInitialized()) {
       await LocalStorageLoginManager._initializeFields();
     }
@@ -32,11 +33,11 @@ class LocalStorageLoginManager implements LoginManager {
 
   //Singleton public methods
 
-  bool isUserLogged() {
+  Future<bool> isUserLogged() async {
     return this._prefs.getString("user_id") != null;
   }
 
-  User getUserLogged() {
+  Future<User> getUserLogged() async {
 
     var existingUser = this._prefs.get("user");
 
@@ -45,7 +46,7 @@ class LocalStorageLoginManager implements LoginManager {
     return User()..decode(KeyedArchive.unarchive(json.decode(existingUser)));
   }
 
-  User saveUser({@required User user, bool forced}) {
+  Future<User> setUserLogged({@required User user, bool forced}) async {
 
     var existingUser = this._prefs.get("user");
 
