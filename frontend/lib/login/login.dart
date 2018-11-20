@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'ChitChat',
       theme: new ThemeData(
-        primaryColor: themeColor,
+        primaryColor: Colors.amber,
       ),
       home: LoginScreen(),
       debugShowCheckedModeBanner: false,
