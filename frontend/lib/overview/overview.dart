@@ -218,8 +218,12 @@ class MainScreenState extends State<MainScreen> {
     });
 
     await FirebaseAuth.instance.signOut();
-    await googleSignIn.disconnect();
-    await googleSignIn.signOut();
+
+    bool isLoggedIn = await googleSignIn.isSignedIn();
+    if (isLoggedIn) {
+      await googleSignIn.disconnect();
+      await googleSignIn.signOut();
+    }
 
     this.setState(() {
       isLoading = false;

@@ -18,6 +18,8 @@ dependencies:
   cached_network_image: ^0.4.2
   intl: ^0.15.7
   mime: ^0.9.6+2
+  audio_recorder: ^0.0.6
+  flutter_sound: ^1.0.6
 
 dependency_overrides:
   http: ^0.12.0

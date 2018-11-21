@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/chat/chatRecorder.dart';
 import 'package:chitchat/chat/chatSettings.dart';
 import 'package:chitchat/overview/overview.dart';
 import 'package:chitchat/common/imageResolution.dart';
@@ -43,7 +44,7 @@ class ChatState extends State<Chat> {
     if (choice.title == CHAT_SETTINGS_TEXT) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => ChatSettings()));
-    } else {
+    }  else {
 
     }
   }
@@ -591,7 +592,7 @@ class ChatScreenState extends State<ChatScreen> {
           // Button send image
           Material(
             child: new Container(
-              margin: new EdgeInsets.symmetric(horizontal: 1.0),
+              margin: new EdgeInsets.symmetric(horizontal: 0),
               child: new IconButton(
                 icon: new Icon(Icons.image),
                 onPressed: getImage,
@@ -602,7 +603,7 @@ class ChatScreenState extends State<ChatScreen> {
           ),
           Material(
             child: new Container(
-              margin: new EdgeInsets.symmetric(horizontal: 1.0),
+              margin: new EdgeInsets.symmetric(horizontal: 0),
               child: new IconButton(
                 icon: new Icon(Icons.face),
                 onPressed: getSticker,
@@ -611,7 +612,20 @@ class ChatScreenState extends State<ChatScreen> {
             ),
             color: Colors.white,
           ),
-
+          Material(
+            child: new Container(
+              margin: new EdgeInsets.symmetric(horizontal: 0),
+              child: new IconButton(
+                icon: new Icon(Icons.mic),
+                onPressed: () {
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) => RecorderScreen()));
+                },
+                color: primaryColor,
+              ),
+            ),
+            color: Colors.white,
+          ),
           // Edit text
           Flexible(
             child: Container(
