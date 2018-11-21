@@ -5,7 +5,24 @@ import 'package:chitchat/common/const.dart';
 import 'package:chitchat/main_content/main_screen.dart';
 import 'package:chitchat/login/login_screen.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+
+  @override
+  State<StatefulWidget> createState() {
+    return _MyAppState();
+  }
+}
+
+class _MyAppState extends State<MyApp> {
+
+  bool _isUserLoggedIn;
+
+  @override
+  void initState() async {
+    super.initState();
+
+    this._isUserLoggedIn = await Environment.shared.credentialsSignInManager.isUserSignedIn();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +38,7 @@ class MyApp extends StatelessWidget {
 
   //Chooses which screen to start the application with, depending whether there is a logged user or not.
   Widget _chooseRightScreen() {
-    return Environment.shared.loginManager.isUserLogged() ? MainScreen() : LoginScreen();
+    return this._isUserLoggedIn ? MainScreen() : LoginScreen();
   }
+
 }

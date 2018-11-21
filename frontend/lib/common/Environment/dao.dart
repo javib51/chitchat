@@ -25,5 +25,5 @@ abstract class DAO<T> {
 
   //Get the element matching the given filtering criteria. If there is more than one element matching, the function throws a DAOException.filterNotUniqueException.
   //filter: a map of String:QueryEntry. For more info see the `QueryEntry` definition in the `Models` folder.
-  Future<T> get(Map<String, QueryEntry<T>> filter);
+  Future<T> get<U>(Map<String, QueryEntry<U>> filter);
 }

@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/common/Environment/environment.dart';
-import 'package:chitchat/common/Environment/login_manager.dart';
 import 'package:chitchat/common/Environment/storage_manager.dart';
 import 'package:chitchat/common/Environment/firestore_user_profile_dao.dart';
 import 'package:chitchat/common/Models/user.dart';
@@ -17,10 +16,10 @@ class WelcomeScreen extends StatefulWidget {
   @override
   _WelcomeScreenState createState() => new _WelcomeScreenState();
 }
+
 class _WelcomeScreenState extends State<WelcomeScreen> {
 
-  LoginManager _loginManager = Environment.shared.loginManager;
-  StorageManager _storageManager = Environment.shared.storageManager;
+  PictureManager _storageManager = Environment.shared.pictureManager;
   FirestoreUserProfileDAO _userProfileDAO = Environment.shared.userProfileDAO;
   User _loggedInUser;
 
@@ -32,7 +31,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void initState() async {
     super.initState();
 
-    this._loggedInUser = this._loginManager.getUserLogged();
+    this._loggedInUser = await Environment.shared.credentialsSignInManager.getSignedInUser();
     this._nickController = new TextEditingController(text: this._loggedInUser.nickname ?? "");
     this._aboutController = new TextEditingController(text: this._loggedInUser.aboutMe ?? "");
   }
@@ -117,8 +116,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       aboutMeContent = this._aboutController.text.trim();
     }
 
-    User userLoggedIn = this._loginManager.getUserLogged();
-    User userToSave = User(aboutMe: aboutMeContent, nickname: this._nickController.text.trim(), pictureURL: userLoggedIn.pictureURL, uid: userLoggedIn.uid);
+    User userToSave = User(aboutMe: aboutMeContent, nickname: this._nickController.text.trim(), pictureURL: this._loggedInUser.pictureURL, uid: this._loggedInUser.uid);
 
     this._userProfileDAO.create(userToSave, true);
 

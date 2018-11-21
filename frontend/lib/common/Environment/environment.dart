@@ -1,7 +1,11 @@
+import 'package:chitchat/common/Environment/sign_in_manager.dart';
+import 'package:chitchat/common/Environment/sign_up_manager.dart';
+import 'package:chitchat/common/Models/google_credentials.dart';
+import 'package:chitchat/common/Models/signup_credentials.dart';
+import 'package:chitchat/common/Models/user.dart';
 import 'package:meta/meta.dart';
 
 import 'package:chitchat/common/Environment/dao.dart';
-import 'package:chitchat/common/Environment/login_manager.dart';
 import 'package:chitchat/common/Environment/storage_manager.dart';
 
 //Singleton class that contains all the managers the app needs during its lifetime.
@@ -13,28 +17,40 @@ class Environment {
   //static getter to get the singleton instance
   static Environment get shared => Environment._instance;
 
-  LoginManager _loginManager;          //Manager to interact with login/logout related actions
-  LoginManager get loginManager => this._loginManager;
 
-  StorageManager _storageManager;      //Manager to interact with storing objects somewhere
-  StorageManager get storageManager => this._storageManager;
+  PictureManager _pictureManager;      //Manager to interact with storing objects somewhere
+  PictureManager get pictureManager => this._pictureManager;
 
-  DAO _userProfileDAO;                 //Manager to CRUD user profiles
-  DAO get userProfileDAO => this._userProfileDAO;
+  DAO<User> _userProfileDAO;                 //Manager to CRUD user profiles
+  DAO<User> get userProfileDAO => this._userProfileDAO;
 
-  DAO _userCredentialsDAO;             //Manager to CRUD user signups
-  DAO get userCredentialsDAO => this._userCredentialsDAO;
+  SignInManager<SignupCredentials> _credentialsSignInManager;             //Manager for sign in operations with classic credentials (email, password)
+  SignInManager<SignupCredentials> get credentialsSignInManager => this._credentialsSignInManager;
+
+  SignInManager<GoogleCredentials> _googleSignInManager;
+  SignInManager<GoogleCredentials> get googleSignInManager => this.googleSignInManager;
+
+  SignUpManager<SignupCredentials> _credentialsSignUpManager;
+  SignUpManager<SignupCredentials> get credentialsSignUpManager => this._credentialsSignUpManager;
 
   Environment._private();
 
   //Must be called at least once before using the Environment anywhere across the app.
-  static void setup({@required LoginManager loginManager, @required StorageManager storageManager, @required DAO userProfileDAO, @required DAO userCredentialsDAO}) {
+  static void setup({
+    @required PictureManager pictureManager,
+    @required DAO<User> userProfileDAO,
+    @required SignInManager<SignupCredentials> credentialsSignInManager,
+    @required SignInManager<GoogleCredentials> googleSignInManager,
+    @required SignUpManager<SignupCredentials> credentialsSignUpManager,
+  }) {
 
     Environment instance = Environment._instance ?? Environment._private();
 
-    instance._loginManager = loginManager;
-    instance._userProfileDAO= userProfileDAO;
-    instance._userCredentialsDAO = userCredentialsDAO;
+    instance._pictureManager = pictureManager;
+    instance._userProfileDAO = userProfileDAO;
+    instance._credentialsSignInManager = credentialsSignInManager;
+    instance._googleSignInManager = googleSignInManager;
+    instance._credentialsSignUpManager = credentialsSignUpManager;
 
     Environment._instance = instance;
   }

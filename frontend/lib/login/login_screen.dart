@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:chitchat/common/Models/signup_credentials.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -7,14 +8,14 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:chitchat/common/Environment/dao.dart';
 import 'package:chitchat/common/Environment/environment.dart';
-import 'package:chitchat/common/Environment/login_manager.dart';
 import 'package:chitchat/common/Models/user.dart';
 import 'package:chitchat/login/register.dart';
 import 'package:chitchat/login/welcome.dart';
 import 'package:chitchat/main_content/main_screen.dart';
+import 'package:chitchat/common/Models/google_credentials.dart';
 
 enum _LoginType {
-  emailPassword, google
+  signupCredentials, google
 }
 
 class LoginScreen extends StatefulWidget {
@@ -25,11 +26,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
 
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
-  final LoginManager _loginManager = Environment.shared.loginManager;
-  final DAO<User> _userProfileDAO = Environment.shared.userProfileDAO;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final regularLoginButton = Padding(
       padding: EdgeInsets.symmetric(vertical: 16.0),
       child: FlatButton(
-          onPressed: () => this._handleLogin(_LoginType.emailPassword),
+          onPressed: () => this._handleLogin(_LoginType.signupCredentials),
           child: Text(
             'SIGN IN',
             style: TextStyle(fontSize: 16.0, color: Colors.black),
@@ -118,19 +116,23 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin(_LoginType loginType) async {
-    FirebaseUser firebaseUser;
+
+    User loggedUser;
 
     try {
       switch (loginType) {
-        case _LoginType.google:
-          {
-            firebaseUser = await this._handleGoogleLogin();
+        case _LoginType.google: {
+          GoogleSignInAuthentication googleAuth = await (await GoogleSignIn().signIn()).authentication;
+
+          loggedUser = await Environment.shared.googleSignInManager.signIn(GoogleCredentials(
+              accessToken: googleAuth.accessToken, idToken: googleAuth.idToken));
           }
           break;
-
-        case _LoginType.emailPassword:
-          {
-            firebaseUser = await this._handleRegularLogin();
+        case _LoginType.signupCredentials: {
+            loggedUser = await Environment.shared.credentialsSignInManager.signIn(SignupCredentials(
+              email: this._emailController.text,
+              password: this._passController.text,
+            ));
           }
           break;
       }
@@ -139,11 +141,10 @@ class _LoginScreenState extends State<LoginScreen> {
       print("Sign in error: $error");
     }
 
-    User signupUser = User(nickname: firebaseUser.displayName, uid: firebaseUser.uid, pictureURL: firebaseUser.photoUrl);
+    DAO<User> userProfileDAO = Environment.shared.userProfileDAO;
 
     try {
-      await this._userProfileDAO.create(signupUser, false);
-      this._loginManager.setUserLogged(user: signupUser, forced: true);
+      await userProfileDAO.create(loggedUser, false);
       Fluttertoast.showToast(msg: "Sign in success");
 
       Navigator.push(
@@ -155,29 +156,11 @@ class _LoginScreenState extends State<LoginScreen> {
     } on DAOException {         //User already existing
       //User existing
       MaterialPageRoute(
-          builder: (context) => signupUser.nickname != null ? MainScreen() : WelcomeScreen()
+          builder: (context) => loggedUser.nickname != null ? MainScreen() : WelcomeScreen()
       );
     } catch (e) {
       Fluttertoast.showToast(msg: "Sign in failed");
       print(e);
     }
-  }
-
-  //TODO: to refactor!!!
-  Future<FirebaseUser> _handleGoogleLogin() async {
-    GoogleSignInAccount googleUser = await new GoogleSignIn().signIn();
-    GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-    return await _firebaseAuth.signInWithGoogle(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-  }
-
-  Future<FirebaseUser> _handleRegularLogin() async {
-    return await _firebaseAuth.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passController.text
-    );
   }
 }

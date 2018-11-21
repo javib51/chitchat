@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/chat/chatSettings.dart';
-import 'package:chitchat/main_content/main_screen.dart';
-import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -34,15 +32,6 @@ class ChatState extends State<Chat> {
 
   ChatState({Key key, @required this.peerId, @required this.peerAvatar});
 
-  void onItemMenuPress(Choice choice) {
-    if (choice.title == CHAT_SETTINGS_TEXT) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => ChatSettings()));
-    } else {
-
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -53,28 +42,29 @@ class ChatState extends State<Chat> {
         ),
         centerTitle: true,
         actions: <Widget>[
-          PopupMenuButton<Choice>(
-            onSelected: onItemMenuPress,
+          PopupMenuButton<String>(
+            onSelected: (String s) {print("`$s` selected");},
             itemBuilder: (BuildContext context) {
-              return choices.map((Choice choice) {
-                return PopupMenuItem<Choice>(
-                    value: choice,
-                    child: Row(
-                      children: <Widget>[
-                        Icon(
-                          choice.icon,
-                          color: primaryColor,
-                        ),
-                        Container(
-                          width: 10.0,
-                        ),
-                        Text(
-                          choice.title,
-                          style: TextStyle(color: primaryColor),
-                        ),
-                      ],
-                    ));
-              }).toList();
+              return [];
+//              return choices.map((Choice choice) {
+//                return PopupMenuItem<Choice>(
+//                    value: choice,
+//                    child: Row(
+//                      children: <Widget>[
+//                        Icon(
+//                          choice.icon,
+//                          color: primaryColor,
+//                        ),
+//                        Container(
+//                          width: 10.0,
+//                        ),
+//                        Text(
+//                          choice.title,
+//                          style: TextStyle(color: primaryColor),
+//                        ),
+//                      ],
+//                    ));
+//              }).toList();
             },
           ),
         ],
@@ -172,6 +162,7 @@ class ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  //TODO: Must be refactored by calling the manager.
   Future uploadFile() async {
     String contentType = lookupMimeType(imageFile.path);
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();

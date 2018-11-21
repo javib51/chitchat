@@ -24,14 +24,14 @@ class FirestoreUserProfileDAO implements DAO<User> {
 
   Firestore _firestoreInstance;
 
-  FirestoreUserProfileDAO._internal();
+  FirestoreUserProfileDAO._private();
 
   static bool _isInitialized() {
     return FirestoreUserProfileDAO._instance != null;
   }
 
   static void _initializeFields() {
-    FirestoreUserProfileDAO._instance = FirestoreUserProfileDAO._internal();
+    FirestoreUserProfileDAO._instance = FirestoreUserProfileDAO._private();
     FirestoreUserProfileDAO._instance._firestoreInstance = Firestore.instance;
   }
 
@@ -84,12 +84,12 @@ class FirestoreUserProfileDAO implements DAO<User> {
   }
 
   @override
-  Future<User> get(Map<String, QueryEntry> filter) async {
+  Future<User> get<T>(Map<String, QueryEntry<T>> filter) async {
     List<User> filteredQueryResult = await this.getAll(filter);
 
     if (filteredQueryResult.length > 1) throw FilterNotUniqueException();
 
-    return filteredQueryResult[0];
+    return filteredQueryResult.elementAt(0);
   }
 
   @override

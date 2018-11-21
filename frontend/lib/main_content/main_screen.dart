@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/common/Environment/environment.dart';
-import 'package:chitchat/common/Environment/login_manager.dart';
 import 'package:chitchat/common/Environment/firestore_user_profile_dao.dart';
+import 'package:chitchat/common/Models/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,14 +16,20 @@ import 'package:google_sign_in/google_sign_in.dart';
 class MainScreen extends StatefulWidget {
 
   @override
-  State createState() => new MainScreenState();
+  State createState() => new _MainScreenState();
 }
 
-class MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> {
 
   bool _isLoading = false;
-  final LoginManager _loginManager = Environment.shared.loginManager;
-  final FirestoreUserProfileDAO _userProfileDAO = Environment.shared.userProfileDAO;
+  User _loggedUser;
+
+  @override
+  void initState() async {
+    super.initState();
+
+    this._loggedUser = await Environment.shared.credentialsSignInManager.getSignedInUser();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +88,7 @@ class MainScreenState extends State<MainScreen> {
   }
 
   Widget buildItem(BuildContext context, DocumentSnapshot document) {
-    if (document['id'] == this._loginManager.getUserLogged()) {       //???
+    if (document['id'] == this._loggedUser.uid) {       //???
       return Container(child: Text("ASSSSS"),);
     } else {
       return Container(

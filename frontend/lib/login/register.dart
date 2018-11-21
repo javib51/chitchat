@@ -1,6 +1,6 @@
 import 'package:chitchat/common/Environment/dao.dart';
 import 'package:chitchat/common/Environment/environment.dart';
-import 'package:chitchat/common/Environment/login_manager.dart';
+import 'package:chitchat/common/Environment/sign_up_manager.dart';
 import 'package:chitchat/common/Models/signup_credentials.dart';
 import 'package:chitchat/common/Models/user.dart';
 import 'package:chitchat/login/welcome.dart';
@@ -106,13 +106,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    DAO<SignupCredentials> userCredentialsDAO = Environment.shared.userCredentialsDAO;
-    LoginManager loginManager = Environment.shared.loginManager;
-
-    String createdUserID;
+    SignUpManager<SignupCredentials> signupManager = Environment.shared.credentialsSignUpManager;
 
     try {
-      createdUserID = await userCredentialsDAO.create(SignupCredentials(
+      await signupManager.signUp(SignupCredentials(
           email: this._emailController.text.trim(),
           password: this._passController.text.trim()));
     } catch (e) {
@@ -120,7 +117,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       print(e);
     }
 
-    loginManager.setUserLogged(user: User(uid: createdUserID), forced: true);
     Fluttertoast.showToast(msg: "Register succes");
 
     Navigator.pop(context);

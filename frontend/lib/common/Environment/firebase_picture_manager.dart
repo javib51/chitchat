@@ -7,28 +7,28 @@ import 'package:chitchat/common/Environment/storage_manager.dart';
 
 //Implements the StorageManager class.
 //Stores the given entities in Firebase Storage.
-class FirebaseStorageManager implements StorageManager {
+class FirebasePictureManager implements PictureManager {
 
-  static FirebaseStorageManager _instance;
+  static FirebasePictureManager _instance;
 
-  static Future<FirebaseStorageManager> get shared async {
-    if (!FirebaseStorageManager._isInitialized()) {
-      await FirebaseStorageManager._initializeFields();
+  static FirebasePictureManager get shared {
+    if (!FirebasePictureManager._isInitialized()) {
+      FirebasePictureManager._initializeFields();
     }
-    return FirebaseStorageManager._instance;
+    return FirebasePictureManager._instance;
   }
 
   FirebaseStorage _storage;
 
-  FirebaseStorageManager._private();
+  FirebasePictureManager._private();
 
   static bool _isInitialized() {
-    return FirebaseStorageManager._instance != null;
+    return FirebasePictureManager._instance != null;
   }
 
-  static Future<void> _initializeFields() async {
-    FirebaseStorageManager._instance = FirebaseStorageManager._private();
-    FirebaseStorageManager._instance._storage = FirebaseStorage.instance;
+  static _initializeFields() {
+    FirebasePictureManager._instance = FirebasePictureManager._private();
+    FirebasePictureManager._instance._storage = FirebaseStorage.instance;
   }
 
   //Singleton public methods
