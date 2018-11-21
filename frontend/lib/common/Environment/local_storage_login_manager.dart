@@ -1,18 +1,16 @@
 import 'dart:convert';
 
-import 'package:chitchat/common/Environment/login_manager.dart';
-import 'package:chitchat/common/Models/user.dart';
 import 'package:codable/codable.dart';
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:chitchat/common/Environment/login_manager.dart';
+import 'package:chitchat/common/Models/user.dart';
+
+//Concrete implementation of LoginManager using SharedPreferences as local storage.
 class LocalStorageLoginManager implements LoginManager {
 
-  LocalStorageLoginManager._internal();
-
   static LocalStorageLoginManager _instance;
-
-  SharedPreferences _prefs;
 
   //Singleton getter accessible as LocalStorageLoginManager.shared
   static Future<LocalStorageLoginManager> get shared async {
@@ -22,22 +20,26 @@ class LocalStorageLoginManager implements LoginManager {
     return LocalStorageLoginManager._instance;
   }
 
+  SharedPreferences _prefs;
+
+  LocalStorageLoginManager._private();
+
   static bool _isInitialized() {
     return LocalStorageLoginManager._instance != null;
   }
 
   static Future<void> _initializeFields() async {
-    LocalStorageLoginManager._instance = LocalStorageLoginManager._internal();
+    LocalStorageLoginManager._instance = LocalStorageLoginManager._private();
     LocalStorageLoginManager._instance._prefs = await SharedPreferences.getInstance();
   }
 
   //Singleton public methods
 
-  Future<bool> isUserLogged() async {
-    return this._prefs.getString("user_id") != null;
+  bool isUserLogged() {
+    return this.getUserLogged() != null;
   }
 
-  Future<User> getUserLogged() async {
+  User getUserLogged() {
 
     var existingUser = this._prefs.get("user");
 
@@ -46,11 +48,11 @@ class LocalStorageLoginManager implements LoginManager {
     return User()..decode(KeyedArchive.unarchive(json.decode(existingUser)));
   }
 
-  Future<User> setUserLogged({@required User user, bool forced}) async {
+  User setUserLogged({@required User user, bool forced}) {
 
     var existingUser = this._prefs.get("user");
 
-    if (existingUser != null && !forced) return null;
+    if (existingUser != null && !forced) throw LoginManagerException.userExistingException;
 
     this._prefs.setString("user", json.encode(KeyedArchive.archive(existingUser)));
 

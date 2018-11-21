@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
+
 import 'package:chitchat/common/Environment/environment.dart';
 import 'package:chitchat/common/const.dart';
 import 'package:chitchat/main_content/main_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:chitchat/login/login_screen.dart';
 
 class MyApp extends StatelessWidget {
@@ -18,6 +19,7 @@ class MyApp extends StatelessWidget {
     );
   }
 
+  //Chooses which screen to start the application with, depending whether there is a logged user or not.
   Widget _chooseRightScreen() {
     return Environment.shared.loginManager.isUserLogged() ? MainScreen() : LoginScreen();
   }

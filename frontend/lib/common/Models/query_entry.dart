@@ -1,13 +1,5 @@
 import 'package:meta/meta.dart';
 
-class QueryEntry<T> {
-
-  QueryEntry({@required this.value, this.l=ValueComparisonLogic.e});
-
-  T value;
-  ValueComparisonLogic l;
-}
-
 enum ValueComparisonLogic {
   gt,   //>
   ge,   //>=
@@ -16,4 +8,16 @@ enum ValueComparisonLogic {
   lt,   //<
   n,    //== null
   nn    //!= null
+}
+
+//Entity representing a single query parameter specifically dealing with Firebase database.
+class QueryEntry<T> {
+
+  QueryEntry({@required this.comparisonValue, this.l=ValueComparisonLogic.e});
+
+  //The threshold value to insert in the query (specifically with ==, !=, >, >=, <=).
+  final T comparisonValue;
+
+  //The comparison logic to apply.
+  final ValueComparisonLogic l;
 }

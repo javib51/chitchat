@@ -4,7 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/common/Environment/environment.dart';
 import 'package:chitchat/common/Environment/login_manager.dart';
 import 'package:chitchat/common/Environment/storage_manager.dart';
-import 'package:chitchat/common/Environment/user_profile_dao.dart';
+import 'package:chitchat/common/Environment/firestore_user_profile_dao.dart';
 import 'package:chitchat/common/Models/user.dart';
 import 'package:chitchat/main_content/main_screen.dart';
 import 'package:chitchat/common/const.dart';
@@ -21,7 +21,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   LoginManager _loginManager = Environment.shared.loginManager;
   StorageManager _storageManager = Environment.shared.storageManager;
-  UserProfileDAO _userProfileDAO = Environment.shared.userProfileDAO;
+  FirestoreUserProfileDAO _userProfileDAO = Environment.shared.userProfileDAO;
   User _loggedInUser;
 
   TextEditingController _nickController;
@@ -32,7 +32,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void initState() async {
     super.initState();
 
-    this._loggedInUser = await this._loginManager.getUserLogged();
+    this._loggedInUser = this._loginManager.getUserLogged();
     this._nickController = new TextEditingController(text: this._loggedInUser.nickname ?? "");
     this._aboutController = new TextEditingController(text: this._loggedInUser.aboutMe ?? "");
   }
@@ -104,7 +104,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  Future<void> _handleSubmitDataPress() async {
+  void _handleSubmitDataPress() {
 
     if (this._nickController.text.trim().isEmpty) {
       Fluttertoast.showToast(msg: "Please provide NickName");
@@ -117,7 +117,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       aboutMeContent = this._aboutController.text.trim();
     }
 
-    User userLoggedIn = await this._loginManager.getUserLogged();
+    User userLoggedIn = this._loginManager.getUserLogged();
     User userToSave = User(aboutMe: aboutMeContent, nickname: this._nickController.text.trim(), pictureURL: userLoggedIn.pictureURL, uid: userLoggedIn.uid);
 
     this._userProfileDAO.create(userToSave, true);
@@ -221,7 +221,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     if (image == null) return null;
 
     String fileName = this._loggedInUser.uid;
-    String pictureURL = await this._storageManager.uploadProfilePicture<String>(profilePicture: image, fileName: fileName);
+    String pictureURL = await this._storageManager.uploadPicture<String>(picture: image, pictureName: fileName);
 
     return pictureURL;
   }

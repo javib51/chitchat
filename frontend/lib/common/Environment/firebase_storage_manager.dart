@@ -1,18 +1,16 @@
 import 'dart:io';
 
-import 'package:chitchat/common/Environment/storage_manager.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:meta/meta.dart';
 
-class FirebaseStorageManager implements StorageManager {
+import 'package:chitchat/common/Environment/storage_manager.dart';
 
-  FirebaseStorageManager._internal();
+//Implements the StorageManager class.
+//Stores the given entities in Firebase Storage.
+class FirebaseStorageManager implements StorageManager {
 
   static FirebaseStorageManager _instance;
 
-  FirebaseStorage _storage;
-
-  //Singleton getter accessible as LocalStorageLoginManager.shared
   static Future<FirebaseStorageManager> get shared async {
     if (!FirebaseStorageManager._isInitialized()) {
       await FirebaseStorageManager._initializeFields();
@@ -20,21 +18,25 @@ class FirebaseStorageManager implements StorageManager {
     return FirebaseStorageManager._instance;
   }
 
+  FirebaseStorage _storage;
+
+  FirebaseStorageManager._private();
+
   static bool _isInitialized() {
     return FirebaseStorageManager._instance != null;
   }
 
   static Future<void> _initializeFields() async {
-    FirebaseStorageManager._instance = FirebaseStorageManager._internal();
+    FirebaseStorageManager._instance = FirebaseStorageManager._private();
     FirebaseStorageManager._instance._storage = FirebaseStorage.instance;
   }
 
   //Singleton public methods
 
   @override
-  Future<T> uploadProfilePicture<T>({@required File profilePicture, String fileName}) async {
-    StorageReference reference = this._storage.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(profilePicture);
+  Future<Object> uploadPicture({@required File picture, String pictureName}) async {
+    StorageReference reference = this._storage.ref().child(pictureName);
+    StorageUploadTask uploadTask = reference.putFile(picture);
     StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
 
     return await storageTaskSnapshot.ref.getDownloadURL();

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/common/Environment/environment.dart';
 import 'package:chitchat/common/Environment/login_manager.dart';
+import 'package:chitchat/common/Environment/firestore_user_profile_dao.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,6 @@ import 'package:chitchat/chat/chat.dart';
 import 'package:chitchat/common/const.dart';
 import 'package:chitchat/my_app.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:chitchat/main_content/settings_widget.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -23,9 +23,66 @@ class MainScreenState extends State<MainScreen> {
 
   bool _isLoading = false;
   final LoginManager _loginManager = Environment.shared.loginManager;
+  final FirestoreUserProfileDAO _userProfileDAO = Environment.shared.userProfileDAO;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'MAIN',
+          style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
+      body: WillPopScope(
+        child: Stack(
+          children: <Widget>[
+            // List
+            Container(
+              child: StreamBuilder(
+                stream: Firestore.instance.collection('users').snapshots(),     //Replace the stream with something that allows async download from firestore
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                      ),
+                    );
+                  } else {
+                    return ListView.builder(
+                      padding: EdgeInsets.all(10.0),
+                      itemBuilder: (context, index) =>
+                          buildItem(context, snapshot.data.documents[index]),
+                      itemCount: snapshot.data.documents.length,
+                    );
+                  }
+                },
+              ),
+            ),
+
+            // Loading
+            Positioned(
+              child: _isLoading
+                  ? Container(
+                child: Center(
+                  child: CircularProgressIndicator(
+                      valueColor:
+                      AlwaysStoppedAnimation<Color>(themeColor)),
+                ),
+                color: Colors.white.withOpacity(0.8),
+              )
+                  : Container(),
+            )
+          ],
+        ),
+        onWillPop: onBackPress,
+      ),
+    );
+  }
 
   Widget buildItem(BuildContext context, DocumentSnapshot document) {
-    if (document['id'] == this._loginManager.getUserID()) {
+    if (document['id'] == this._loginManager.getUserLogged()) {       //???
       return Container(child: Text("ASSSSS"),);
     } else {
       return Container(
@@ -194,15 +251,6 @@ class MainScreenState extends State<MainScreen> {
 
   final GoogleSignIn googleSignIn = new GoogleSignIn();
 
-  void onItemMenuPress(Choice choice) {
-    if (choice.title == 'Log out') {
-      handleSignOut();
-    } else {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Settings()));
-    }
-  }
-
   Future<Null> handleSignOut() async {
     this.setState(() {
       _isLoading = true;
@@ -223,87 +271,5 @@ class MainScreenState extends State<MainScreen> {
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => MyApp()),
         (Route<dynamic> route) => false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'MAIN',
-          style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        actions: <Widget>[
-          PopupMenuButton<Choice>(
-            onSelected: onItemMenuPress,
-            itemBuilder: (BuildContext context) {
-              return choices.map((Choice choice) {
-                return PopupMenuItem<Choice>(
-                    value: choice,
-                    child: Row(
-                      children: <Widget>[
-                        Icon(
-                          choice.icon,
-                          color: primaryColor,
-                        ),
-                        Container(
-                          width: 10.0,
-                        ),
-                        Text(
-                          choice.title,
-                          style: TextStyle(color: primaryColor),
-                        ),
-                      ],
-                    ));
-              }).toList();
-            },
-          ),
-        ],
-      ),
-      body: WillPopScope(
-        child: Stack(
-          children: <Widget>[
-            // List
-            Container(
-              child: StreamBuilder(
-                stream: Firestore.instance.collection('users').snapshots(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                      ),
-                    );
-                  } else {
-                    return ListView.builder(
-                      padding: EdgeInsets.all(10.0),
-                      itemBuilder: (context, index) =>
-                          buildItem(context, snapshot.data.documents[index]),
-                      itemCount: snapshot.data.documents.length,
-                    );
-                  }
-                },
-              ),
-            ),
-
-            // Loading
-            Positioned(
-              child: _isLoading
-                  ? Container(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(themeColor)),
-                      ),
-                      color: Colors.white.withOpacity(0.8),
-                    )
-                  : Container(),
-            )
-          ],
-        ),
-        onWillPop: onBackPress,
-      ),
-    );
   }
 }
