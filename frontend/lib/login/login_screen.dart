@@ -1,16 +1,17 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+import 'package:chitchat/common/Environment/dao.dart';
 import 'package:chitchat/common/Environment/environment.dart';
 import 'package:chitchat/common/Environment/login_manager.dart';
 import 'package:chitchat/common/Models/user.dart';
 import 'package:chitchat/login/register.dart';
 import 'package:chitchat/login/welcome.dart';
 import 'package:chitchat/main_content/main_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 enum _LoginType {
   emailPassword, google
@@ -24,11 +25,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
 
-  final GoogleSignIn _googleSignIn = new GoogleSignIn();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
   final LoginManager _loginManager = Environment.shared.loginManager;
+  final DAO<User> _userProfileDAO = Environment.shared.userProfileDAO;
 
   @override
   Widget build(BuildContext context) {
@@ -138,58 +139,33 @@ class _LoginScreenState extends State<LoginScreen> {
       print("Sign in error: $error");
     }
 
-    // Check is already sign up
-    final QuerySnapshot result = await Firestore.instance
-        .collection('users')
-        .where('id', isEqualTo: firebaseUser.uid)
-        .getDocuments();
-    final List<DocumentSnapshot> documents = result.documents;
+    User signupUser = User(nickname: firebaseUser.displayName, uid: firebaseUser.uid, pictureURL: firebaseUser.photoUrl);
 
-    if (documents.isEmpty) {
-      // Update data to server if new user
-
-      // Write data to local
-      User currentUser = User(nickname: firebaseUser.displayName,
-          uid: firebaseUser.uid,
-          pictureURL: firebaseUser.photoUrl);
-      this._loginManager.setUserLogged(user: currentUser, forced: true);
-
+    try {
+      await this._userProfileDAO.create(signupUser, false);
+      this._loginManager.setUserLogged(user: signupUser, forced: true);
       Fluttertoast.showToast(msg: "Sign in success");
 
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => WelcomeScreen()
-        ),
+          builder: (context) => WelcomeScreen()
+        )
       );
-    } else {
-      User newUser = User(nickname: documents[0]['nickname'],
-          uid: documents[0]['id'],
-          pictureURL: documents[0]['photoUrl']);
-      this._loginManager.setUserLogged(user: newUser, forced: true);
-
-      Fluttertoast.showToast(msg: "Sign in success");
-
-      if (documents[0]['nickname']
-          .toString()
-          .isEmpty) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => WelcomeScreen()),
-        );
-      } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => MainScreen()),
-        );
-      }
+    } on DAOException {         //User already existing
+      //User existing
+      MaterialPageRoute(
+          builder: (context) => signupUser.nickname != null ? MainScreen() : WelcomeScreen()
+      );
+    } catch (e) {
+      Fluttertoast.showToast(msg: "Sign in failed");
+      print(e);
     }
   }
 
+  //TODO: to refactor!!!
   Future<FirebaseUser> _handleGoogleLogin() async {
-    GoogleSignInAccount googleUser = await _googleSignIn.signIn();
+    GoogleSignInAccount googleUser = await new GoogleSignIn().signIn();
     GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
     return await _firebaseAuth.signInWithGoogle(
@@ -203,9 +179,5 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text,
         password: _passController.text
     );
-  }
-
-  Future<bool> isUserSignedUp({@required String userID}) async {
-
   }
 }

@@ -221,7 +221,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     if (image == null) return null;
 
     String fileName = this._loggedInUser.uid;
-    String pictureURL = await this._storageManager.uploadPicture<String>(picture: image, pictureName: fileName);
+    String pictureURL = await this._storageManager.uploadPicture(picture: image, pictureName: fileName);
 
     return pictureURL;
   }

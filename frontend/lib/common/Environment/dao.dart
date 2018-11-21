@@ -1,5 +1,9 @@
 import 'package:chitchat/common/Models/query_entry.dart';
 
+abstract class DAOException implements Exception {}
+
+class FilterNotUniqueException extends DAOException {}
+
 //Abstract class that must be implemented by all DAOs dealing with objects that can be store in any kind of storage.
 abstract class DAO<T> {
 
@@ -22,8 +26,4 @@ abstract class DAO<T> {
   //Get the element matching the given filtering criteria. If there is more than one element matching, the function throws a DAOException.filterNotUniqueException.
   //filter: a map of String:QueryEntry. For more info see the `QueryEntry` definition in the `Models` folder.
   Future<T> get(Map<String, QueryEntry<T>> filter);
-}
-
-enum DAOException {
-  filterNotUniqueException,     //Thrown if query for getting one element returns more than one element
 }

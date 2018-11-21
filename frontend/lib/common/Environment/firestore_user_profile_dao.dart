@@ -4,9 +4,9 @@ import 'package:chitchat/common/Environment/dao.dart';
 import 'package:chitchat/common/Models/query_entry.dart';
 import 'package:chitchat/common/Models/user.dart';
 
-enum UserProfileDAOException {
-  userExistingException
-}
+abstract class UserProfileDAOException extends DAOException {}
+
+class UserExistingException extends UserProfileDAOException {}
 
 //Implements the DAO class with the concrete type User.
 //Stores the given entities in Firestore database.
@@ -37,14 +37,13 @@ class FirestoreUserProfileDAO implements DAO<User> {
 
   //Singleton public methods
 
-  //throws: UserProfileDAOException.userExistingException if trying to create a duplicate user.
+  //throws: UserExistingException if trying to create a duplicate user.
   @override
   Future<Object> create(User element, [bool updateIfExist=false]) async {
     
     bool userProfileExists = (await this._getUserByID(element.uid)) != null;
 
-    if (userProfileExists && !updateIfExist) throw UserProfileDAOException
-        .userExistingException;
+    if (userProfileExists && !updateIfExist) throw UserExistingException();
 
     await this._firestoreInstance.document(element.uid).setData({
       "nickname": element.nickname,
@@ -88,7 +87,7 @@ class FirestoreUserProfileDAO implements DAO<User> {
   Future<User> get(Map<String, QueryEntry> filter) async {
     List<User> filteredQueryResult = await this.getAll(filter);
 
-    if (filteredQueryResult.length > 1) throw DAOException.filterNotUniqueException;
+    if (filteredQueryResult.length > 1) throw FilterNotUniqueException();
 
     return filteredQueryResult[0];
   }

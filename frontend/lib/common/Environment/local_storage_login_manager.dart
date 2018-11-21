@@ -52,7 +52,7 @@ class LocalStorageLoginManager implements LoginManager {
 
     var existingUser = this._prefs.get("user");
 
-    if (existingUser != null && !forced) throw LoginManagerException.userExistingException;
+    if (existingUser != null && !forced) throw UserExistingException();
 
     this._prefs.setString("user", json.encode(KeyedArchive.archive(existingUser)));
 

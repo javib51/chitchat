@@ -2,8 +2,13 @@ import 'package:meta/meta.dart';
 
 import 'package:chitchat/common/Models/user.dart';
 
-enum LoginManagerException {
-  userExistingException
+abstract class LoginManagerException implements Exception {}
+
+class UserExistingException extends LoginManagerException {}
+
+enum LoginOption {
+  google,
+  regular
 }
 
 //Abstract class providing an interface to all login/logout related actions.

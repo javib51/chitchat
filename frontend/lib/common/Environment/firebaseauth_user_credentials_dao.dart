@@ -4,9 +4,9 @@ import 'package:chitchat/common/Environment/dao.dart';
 import 'package:chitchat/common/Models/query_entry.dart';
 import 'package:chitchat/common/Models/signup_credentials.dart';
 
-enum UserCredentialsDAOException {
-  emailExistingException,
-}
+abstract class UserCredentialsDAOException extends DAOException {}
+
+class EmailExistingException extends UserCredentialsDAOException {}
 
 //Implements the DAO class with the concrete type SingupCredentials.
 //Stores the given entities in Firebase by interacting with FirebaseAuth.
@@ -37,10 +37,10 @@ class FirebaseAuthUserCredentialsDAO implements DAO<SignupCredentials> {
 
   //Singleton public methods
 
-  //throws: UserCredentialsDAOException.emailExistingException if trying to create a duplicate user (no existing email address can be used).
+  //throws: EmailExistingException if trying to create a duplicate user (no existing email address can be used).
   @override
   Future<Object> create(SignupCredentials element, [bool forced=false]) async {
-    if (forced) throw UserCredentialsDAOException.emailExistingException;    //Cannot force saving a new user conflicting with a previous one, since there cannot be two users with the same email address.
+    if (forced) throw EmailExistingException();    //Cannot force saving a new user conflicting with a previous one, since there cannot be two users with the same email address.
 
     return await this._firebaseAuthInstance.createUserWithEmailAndPassword(email: element.email, password: element.password);
   }
