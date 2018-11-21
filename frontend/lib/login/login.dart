@@ -235,23 +235,37 @@ class LoginScreenState extends State<LoginScreen> {
 
     );
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: ListView(
-          shrinkWrap: true,
-          padding: EdgeInsets.only(left: 24.0, right: 24.0),
-          children: <Widget>[
-            email,
-            SizedBox(height: 8.0),
-            password,
-            SizedBox(height: 24.0),
-            loginButton,
-            GoogleLogin,
-            registerButton,
-          ],
+    return Stack(
+    children: <Widget>[
+      Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            children: <Widget>[
+              email,
+              SizedBox(height: 8.0),
+              password,
+              SizedBox(height: 24.0),
+              loginButton,
+              GoogleLogin,
+              registerButton,
+            ],
+          ),
         ),
       ),
+      Positioned(
+        child: isLoading
+            ? Container(
+          child: Center(
+            child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+          ),
+          color: Colors.white.withOpacity(0.8),
+        )
+            : Container(),
+      ),
+    ],
     );
   }
 }
