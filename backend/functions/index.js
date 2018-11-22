@@ -1,0 +1,15 @@
+'use strict';
+
+const admin = require('firebase-admin');
+const generateThumbnail = require('./generateThumbnail');
+const messageNotifications = require('./messageNotifications');
+
+//Gobal init
+admin.initializeApp();
+
+const settings = {/* your settings... */ timestampsInSnapshots: true};
+admin.firestore().settings(settings);
+
+// Functions definition
+exports.generateThumbnail = generateThumbnail.handler;
+exports.messageNotifications = messageNotifications.handler;
