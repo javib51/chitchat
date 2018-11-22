@@ -1,9 +1,7 @@
 'use strict';
-
+const admin = require('firebase-admin');
 const functions = require('firebase-functions');
 const mkdirp = require('mkdirp-promise');
-const admin = require('firebase-admin');
-admin.initializeApp();
 const spawn = require('child-process-promise').spawn;
 const path = require('path');
 const os = require('os');
