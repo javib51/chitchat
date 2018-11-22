@@ -30,10 +30,10 @@ class MainScreenState extends State<MainScreen> {
 
   bool isLoading = false;
 
+  Map<String,Map<String,String>> values = new Map();
   SharedPreferences prefs;
 
   String nickname = '';
-  String aboutMe = '';
   String photoUrl = '';
 
   @override
@@ -45,11 +45,34 @@ class MainScreenState extends State<MainScreen> {
   void readLocal() async {
     prefs = await SharedPreferences.getInstance();
     nickname = prefs.getString('nickname') ?? '';
-    aboutMe = prefs.getString('aboutMe') ?? '';
     photoUrl = prefs.getString('photoUrl') ?? '';
 
     // Force refresh input
     setState(() {});
+  }
+
+  Stream<QuerySnapshot> getChats() {
+    return Firestore.instance.collection('chats')
+        .where("users",  arrayContains: currentUserId).snapshots();
+  }
+
+  Map<String, String> getChatInfo(DocumentSnapshot chat) {
+    Map<String, String> map = new Map();
+    String docId = chat['id'];
+    if(chat['type'] == 'G') {
+      map['photoUrl'] =
+      "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
+      map['name'] = chat['name'];
+    } else {
+      map['photoUrl'] = "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
+      map['name'] = "No name";
+      //String userId = (chat['users'][0] == currentUserId)? chat['users'][1] : currentUserId;
+      /*Firestore.instance.collection('users').document().get().then((snapshot) => {
+          values[docId]['photoUrl'] = snapshot['photoUrl'];
+          values[docId]['name'] = snapshot['nickname'];
+      });*/
+    }
+    return map;
   }
 
   Future<bool> onBackPress() {
@@ -151,6 +174,7 @@ class MainScreenState extends State<MainScreen> {
     if (document['id'] == currentUserId) {
       return Container();
     } else {
+      Map info = getChatInfo(document);
       return Container(
         child: FlatButton(
           child: Row(
@@ -166,7 +190,7 @@ class MainScreenState extends State<MainScreen> {
                     height: 50.0,
                     padding: EdgeInsets.all(15.0),
                   ),
-                  imageUrl: document['photoUrl'],
+                  imageUrl: info['photoUrl'],
                   width: 50.0,
                   height: 50.0,
                   fit: BoxFit.cover,
@@ -180,20 +204,12 @@ class MainScreenState extends State<MainScreen> {
                     children: <Widget>[
                       new Container(
                         child: Text(
-                          'Nickname: ${document['nickname']}',
+                          info['name'],
                           style: TextStyle(color: primaryColor),
                         ),
                         alignment: Alignment.centerLeft,
                         margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
                       ),
-                      new Container(
-                        child: Text(
-                          'About me: ${document['aboutMe'] ?? 'Not available'}',
-                          style: TextStyle(color: primaryColor),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
-                      )
                     ],
                   ),
                   margin: EdgeInsets.only(left: 20.0),
@@ -206,8 +222,8 @@ class MainScreenState extends State<MainScreen> {
                 context,
                 new MaterialPageRoute(
                     builder: (context) => new Chat(
-                          peerId: document.documentID,
-                          peerAvatar: document['photoUrl'],
+                          chatId: document.documentID,
+                          chatAvatar: info['photoUrl'],
                         )));
           },
           color: greyColor2,
@@ -262,7 +278,6 @@ class MainScreenState extends State<MainScreen> {
           children: <Widget>[
             new UserAccountsDrawerHeader(
               accountName: new Text(nickname),
-              accountEmail: new Text(aboutMe),
               currentAccountPicture: new CircleAvatar(
                 backgroundImage: new NetworkImage(photoUrl)
               ),
@@ -294,7 +309,7 @@ class MainScreenState extends State<MainScreen> {
             // List
             Container(
               child: StreamBuilder(
-                stream: Firestore.instance.collection('users').snapshots(),
+                stream: getChats(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(

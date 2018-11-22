@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:chitchat/login/register.dart';
 import 'package:chitchat/login/welcome.dart';
+import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -113,6 +114,8 @@ class LoginScreenState extends State<LoginScreen> {
         await prefs.setString('id', currentUser.uid);
         await prefs.setString('nickname', currentUser.displayName);
         await prefs.setString('photoUrl', currentUser.photoUrl);
+        await prefs.setString('photosResolution',
+            ImageResolution.full.toString().split('.').last);
 
         Fluttertoast.showToast(msg: "Sign in success");
         this.setState(() {
@@ -133,7 +136,7 @@ class LoginScreenState extends State<LoginScreen> {
         await prefs.setString('id', documents[0]['id']);
         await prefs.setString('nickname', documents[0]['nickname']);
         await prefs.setString('photoUrl', documents[0]['photoUrl']);
-        await prefs.setString('aboutMe', documents[0]['aboutMe']);
+        await prefs.setString('photosResolution', documents[0]['photosResolution']);
 
         Fluttertoast.showToast(msg: "Sign in success");
         this.setState(() {

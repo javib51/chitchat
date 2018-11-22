@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/overview/overview.dart';
@@ -29,7 +30,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
   final String currentUserId;
   String id = '';
   String nickname = '';
-  String aboutMe = '';
+  String photosResolution = '';
   String photoUrl = '';
 
   bool isLoading = false;
@@ -48,11 +49,11 @@ class WelcomeScreenState extends State<WelcomeScreen> {
     prefs = await SharedPreferences.getInstance();
     id = prefs.getString('id') ?? '';
     nickname = prefs.getString('nickname') ?? '';
-    aboutMe = prefs.getString('aboutMe') ?? '';
+    photosResolution = prefs.getString('photosResolution') ?? ImageResolution.full.toString().split('.').last;
     photoUrl = prefs.getString('photoUrl') ?? '';
 
     nickController = new TextEditingController(text: nickname);
-    aboutController = new TextEditingController(text: aboutMe);
+    //aboutController = new TextEditingController(text: aboutMe);
 
     // Force refresh input
     setState(() {});
@@ -102,14 +103,6 @@ class WelcomeScreenState extends State<WelcomeScreen> {
       return;
     }
 
-    String abouttext = "available";
-
-    if (aboutController.text
-        .trim()
-        .length > 0) {
-      abouttext = aboutController.text.trim();
-    }
-
     final QuerySnapshot result = await Firestore.instance
         .collection('users')
         .where('id', isEqualTo: currentUserId)
@@ -124,7 +117,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         'nickname': nickController.text.trim(),
         'photoUrl': photoUrl,
         'id': currentUserId,
-        'aboutMe': abouttext,
+        'photosResolution': photosResolution,
       });
     } else {
       Firestore.instance
@@ -132,11 +125,10 @@ class WelcomeScreenState extends State<WelcomeScreen> {
           .document(id)
           .updateData({
         'nickname': nickController.text.trim(),
-        'aboutMe': abouttext,
+        'photosResolution': photosResolution,
         'photoUrl': photoUrl
       }).then((data) async {
         await prefs.setString('nickname', nickController.text.trim());
-        await prefs.setString('aboutMe', abouttext);
         await prefs.setString('photoUrl', photoUrl);
         });
       }
@@ -164,16 +156,6 @@ class WelcomeScreenState extends State<WelcomeScreen> {
       autofocus: false,
       decoration: InputDecoration(
         hintText: 'NickName',
-        contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-      ),
-
-    );
-
-    final about = TextField(
-      controller: aboutController,
-      autofocus: false,
-      decoration: InputDecoration(
-        hintText: 'About you',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
       ),
 
@@ -275,8 +257,6 @@ class WelcomeScreenState extends State<WelcomeScreen> {
               profilephoto,
               SizedBox(height: 40.0),
               nickname,
-              SizedBox(height: 40.0),
-              about,
               SizedBox(height: 40.0),
               finregButton,
             ],
