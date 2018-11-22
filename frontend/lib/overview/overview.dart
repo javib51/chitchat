@@ -56,21 +56,17 @@ class MainScreenState extends State<MainScreen> {
         .where("users",  arrayContains: currentUserId).snapshots();
   }
 
-  Map<String, String> getChatInfo(DocumentSnapshot chat) {
+  Future<Map<String, String>> getChatInfo(DocumentSnapshot chat) async {
     Map<String, String> map = new Map();
-    String docId = chat['id'];
     if(chat['type'] == 'G') {
       map['photoUrl'] =
       "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
       map['name'] = chat['name'];
     } else {
-      map['photoUrl'] = "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
-      map['name'] = "No name";
-      //String userId = (chat['users'][0] == currentUserId)? chat['users'][1] : currentUserId;
-      /*Firestore.instance.collection('users').document().get().then((snapshot) => {
-          values[docId]['photoUrl'] = snapshot['photoUrl'];
-          values[docId]['name'] = snapshot['nickname'];
-      });*/
+      String userId = (chat['users'][0] == currentUserId)? chat['users'][1] : chat['users'][0];
+      DocumentSnapshot user = await Firestore.instance.collection('users').document(userId).get();
+      map['photoUrl'] = user['photoUrl'];
+      map['name'] = user['nickname'];
     }
     return map;
   }
@@ -170,11 +166,20 @@ class MainScreenState extends State<MainScreen> {
     }
   }
 
-  Widget buildItem(BuildContext context, DocumentSnapshot document) {
-    if (document['id'] == currentUserId) {
-      return Container();
-    } else {
-      Map info = getChatInfo(document);
+  Widget buildItemFuture(BuildContext context, DocumentSnapshot document) {
+    return FutureBuilder(
+        future: getChatInfo(document),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData && snapshot.data != null) {
+            return buildItem(context, document, snapshot.data);
+          } else {
+            return Container();
+          }
+        }
+    );
+  }
+
+  Widget buildItem(BuildContext context, DocumentSnapshot document, Map<String, String> info) {
       return Container(
         child: FlatButton(
           child: Row(
@@ -233,7 +238,6 @@ class MainScreenState extends State<MainScreen> {
         ),
         margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
       );
-    }
   }
 
   final GoogleSignIn googleSignIn = new GoogleSignIn();
@@ -321,7 +325,7 @@ class MainScreenState extends State<MainScreen> {
                     return ListView.builder(
                       padding: EdgeInsets.all(10.0),
                       itemBuilder: (context, index) =>
-                          buildItem(context, snapshot.data.documents[index]),
+                          buildItemFuture(context, snapshot.data.documents[index]),
                       itemCount: snapshot.data.documents.length,
                     );
                   }
