@@ -34,20 +34,17 @@ class SettingsScreen extends StatefulWidget {
 
 class SettingsScreenState extends State<SettingsScreen> {
   TextEditingController controllerNickname;
-  TextEditingController controllerAboutMe;
 
   SharedPreferences prefs;
 
   String id = '';
   String nickname = '';
-  String aboutMe = '';
   String photoUrl = '';
-
+  String photosResolution = '';
   bool isLoading = false;
   File avatarImageFile;
 
   final FocusNode focusNodeNickname = new FocusNode();
-  final FocusNode focusNodeAboutMe = new FocusNode();
 
   @override
   void initState() {
@@ -59,11 +56,10 @@ class SettingsScreenState extends State<SettingsScreen> {
     prefs = await SharedPreferences.getInstance();
     id = prefs.getString('id') ?? '';
     nickname = prefs.getString('nickname') ?? '';
-    aboutMe = prefs.getString('aboutMe') ?? '';
+    photosResolution = prefs.getString('photosResolution') ?? '';
     photoUrl = prefs.getString('photoUrl') ?? '';
 
     controllerNickname = new TextEditingController(text: nickname);
-    controllerAboutMe = new TextEditingController(text: aboutMe);
 
     // Force refresh input
     setState(() {});
@@ -90,7 +86,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     Firestore.instance
         .collection('users')
         .document(id)
-        .updateData({'nickname': nickname, 'aboutMe': aboutMe, 'photoUrl': photoUrl}).then((data) async {
+        .updateData({'nickname': nickname, 'photosResolution': photosResolution, 'photoUrl': photoUrl}).then((data) async {
       await prefs.setString('photoUrl', photoUrl);
       setState(() {
         isLoading = false;
@@ -109,7 +105,6 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   void handleUpdateData() {
     focusNodeNickname.unfocus();
-    focusNodeAboutMe.unfocus();
 
     setState(() {
       isLoading = true;
@@ -118,9 +113,9 @@ class SettingsScreenState extends State<SettingsScreen> {
     Firestore.instance
         .collection('users')
         .document(id)
-        .updateData({'nickname': nickname, 'aboutMe': aboutMe, 'photoUrl': photoUrl}).then((data) async {
+        .updateData({'nickname': nickname, 'photosResolution': photosResolution, 'photoUrl': photoUrl}).then((data) async {
       await prefs.setString('nickname', nickname);
-      await prefs.setString('aboutMe', aboutMe);
+      await prefs.setString('photosResolution', photosResolution);
       await prefs.setString('photoUrl', photoUrl);
 
       setState(() {
@@ -229,33 +224,6 @@ class SettingsScreenState extends State<SettingsScreen> {
                           nickname = value;
                         },
                         focusNode: focusNodeNickname,
-                      ),
-                    ),
-                    margin: EdgeInsets.only(left: 30.0, right: 30.0),
-                  ),
-
-                  // About me
-                  Container(
-                    child: Text(
-                      'About me',
-                      style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, color: primaryColor),
-                    ),
-                    margin: EdgeInsets.only(left: 10.0, top: 30.0, bottom: 5.0),
-                  ),
-                  Container(
-                    child: Theme(
-                      data: Theme.of(context).copyWith(primaryColor: primaryColor),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Fun, like travel and play PES...',
-                          contentPadding: EdgeInsets.all(5.0),
-                          hintStyle: TextStyle(color: greyColor),
-                        ),
-                        controller: controllerAboutMe,
-                        onChanged: (value) {
-                          aboutMe = value;
-                        },
-                        focusNode: focusNodeAboutMe,
                       ),
                     ),
                     margin: EdgeInsets.only(left: 30.0, right: 30.0),
