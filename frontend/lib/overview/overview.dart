@@ -10,6 +10,7 @@ import 'package:chitchat/const.dart';
 import 'package:chitchat/login/login.dart';
 import 'package:chitchat/settings/settings.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 
@@ -28,10 +29,28 @@ class MainScreenState extends State<MainScreen> {
   final String currentUserId;
 
   bool isLoading = false;
-  List<Choice> choices = const <Choice>[
-    const Choice(title: 'Settings', icon: Icons.settings),
-    const Choice(title: 'Log out', icon: Icons.exit_to_app),
-  ];
+
+  SharedPreferences prefs;
+
+  String nickname = '';
+  String aboutMe = '';
+  String photoUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    readLocal();
+  }
+
+  void readLocal() async {
+    prefs = await SharedPreferences.getInstance();
+    nickname = prefs.getString('nickname') ?? '';
+    aboutMe = prefs.getString('aboutMe') ?? '';
+    photoUrl = prefs.getString('photoUrl') ?? '';
+
+    // Force refresh input
+    setState(() {});
+  }
 
   Future<bool> onBackPress() {
     openDialog();
@@ -203,15 +222,6 @@ class MainScreenState extends State<MainScreen> {
 
   final GoogleSignIn googleSignIn = new GoogleSignIn();
 
-  void onItemMenuPress(Choice choice) {
-    if (choice.title == 'Log out') {
-      handleSignOut();
-    } else {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Settings()));
-    }
-  }
-
   Future<Null> handleSignOut() async {
     this.setState(() {
       isLoading = true;
@@ -244,31 +254,39 @@ class MainScreenState extends State<MainScreen> {
         ),
         centerTitle: true,
         actions: <Widget>[
-          PopupMenuButton<Choice>(
-            onSelected: onItemMenuPress,
-            itemBuilder: (BuildContext context) {
-              return choices.map((Choice choice) {
-                return PopupMenuItem<Choice>(
-                    value: choice,
-                    child: Row(
-                      children: <Widget>[
-                        Icon(
-                          choice.icon,
-                          color: primaryColor,
-                        ),
-                        Container(
-                          width: 10.0,
-                        ),
-                        Text(
-                          choice.title,
-                          style: TextStyle(color: primaryColor),
-                        ),
-                      ],
-                    ));
-              }).toList();
-            },
-          ),
+
         ],
+      ),
+      drawer: new Drawer(
+        child: ListView(
+          children: <Widget>[
+            new UserAccountsDrawerHeader(
+              accountName: new Text(nickname),
+              accountEmail: new Text(aboutMe),
+              currentAccountPicture: new CircleAvatar(
+                backgroundImage: new NetworkImage(photoUrl)
+              ),
+            ),
+            new ListTile(
+              title: new Text('Settings'),
+              onTap: (){
+                Navigator.of(context).pop();
+                Navigator.push(
+                context, MaterialPageRoute(builder: (context) => Settings()));
+              },
+            ),
+            new Divider(
+              color: Colors.black,
+              height: 5.0,
+            ),
+            new ListTile(
+              title: new Text('Log out'),
+              onTap: (){
+                handleSignOut();
+              },
+            ),
+          ],
+        ),
       ),
       body: WillPopScope(
         child: Stack(

@@ -1,3 +1,4 @@
+import 'package:chitchat/const.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
@@ -13,13 +14,11 @@ class RecorderScreen extends StatefulWidget {
 
 class RecorderScreenState extends State<RecorderScreen> {
   bool _isRecording = false;
-  bool _isPlaying = false;
   StreamSubscription _recorderSubscription;
-  StreamSubscription _playerSubscription;
   FlutterSound flutterSound;
 
   String _recorderTxt = '00:00:00';
-  String _playerTxt = '00:00:00';
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -71,80 +70,95 @@ class RecorderScreenState extends State<RecorderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text('Sound Recorder'),
-      ),
-      body: Center(
-        child: ListView(
-          shrinkWrap: true,
-          padding: EdgeInsets.only(left: 24.0, right: 24.0),
-          children: <Widget>[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  margin: EdgeInsets.only(top: 24.0, bottom:16.0),
-                  child: Text(
-                    this._recorderTxt,
-                    style: TextStyle(
-                      fontSize: 48.0,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              children: <Widget>[
-                Container(
-                  width: 60.0,
-                  height: 60.0,
-                  child: ClipOval(
-                    child: FlatButton(
-                      onPressed: () {
-                        if (!this._isRecording) {
-                          return this.startRecorder();
-                        }
-                        this.stopRecorder();
-                      },
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.mic,
+    return Stack(
+
+    children: <Widget>[
+      Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text('Sound Recorder'),
+        ),
+        body: Center(
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Container(
+                    margin: EdgeInsets.only(top: 24.0, bottom:16.0),
+                    child: Text(
+                      this._recorderTxt,
+                      style: TextStyle(
+                        fontSize: 48.0,
                         color: Colors.black,
-                        size: 60.0,
                       ),
                     ),
                   ),
-                ),
-              ],
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 64.0),
-              child: FlatButton(
-                  child: Text(
-                    'SEND',
-                    style: TextStyle(fontSize: 16.0, color: Colors.black),
+                ],
+              ),
+              Row(
+                children: <Widget>[
+                  Container(
+                    width: 60.0,
+                    height: 60.0,
+                    child: ClipOval(
+                      child: FlatButton(
+                        onPressed: () {
+                          if (!this._isRecording) {
+                            return this.startRecorder();
+                          }
+                          this.stopRecorder();
+                        },
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.mic,
+                          color: Colors.black,
+                          size: 60.0,
+                        ),
+                      ),
+                    ),
                   ),
-                  onPressed: () {
-                    if (!this._isRecording) {
-                      return this.startRecorder();
-                    }
-                    this.stopRecorder();
-                  },
-                  color: Colors.amber,
-                  highlightColor: Colors.blueGrey,
-                  splashColor: Colors.transparent,
-                  textColor: Colors.white,
-                  padding: EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0)),
-            )
-          ],
-        ),
-      )
+                ],
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 64.0),
+                child: FlatButton(
+                    child: Text(
+                      'SEND',
+                      style: TextStyle(fontSize: 16.0, color: Colors.black),
+                    ),
+                    onPressed: () {
+                      if (!this._isRecording) {
+                        return this.startRecorder();
+                      }
+                      this.stopRecorder();
+                    },
+                    color: Colors.amber,
+                    highlightColor: Colors.blueGrey,
+                    splashColor: Colors.transparent,
+                    textColor: Colors.white,
+                    padding: EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0)),
+              )
+            ],
+          ),
+        )
+      ),
+      Positioned(
+        child: isLoading
+            ? Container(
+          child: Center(
+            child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+          ),
+          color: Colors.white.withOpacity(0.8),
+        )
+            : Container(),
+      ),
+    ],
     );
   }
 }

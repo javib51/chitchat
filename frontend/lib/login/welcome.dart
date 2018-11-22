@@ -138,7 +138,8 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         await prefs.setString('nickname', nickController.text.trim());
         await prefs.setString('aboutMe', abouttext);
         await prefs.setString('photoUrl', photoUrl);
-      });
+        });
+      }
 
       setState(() {
         isLoading = false;
@@ -153,7 +154,6 @@ class WelcomeScreenState extends State<WelcomeScreen> {
                   currentUserId: currentUserId,
                 )),
       );
-    }
   }
 
   @override
@@ -253,32 +253,47 @@ class WelcomeScreenState extends State<WelcomeScreen> {
     );
 
 
-    return Scaffold(
-      body: Center(
-        child: ListView(
-          shrinkWrap: true,
-          padding: EdgeInsets.only(left: 24.0, right: 24.0),
-          children: <Widget>[
-            new Text(
-              "Set your Profile",
-              textAlign: TextAlign.center,
-              style: new TextStyle(
-                fontFamily: "Roboto",
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold,
+    return Stack(
+
+    children: <Widget>[
+      Scaffold(
+        body: Center(
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            children: <Widget>[
+              new Text(
+                "Set your Profile",
+                textAlign: TextAlign.center,
+                style: new TextStyle(
+                  fontFamily: "Roboto",
+                  fontSize: 32.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 40.0),
-            profilephoto,
-            SizedBox(height: 40.0),
-            nickname,
-            SizedBox(height: 40.0),
-            about,
-            SizedBox(height: 40.0),
-            finregButton,
-          ],
+              SizedBox(height: 40.0),
+              profilephoto,
+              SizedBox(height: 40.0),
+              nickname,
+              SizedBox(height: 40.0),
+              about,
+              SizedBox(height: 40.0),
+              finregButton,
+            ],
+          ),
         ),
       ),
+      Positioned(
+        child: isLoading
+            ? Container(
+          child: Center(
+            child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+          ),
+          color: Colors.white.withOpacity(0.8),
+        )
+            : Container(),
+      ),
+    ],
     );
   }
 

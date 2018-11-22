@@ -1,3 +1,4 @@
+import 'package:chitchat/const.dart';
 import 'package:chitchat/login/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -109,32 +110,47 @@ class RegisterScreenState extends State<RegisterScreen> {
         }
     );
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: ListView(
-          shrinkWrap: true,
-          padding: EdgeInsets.only(left: 24.0, right: 24.0),
-          children: <Widget>[
-            new Text(
-              "Register",
-              textAlign: TextAlign.center,
-              style: new TextStyle(
-                fontFamily: "Roboto",
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold,
+    return Stack(
+
+    children: <Widget>[
+      Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            children: <Widget>[
+              new Text(
+                "Register",
+                textAlign: TextAlign.center,
+                style: new TextStyle(
+                  fontFamily: "Roboto",
+                  fontSize: 32.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 40.0),
-            email,
-            SizedBox(height: 8.0),
-            password,
-            SizedBox(height: 24.0),
-            registerButton,
-            loginButton
-          ],
+              SizedBox(height: 40.0),
+              email,
+              SizedBox(height: 8.0),
+              password,
+              SizedBox(height: 24.0),
+              registerButton,
+              loginButton
+            ],
+          ),
         ),
       ),
+      Positioned(
+        child: isLoading
+            ? Container(
+          child: Center(
+            child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+          ),
+          color: Colors.white.withOpacity(0.8),
+        )
+            : Container(),
+      ),
+    ],
     );
   }
 }
