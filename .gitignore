@@ -14,3 +14,4 @@ build/
 *.iws
 .idea/
 frontend/pubspec\.lock
+.vscode/
