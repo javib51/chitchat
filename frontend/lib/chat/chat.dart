@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:uuid/uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/chat/chatRecorder.dart';
 import 'package:chitchat/chat/chatSettings.dart';
 import 'package:chitchat/overview/overview.dart';
 import 'package:chitchat/common/imageResolution.dart';
@@ -18,21 +20,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 const CHAT_SETTINGS_TEXT = "Settings/Members";
 
 class Chat extends StatefulWidget {
-  final String peerId;
-  final String peerAvatar;
+  final String chatId;
+  final String chatAvatar;
 
-  Chat({Key key, @required this.peerId, @required this.peerAvatar}) : super(key: key);
+  Chat({Key key, @required this.chatId, @required this.chatAvatar}) : super(key: key);
 
 
   @override
-  State createState() => new ChatState(peerId: peerId, peerAvatar: peerAvatar);
+  State createState() => new ChatState(chatId: chatId, chatAvatar: chatAvatar);
 }
 
 class ChatState extends State<Chat> {
-  final String peerId;
-  final String peerAvatar;
+  final String chatId;
+  final String chatAvatar;
 
-  ChatState({Key key, @required this.peerId, @required this.peerAvatar});
+  ChatState({Key key, @required this.chatId, @required this.chatAvatar});
 
   List<Choice> choices = const <Choice>[
     const Choice(title: CHAT_SETTINGS_TEXT, icon: Icons.settings),
@@ -43,7 +45,7 @@ class ChatState extends State<Chat> {
     if (choice.title == CHAT_SETTINGS_TEXT) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => ChatSettings()));
-    } else {
+    }  else {
 
     }
   }
@@ -85,28 +87,28 @@ class ChatState extends State<Chat> {
         ],
       ),
       body: new ChatScreen(
-        peerId: peerId,
-        peerAvatar: peerAvatar,
+        chatId: chatId,
+        chatAvatar: chatAvatar,
       ),
     );
   }
 }
 
 class ChatScreen extends StatefulWidget {
-  final String peerId;
-  final String peerAvatar;
+  final String chatId;
+  final String chatAvatar;
 
-  ChatScreen({Key key, @required this.peerId, @required this.peerAvatar}) : super(key: key);
+  ChatScreen({Key key, @required this.chatId, @required this.chatAvatar}) : super(key: key);
 
   @override
-  State createState() => new ChatScreenState(peerId: peerId, peerAvatar: peerAvatar);
+  State createState() => new ChatScreenState(chatId: chatId, chatAvatar: chatAvatar);
 }
 
 class ChatScreenState extends State<ChatScreen> {
-  ChatScreenState({Key key, @required this.peerId, @required this.peerAvatar});
+  ChatScreenState({Key key, @required this.chatId, @required this.chatAvatar});
 
-  String peerId;
-  String peerAvatar;
+  String chatId;
+  String chatAvatar;
   String id;
 
   var listMessage;
@@ -150,12 +152,7 @@ class ChatScreenState extends State<ChatScreen> {
 
   readLocal() async {
     prefs = await SharedPreferences.getInstance();
-    id = prefs.getString('id') ?? '';
-    if (id.hashCode <= peerId.hashCode) {
-      groupChatId = '$id-$peerId';
-    } else {
-      groupChatId = '$peerId-$id';
-    }
+      groupChatId = chatId;
 
     setState(() {});
   }
@@ -202,28 +199,27 @@ class ChatScreenState extends State<ChatScreen> {
       isLoading = false;
     });
 
-    onSendMessage(imageUrl, 1);
+    onSendMessage(imageUrl, "photo");
   }
 
-  void onSendMessage(String content, int type) {
+  void onSendMessage(String payload, String type) {
     // type: 0 = text, 1 = image, 2 = sticker
-    if (content.trim() != '') {
+    if (payload. trim() != '') {
       textEditingController.clear();
 
       var documentReference = Firestore.instance
-          .collection('messages')
+          .collection('chats')
           .document(groupChatId)
-          .collection(groupChatId)
-          .document(DateTime.now().millisecondsSinceEpoch.toString());
+          .collection('messages')
+          .document(new Uuid().v4());
 
       Firestore.instance.runTransaction((transaction) async {
         await transaction.set(
           documentReference,
           {
-            'idFrom': id,
-            'idTo': peerId,
+            'userFrom': Firestore.instance.collection('users').document(id),
             'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-            'content': content,
+            'payload': payload,
             'type': type
           },
         );
@@ -235,15 +231,15 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget buildItem(int index, DocumentSnapshot document) {
-    if (document['idFrom'] == id) {
+    if (document['userFrom'] == id) {
       // Right (my message)
       return Row(
         children: <Widget>[
-          document['type'] == 0
+          document['type'] == "text"
               // Text
               ? Container(
                   child: Text(
-                    document['content'],
+                    document['payload'],
                     style: TextStyle(color: primaryColor),
                   ),
                   padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
@@ -251,7 +247,7 @@ class ChatScreenState extends State<ChatScreen> {
                   decoration: BoxDecoration(color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
                   margin: EdgeInsets.only(bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0),
                 )
-              : document['type'] == 1
+              : document['type'] == "photo"
                   // Image
                   ? Container(
                       child: Material(
@@ -282,7 +278,7 @@ class ChatScreenState extends State<ChatScreen> {
                             ),
                             clipBehavior: Clip.hardEdge,
                           ),
-                          imageUrl: document['content'],
+                          imageUrl: document['payload'],
                           width: 200.0,
                           height: 200.0,
                           fit: BoxFit.cover,
@@ -295,7 +291,7 @@ class ChatScreenState extends State<ChatScreen> {
                   // Sticker
                   : Container(
                       child: new Image.asset(
-                        'images/${document['content']}.gif',
+                        'images/${document['payload']}.gif',
                         width: 100.0,
                         height: 100.0,
                         fit: BoxFit.cover,
@@ -324,7 +320,7 @@ class ChatScreenState extends State<ChatScreen> {
                             height: 35.0,
                             padding: EdgeInsets.all(10.0),
                           ),
-                          imageUrl: peerAvatar,
+                          imageUrl: chatAvatar,
                           width: 35.0,
                           height: 35.0,
                           fit: BoxFit.cover,
@@ -335,10 +331,10 @@ class ChatScreenState extends State<ChatScreen> {
                         clipBehavior: Clip.hardEdge,
                       )
                     : Container(width: 35.0),
-                document['type'] == 0
+                document['type'] == "text"
                     ? Container(
                         child: Text(
-                          document['content'],
+                          document['payload'],
                           style: TextStyle(color: Colors.white),
                         ),
                         padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
@@ -346,7 +342,7 @@ class ChatScreenState extends State<ChatScreen> {
                         decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(8.0)),
                         margin: EdgeInsets.only(left: 10.0),
                       )
-                    : document['type'] == 1
+                    : document['type'] == "photo"
                         ? Container(
                             child: Material(
                               child: CachedNetworkImage(
@@ -376,7 +372,7 @@ class ChatScreenState extends State<ChatScreen> {
                                   ),
                                   clipBehavior: Clip.hardEdge,
                                 ),
-                                imageUrl: document['content'],
+                                imageUrl: document['payload'],
                                 width: 200.0,
                                 height: 200.0,
                                 fit: BoxFit.cover,
@@ -388,7 +384,7 @@ class ChatScreenState extends State<ChatScreen> {
                           )
                         : Container(
                             child: new Image.asset(
-                              'images/${document['content']}.gif',
+                              'images/${document['payload']}.gif',
                               width: 100.0,
                               height: 100.0,
                               fit: BoxFit.cover,
@@ -457,9 +453,8 @@ class ChatScreenState extends State<ChatScreen> {
 
               // Sticker
               (isShowSticker ? buildSticker() : Container()),
-              //Emoji
-              (isShowEmoji ? buildEmoji() : Container()),
-              // Input content
+
+              // Input payload
               buildInput(),
             ],
           ),
@@ -479,7 +474,7 @@ class ChatScreenState extends State<ChatScreen> {
           Row(
             children: <Widget>[
               FlatButton(
-                onPressed: () => onSendMessage('mimi1', 2),
+                onPressed: () => onSendMessage('mimi1', "sticker"),
                 child: new Image.asset(
                   'images/mimi1.gif',
                   width: 50.0,
@@ -488,7 +483,7 @@ class ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               FlatButton(
-                onPressed: () => onSendMessage('mimi2', 2),
+                onPressed: () => onSendMessage('mimi2', "sticker"),
                 child: new Image.asset(
                   'images/mimi2.gif',
                   width: 50.0,
@@ -497,7 +492,7 @@ class ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               FlatButton(
-                onPressed: () => onSendMessage('mimi3', 2),
+                onPressed: () => onSendMessage('mimi3', "sticker"),
                 child: new Image.asset(
                   'images/mimi3.gif',
                   width: 50.0,
@@ -511,7 +506,7 @@ class ChatScreenState extends State<ChatScreen> {
           Row(
             children: <Widget>[
               FlatButton(
-                onPressed: () => onSendMessage('mimi4', 2),
+                onPressed: () => onSendMessage('mimi4', "sticker"),
                 child: new Image.asset(
                   'images/mimi4.gif',
                   width: 50.0,
@@ -520,7 +515,7 @@ class ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               FlatButton(
-                onPressed: () => onSendMessage('mimi5', 2),
+                onPressed: () => onSendMessage('mimi5', "sticker"),
                 child: new Image.asset(
                   'images/mimi5.gif',
                   width: 50.0,
@@ -529,7 +524,7 @@ class ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               FlatButton(
-                onPressed: () => onSendMessage('mimi6', 2),
+                onPressed: () => onSendMessage('mimi6', "sticker"),
                 child: new Image.asset(
                   'images/mimi6.gif',
                   width: 50.0,
@@ -543,7 +538,7 @@ class ChatScreenState extends State<ChatScreen> {
           Row(
             children: <Widget>[
               FlatButton(
-                onPressed: () => onSendMessage('mimi7', 2),
+                onPressed: () => onSendMessage('mimi7', "sticker"),
                 child: new Image.asset(
                   'images/mimi7.gif',
                   width: 50.0,
@@ -552,7 +547,7 @@ class ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               FlatButton(
-                onPressed: () => onSendMessage('mimi8', 2),
+                onPressed: () => onSendMessage('mimi8', "sticker"),
                 child: new Image.asset(
                   'images/mimi8.gif',
                   width: 50.0,
@@ -561,7 +556,7 @@ class ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               FlatButton(
-                onPressed: () => onSendMessage('mimi9', 2),
+                onPressed: () => onSendMessage('mimi9', "sticker"),
                 child: new Image.asset(
                   'images/mimi9.gif',
                   width: 50.0,
@@ -712,7 +707,7 @@ class ChatScreenState extends State<ChatScreen> {
           // Button send image
           Material(
             child: new Container(
-              margin: new EdgeInsets.symmetric(horizontal: 1.0),
+              margin: new EdgeInsets.symmetric(horizontal: 0),
               child: new IconButton(
                 icon: new Icon(Icons.image),
                 onPressed: getImage,
@@ -723,7 +718,7 @@ class ChatScreenState extends State<ChatScreen> {
           ),
           Material(
             child: new Container(
-              margin: new EdgeInsets.symmetric(horizontal: 1.0),
+              margin: new EdgeInsets.symmetric(horizontal: 0),
               child: new IconButton(
                 icon: new Icon(Icons.face),
                 onPressed: getSticker,
@@ -732,7 +727,20 @@ class ChatScreenState extends State<ChatScreen> {
             ),
             color: Colors.white,
           ),
-
+          Material(
+            child: new Container(
+              margin: new EdgeInsets.symmetric(horizontal: 0),
+              child: new IconButton(
+                icon: new Icon(Icons.mic),
+                onPressed: () {
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) => RecorderScreen()));
+                },
+                color: primaryColor,
+              ),
+            ),
+            color: Colors.white,
+          ),
           // Edit text
           Flexible(
             child: Container(
@@ -754,7 +762,7 @@ class ChatScreenState extends State<ChatScreen> {
               margin: new EdgeInsets.symmetric(horizontal: 8.0),
               child: new IconButton(
                 icon: new Icon(Icons.send),
-                onPressed: () => onSendMessage(textEditingController.text, 0),
+                onPressed: () => onSendMessage(textEditingController.text, "text"),
                 color: primaryColor,
               ),
             ),
@@ -775,9 +783,9 @@ class ChatScreenState extends State<ChatScreen> {
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)))
           : StreamBuilder(
               stream: Firestore.instance
-                  .collection('messages')
+                  .collection('chats')
                   .document(groupChatId)
-                  .collection(groupChatId)
+                  .collection('messages')
                   .orderBy('timestamp', descending: true)
                   .limit(20)
                   .snapshots(),
@@ -799,4 +807,5 @@ class ChatScreenState extends State<ChatScreen> {
             ),
     );
   }
+
 }

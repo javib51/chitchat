@@ -1,4 +1,5 @@
-import 'package:chitchat/overview/overview.dart';
+import 'package:chitchat/const.dart';
+import 'package:chitchat/login/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,121 +9,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class RegisterScreen extends StatefulWidget {
   @override
   RegisterScreenState createState() => new RegisterScreenState();
-}
-
-class NickPhotoScreen extends StatefulWidget {
-  final FirebaseUser currentUser;
-
-  NickPhotoScreen({Key key, @required this.currentUser}) : super(key: key);
-
-  @override
-  NickPhotoScreenState createState() => new NickPhotoScreenState(currentUser: currentUser);
-}
-
-class NickPhotoScreenState extends State<NickPhotoScreen> {
-  NickPhotoScreenState({Key key, @required this.currentUser});
-  final nickController = TextEditingController();
-  final FirebaseUser currentUser;
-  final myController = TextEditingController();
-
-  SharedPreferences prefs;
-
-  bool isLoading = false;
-
-  Future<Null> finalRegister() async {
-    prefs = await SharedPreferences.getInstance();
-
-    this.setState(() {
-      isLoading = true;
-    });
-
-    Firestore.instance
-        .collection('users')
-        .document(currentUser.uid)
-        .setData({
-      'nickname': nickController.text,
-    });
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => MainScreen(
-            currentUserId: currentUser.uid,
-          )),
-    );
-
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-
-    final nickname = TextField(
-      controller: nickController,
-      autofocus: false,
-      decoration: InputDecoration(
-        hintText: 'NickName',
-        contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-      ),
-
-    );
-
-    final finregButton = Padding(
-      padding: EdgeInsets.symmetric(vertical: 16.0),
-      child: FlatButton(
-          onPressed: finalRegister,
-          child: Text(
-            "LET'S CHITCHAT",
-            style: TextStyle(fontSize: 16.0, color: Colors.black),
-          ),
-          color: Colors.amber,
-          highlightColor: Colors.blueGrey,
-          splashColor: Colors.transparent,
-          textColor: Colors.white,
-          padding: EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0)),
-    );
-
-    final profilephoto = Container(
-        constraints: BoxConstraints(
-            maxHeight: 120.0,
-            maxWidth: 120.0,
-            minWidth: 120.0,
-            minHeight: 120.0
-        ),
-        decoration: new BoxDecoration(
-            shape: BoxShape.circle,
-            image: new DecorationImage(
-                fit: BoxFit.fill,
-                image: new NetworkImage(
-                    "https://i.imgur.com/BoN9kdC.png")
-            )
-        ));
-
-
-    return Scaffold(
-      body: Center(
-        child: ListView(
-          shrinkWrap: true,
-          padding: EdgeInsets.only(left: 24.0, right: 24.0),
-          children: <Widget>[
-            new Text(
-              "Set your Profile",
-              textAlign: TextAlign.center,
-              style: new TextStyle(
-                fontFamily: "Roboto",
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 40.0),
-            nickname,
-            SizedBox(height: 40.0),
-            finregButton,
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class RegisterScreenState extends State<RegisterScreen> {
@@ -158,18 +44,22 @@ class RegisterScreenState extends State<RegisterScreen> {
     FirebaseUser firebaseUser;
     try {
       firebaseUser = await firebaseAuth.createUserWithEmailAndPassword(
-          email: emailController.text, password: passController.text);
+          email: emailController.text.trim(), password: passController.text.trim());
     } catch (e) {
       Fluttertoast.showToast(msg: "Register fail");
       print(e.toString());
       return;
     }
+
+    await prefs.clear();
+    await prefs.setString('id', firebaseUser.uid);
+
     Fluttertoast.showToast(msg: "Register succes");
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => NickPhotoScreen(
-            currentUser: firebaseUser,
+          builder: (context) => WelcomeScreen(
+            currentUserId: firebaseUser.uid,
           )),
     );
   }
@@ -220,32 +110,47 @@ class RegisterScreenState extends State<RegisterScreen> {
         }
     );
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: ListView(
-          shrinkWrap: true,
-          padding: EdgeInsets.only(left: 24.0, right: 24.0),
-          children: <Widget>[
-            new Text(
-              "Register",
-              textAlign: TextAlign.center,
-              style: new TextStyle(
-                fontFamily: "Roboto",
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold,
+    return Stack(
+
+    children: <Widget>[
+      Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            children: <Widget>[
+              new Text(
+                "Register",
+                textAlign: TextAlign.center,
+                style: new TextStyle(
+                  fontFamily: "Roboto",
+                  fontSize: 32.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 40.0),
-            email,
-            SizedBox(height: 8.0),
-            password,
-            SizedBox(height: 24.0),
-            registerButton,
-            loginButton
-          ],
+              SizedBox(height: 40.0),
+              email,
+              SizedBox(height: 8.0),
+              password,
+              SizedBox(height: 24.0),
+              registerButton,
+              loginButton
+            ],
+          ),
         ),
       ),
+      Positioned(
+        child: isLoading
+            ? Container(
+          child: Center(
+            child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+          ),
+          color: Colors.white.withOpacity(0.8),
+        )
+            : Container(),
+      ),
+    ],
     );
   }
 }

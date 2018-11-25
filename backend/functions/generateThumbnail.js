@@ -1,9 +1,7 @@
 'use strict';
-
+const admin = require('firebase-admin');
 const functions = require('firebase-functions');
 const mkdirp = require('mkdirp-promise');
-const admin = require('firebase-admin');
-admin.initializeApp();
 const spawn = require('child-process-promise').spawn;
 const path = require('path');
 const os = require('os');
@@ -12,7 +10,7 @@ const fs = require('fs');
 // Thumbnail prefix added to file names.
 const THUMB_PREFIX = 'thumb_';
 
-exports.generateThumbnail = functions.storage.object().onFinalize(async (object) => {
+exports.handler = functions.storage.object().onFinalize(async (object) => {
     // File and directory paths.
     console.log(object);
 
@@ -51,12 +49,12 @@ exports.generateThumbnail = functions.storage.object().onFinalize(async (object)
      * on maxResolution variable.
      * Ex: maxResolution = 'high' -> thumb low
      */
-    if(maxResolution == 'high' || maxResolution == 'full') {
+    if (maxResolution == 'high' || maxResolution == 'full') {
         console.log('createThumb 640x480');
         await createThumb(object, tempFile, bucket, file, 640, 480);
     }
 
-    if(maxResolution == 'full') {
+    if (maxResolution == 'full') {
         console.log('createThumb 1280x960');
         await createThumb(object, tempFile, bucket, file, 1280, 960);
     }
@@ -65,6 +63,18 @@ exports.generateThumbnail = functions.storage.object().onFinalize(async (object)
     return console.log('Thumbnail URLs saved to database.');
 });
 
+/**
+ *
+ * @param object
+ * @param tempFile
+ * @param bucket
+ * @param file
+ * @param max_width
+ * @param max_height
+ * @returns {Promise<void>}
+ * @abstract It create a thumb image from the original one and upload it to firebase cloud storage
+ * @event Sometimes an error is thrown, it depends on Google Cloud IAM rules. These exception, normally, do not affect to the right behavior of the function.
+ */
 async function createThumb(object, tempFile, bucket, file, max_width, max_height) {
     try {
         const thumb_prefix = THUMB_PREFIX + max_width + "_" + max_height + "_";
@@ -102,7 +112,7 @@ async function createThumb(object, tempFile, bucket, file, max_width, max_height
         const fileUrl = originalResult[0];
         // Add the URLs to the Database
         await admin.database().ref('images').push({path: fileUrl, thumbnail: thumbFileUrl});
-    } catch(error){
+    } catch (error) {
         console.error(error);
     }
 }
