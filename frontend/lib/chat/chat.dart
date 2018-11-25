@@ -22,19 +22,21 @@ const CHAT_SETTINGS_TEXT = "Settings/Members";
 class Chat extends StatefulWidget {
   final String chatId;
   final String chatAvatar;
+  final String currentUserId;
 
-  Chat({Key key, @required this.chatId, @required this.chatAvatar}) : super(key: key);
+  Chat({Key key, @required this.currentUserId, @required this.chatId, @required this.chatAvatar}) : super(key: key);
 
 
   @override
-  State createState() => new ChatState(chatId: chatId, chatAvatar: chatAvatar);
+  State createState() => new ChatState(currentUserId: currentUserId, chatId: chatId, chatAvatar: chatAvatar);
 }
 
 class ChatState extends State<Chat> {
   final String chatId;
   final String chatAvatar;
+  final String currentUserId;
 
-  ChatState({Key key, @required this.chatId, @required this.chatAvatar});
+  ChatState({Key key, @required this.currentUserId, @required this.chatId, @required this.chatAvatar});
 
   List<Choice> choices = const <Choice>[
     const Choice(title: CHAT_SETTINGS_TEXT, icon: Icons.settings),
@@ -87,6 +89,7 @@ class ChatState extends State<Chat> {
         ],
       ),
       body: new ChatScreen(
+        currentUserId: currentUserId,
         chatId: chatId,
         chatAvatar: chatAvatar,
       ),
@@ -97,15 +100,16 @@ class ChatState extends State<Chat> {
 class ChatScreen extends StatefulWidget {
   final String chatId;
   final String chatAvatar;
+  final String currentUserId;
 
-  ChatScreen({Key key, @required this.chatId, @required this.chatAvatar}) : super(key: key);
+  ChatScreen({Key key, @required this.currentUserId, @required this.chatId, @required this.chatAvatar}) : super(key: key);
 
   @override
-  State createState() => new ChatScreenState(chatId: chatId, chatAvatar: chatAvatar);
+  State createState() => new ChatScreenState(id: currentUserId, chatId: chatId, chatAvatar: chatAvatar);
 }
 
 class ChatScreenState extends State<ChatScreen> {
-  ChatScreenState({Key key, @required this.chatId, @required this.chatAvatar});
+  ChatScreenState({Key key, @required this.id, @required this.chatId, @required this.chatAvatar});
 
   String chatId;
   String chatAvatar;
@@ -199,15 +203,19 @@ class ChatScreenState extends State<ChatScreen> {
 
       var documentReference = Firestore.instance
           .collection('chats')
-          .document(groupChatId)
+          .document (groupChatId)
           .collection('messages')
           .document(new Uuid().v4());
+
+      /*Map<String, String> usersReference = new Map();
+      usersReference['uid'] =  'users/' + id;*/
 
       Firestore.instance.runTransaction((transaction) async {
         await transaction.set(
           documentReference,
           {
-            'userFrom': Firestore.instance.collection('users').document(id),
+            'userFrom': Firestore.instance
+                .collection('users').document(id),
             'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
             'payload': payload,
             'type': type

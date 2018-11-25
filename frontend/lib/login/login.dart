@@ -5,12 +5,15 @@ import 'package:chitchat/login/welcome.dart';
 import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/overview/overview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -47,10 +50,16 @@ class LoginScreenState extends State<LoginScreen> {
   bool isLoggedIn = false;
   FirebaseUser currentUser;
 
+  FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
   @override
   void initState() {
     super.initState();
     isSignedIn();
+    initFlutterLocalNotifications();
+    initFirebaseMessaging();
+    initFireStore();
   }
 
   void isSignedIn() async {
@@ -72,6 +81,58 @@ class LoginScreenState extends State<LoginScreen> {
 
     this.setState(() {
       isLoading = false;
+    });
+  }
+
+  void initFireStore() {
+    Firestore.instance.settings(timestampsInSnapshotsEnabled: true);
+  }
+
+  void initFlutterLocalNotifications() {
+    var initializationSettingsAndroid =
+    new AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsIOS = new IOSInitializationSettings();
+    var initializationSettings = new InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future _showNotificationWithDefaultSound(Map<String, dynamic> message) async {
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+        'your channel id', 'your channel name', 'your channel description',
+        importance: Importance.Max, priority: Priority.High);
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      message['notification']['title'],
+      message['notification']['body'],
+      platformChannelSpecifics,
+      payload: 'Default_Sound',
+    );
+  }
+
+  void initFirebaseMessaging() {
+    _firebaseMessaging.setAutoInitEnabled(true);
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) {
+        print('on message $message');
+        _showNotificationWithDefaultSound(message);
+      },
+      onResume: (Map<String, dynamic> message) {
+        print('on resume $message');
+      },
+      onLaunch: (Map<String, dynamic> message) {
+        print('on launch $message');
+      },
+    );
+
+    _firebaseMessaging.getToken().then((token) async{
+      print(token);
+      prefs = await SharedPreferences.getInstance();
+      prefs.setString("notificationToken", token);
     });
   }
 
