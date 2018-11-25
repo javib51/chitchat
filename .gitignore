@@ -15,3 +15,7 @@ build/
 .idea/
 frontend/pubspec\.lock
 .vscode/
+
+
+backend/image_thumbnail/package-lock.json
+frontend/pubspec.lock
