@@ -1,14 +1,5 @@
-import 'dart:async';
-import 'dart:io';
-
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatSettings extends StatelessWidget {
   Size deviceSize;
@@ -32,11 +23,11 @@ class ChatSettings extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 40.0,
                       backgroundImage: NetworkImage(
-                          "https://avatars0.githubusercontent.com/u/12619420?s=460&v=4"),
+                          "https://cdn.pixabay.com/photo/2017/03/24/07/28/whatsapp-2170427_960_720.png"),
                     ),
                   ),
                   Text(
-                    "Pawan Kumar",
+                    "Name of the chat",
                     style: TextStyle(color: Colors.white, fontSize: 20.0),
                   ),
                 ],
@@ -117,7 +108,8 @@ class ChatSettings extends StatelessWidget {
       );
 
   Widget userList() => Container(
-      height: deviceSize.height/3.5,
+      height: deviceSize.height/4,
+      padding: const EdgeInsets.all(0.0),
       child: new ListView(
         scrollDirection: Axis.vertical,
         children: <Widget>[
@@ -133,36 +125,27 @@ class ChatSettings extends StatelessWidget {
         width: double.infinity,
         height: deviceSize.height / 2.75,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 5.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(4.0),
                 child: Text(
                   "Users",
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
                 ),
               ),
               userList(),
-              /* Expanded(
-                child: Card(
-                  elevation: 2.0,
-                  child: Image.network(
-                    "https://cdn.pixabay.com/photo/2018/06/12/01/04/road-3469810_960_720.jpg",
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ), */
             ],
           ),
         ),
       );
 
   Widget leaveChatCard() => Container(
-        height: deviceSize.height / 11,
+        height: deviceSize.height / 18,
         width: deviceSize.width / 2,
-        padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 10.0),
+        //padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 1.0),
         child: FlatButton(
             onPressed: () => leaveChat(),
             child: Text(

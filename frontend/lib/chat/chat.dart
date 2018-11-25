@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/chat/chatSettings.dart';
@@ -12,6 +13,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 
 const CHAT_SETTINGS_TEXT = "Settings/Members";
 
@@ -439,7 +441,7 @@ class ChatScreenState extends State<ChatScreen> {
               buildListMessage(),
 
               // Sticker
-              (isShowSticker ? buildSticker() : Container()),
+              (isShowSticker ? stickersEmojisWrapper() : Container()),
 
               // Input content
               buildInput(),
@@ -603,7 +605,8 @@ class ChatScreenState extends State<ChatScreen> {
               ),
             ),
             color: Colors.white,
-          ),
+          ), 
+          
 
           // Edit text
           Flexible(
@@ -669,6 +672,100 @@ class ChatScreenState extends State<ChatScreen> {
                 }
               },
             ),
+    );
+  }
+  
+  Widget stickersEmojisWrapper() {
+    return new Container(
+      child: PageView(
+      children: [
+        new Container(color: Colors.red),
+        new Container(color: Colors.blue),
+        //galleryEmojis()
+      ]
+      ),
+      decoration: new BoxDecoration(
+      border: new Border(top: new BorderSide(color: greyColor2, width: 0.5)), color: Colors.white),
+      padding: EdgeInsets.all(5.0),
+      height: 180.0,
+    );
+  }
+
+  Widget galleryEmojis(){
+    print("gallery Emojis");
+     final file = new File('/images/emojis.json').toString();
+    Iterable iterable = json.decode(file);
+    for(var n in iterable){
+      print(n);
+    }
+    //List<String> emojis = l.map((Map model)=> ;
+
+    return Container(
+      child: new GridView.count(
+          crossAxisCount: 2,
+          childAspectRatio: 1,
+          controller: new ScrollController(keepScrollOffset: false),
+          shrinkWrap: true,
+          scrollDirection: Axis.vertical,
+          // children: widgetList.map((String value) {
+          //   return new Container(
+          //     color: Colors.green,
+          //     margin: new EdgeInsets.all(1.0),
+          //     child: new Center(
+          //       child: new Text(
+          //         value,
+          //         style: new TextStyle(
+          //           fontSize: 50.0,
+          //           color: Colors.white,
+          //         ),
+          //       ),
+          //     ),
+          //   );
+          // }).toList(),
+        ),
+    );
+  }
+
+  Widget buildEmojis() {
+    return Container(
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              InkWell(
+                  onTap: () {
+                  },
+                  child: Text(
+                  "🐣"+"😺",
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30.0),
+                  ),
+              ),
+              InkWell(
+                  onTap: () {
+                  },
+                  child: Text(
+                  "🐣"+"😺",
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30.0),
+                  ),
+              ),
+              InkWell(
+                  onTap: () {
+                  },
+                  child: Text(
+                  "🐣"+"😺",
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30.0),
+                  ),
+              ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          ),
+        ],
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      ),
+      decoration: new BoxDecoration(
+          border: new Border(top: new BorderSide(color: greyColor2, width: 0.5)), color: Colors.white),
+      padding: EdgeInsets.all(0.0),
+      height: 180.0,
     );
   }
 }
