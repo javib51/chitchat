@@ -47,10 +47,18 @@ class MainScreenState extends State<MainScreen> {
     nickname = prefs.getString('nickname') ?? '';
     photoUrl = prefs.getString('photoUrl') ?? '';
 
+    String notificationToken = prefs.getString('notificationToken') ?? '';
+    if(notificationToken != '') {
+      updateToken(notificationToken);
+    }
     // Force refresh input
     setState(() {});
   }
 
+  void updateToken(String notificationToken) async {
+    Firestore.instance.collection('users').document(currentUserId).updateData({"notificationToken": notificationToken});
+  }
+  
   Stream<QuerySnapshot> getChats() {
     return Firestore.instance.collection('chats')
         .where("users",  arrayContains: currentUserId).snapshots();
@@ -227,6 +235,7 @@ class MainScreenState extends State<MainScreen> {
                 context,
                 new MaterialPageRoute(
                     builder: (context) => new Chat(
+                          currentUserId: currentUserId,
                           chatId: document.documentID,
                           chatAvatar: info['photoUrl'],
                         )));
