@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "staging": "javib51-aalto-mcc",
+    "default": "javib51-aalto-mcc"
+  }
+}
