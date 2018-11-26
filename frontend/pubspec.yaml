@@ -21,7 +21,8 @@ dependencies:
   audio_recorder: ^0.0.6
   flutter_sound: ^1.0.6
   uuid: ^1.0.3
-
+  multi_image_picker: ^2.2.55
+  
 dependency_overrides:
   http: ^0.12.0
 

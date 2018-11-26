@@ -17,6 +17,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:multi_image_picker/asset.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:flutter/services.dart';
 
 
 const CHAT_SETTINGS_TEXT = "Settings/Members";
@@ -123,6 +126,10 @@ class ChatScreenState extends State<ChatScreen> {
   bool isShowEmoji;
   String imageUrl;
 
+  //Load Image from Galerry
+  List<Asset> images = List<Asset>();
+  String _error;
+
   final TextEditingController textEditingController = new TextEditingController();
   final ScrollController listScrollController = new ScrollController();
   final FocusNode focusNode = new FocusNode();
@@ -160,13 +167,13 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Future getImage() async {
-    imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
+    imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
 
     if (imageFile != null) {
       setState(() {
         isLoading = true;
       });
-      uploadFile();
+      //uploadFile();
     }
   }
 
@@ -186,11 +193,13 @@ class ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  Future uploadFile() async {
-    String contentType = lookupMimeType(imageFile.path);
+  Future uploadFile(File file) async {
+    print("upload file...");
+    print(file.toString());
+    String contentType = lookupMimeType(file.path);
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
     StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(imageFile, StorageMetadata(
+    StorageUploadTask uploadTask = reference.putFile(file, StorageMetadata(
         contentType: contentType,
         customMetadata: {
       "resolution": ImageResolution.full.toString().split('.').last,
@@ -602,7 +611,8 @@ class ChatScreenState extends State<ChatScreen> {
               margin: new EdgeInsets.symmetric(horizontal: 0),
               child: new IconButton(
                 icon: new Icon(Icons.image),
-                onPressed: getImage,
+                //onPressed: getImage,
+                onPressed: loadAssets,
                 color: primaryColor,
               ),
             ),
@@ -792,5 +802,44 @@ class ChatScreenState extends State<ChatScreen> {
       padding: EdgeInsets.all(0.0),
       height: 180.0,
     );
+  }
+
+  Future<void> loadAssets() async {
+    setState(() {
+      images = List<Asset>();
+    });
+
+    List resultList;
+    String error;
+
+    try {
+        resultList = await MultiImagePicker.pickImages(
+        maxImages: 1,
+        enableCamera: true,
+      );
+    } on PlatformException catch (e) {
+      error = e.message;
+    }
+    
+    print("Result...");
+    print(resultList[0].identifier);
+    //resultList.forEach((element) => print(element.identifier.toString()));
+    //resultList.forEach((element) => print(element._identifier));
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    //if (!mounted) return;
+
+    if (resultList.isNotEmpty) {
+      setState(() {
+        isLoading = true;
+        images = resultList;
+        //print("debug printing...");
+        //debugPrint(images.toString());
+        if (error == null) _error = 'No Error Dectected';
+      });
+      uploadFile(new File(resultList[0].identifier));
+    }
   }
 }

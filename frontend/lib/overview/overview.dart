@@ -10,7 +10,6 @@ import 'package:chitchat/const.dart';
 import 'package:chitchat/login/login.dart';
 import 'package:chitchat/settings/settings.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 
 
@@ -29,47 +28,10 @@ class MainScreenState extends State<MainScreen> {
   final String currentUserId;
 
   bool isLoading = false;
-
-  Map<String,Map<String,String>> values = new Map();
-  SharedPreferences prefs;
-
-  String nickname = '';
-  String photoUrl = '';
-
-  @override
-  void initState() {
-    super.initState();
-    readLocal();
-  }
-
-  void readLocal() async {
-    prefs = await SharedPreferences.getInstance();
-    nickname = prefs.getString('nickname') ?? '';
-    photoUrl = prefs.getString('photoUrl') ?? '';
-
-    // Force refresh input
-    setState(() {});
-  }
-
-  Stream<QuerySnapshot> getChats() {
-    return Firestore.instance.collection('chats')
-        .where("users",  arrayContains: currentUserId).snapshots();
-  }
-
-  Future<Map<String, String>> getChatInfo(DocumentSnapshot chat) async {
-    Map<String, String> map = new Map();
-    if(chat['type'] == 'G') {
-      map['photoUrl'] =
-      "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
-      map['name'] = chat['name'];
-    } else {
-      String userId = (chat['users'][0] == currentUserId)? chat['users'][1] : chat['users'][0];
-      DocumentSnapshot user = await Firestore.instance.collection('users').document(userId).get();
-      map['photoUrl'] = user['photoUrl'];
-      map['name'] = user['nickname'];
-    }
-    return map;
-  }
+  List<Choice> choices = const <Choice>[
+    const Choice(title: 'Settings', icon: Icons.settings),
+    const Choice(title: 'Log out', icon: Icons.exit_to_app),
+  ];
 
   Future<bool> onBackPress() {
     openDialog();
@@ -166,20 +128,10 @@ class MainScreenState extends State<MainScreen> {
     }
   }
 
-  Widget buildItemFuture(BuildContext context, DocumentSnapshot document) {
-    return FutureBuilder(
-        future: getChatInfo(document),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData && snapshot.data != null) {
-            return buildItem(context, document, snapshot.data);
-          } else {
-            return Container();
-          }
-        }
-    );
-  }
-
-  Widget buildItem(BuildContext context, DocumentSnapshot document, Map<String, String> info) {
+  Widget buildItem(BuildContext context, DocumentSnapshot document) {
+    if (document['id'] == currentUserId) {
+      return Container();
+    } else {
       return Container(
         child: FlatButton(
           child: Row(
@@ -195,7 +147,7 @@ class MainScreenState extends State<MainScreen> {
                     height: 50.0,
                     padding: EdgeInsets.all(15.0),
                   ),
-                  imageUrl: info['photoUrl'],
+                  imageUrl: document['photoUrl'],
                   width: 50.0,
                   height: 50.0,
                   fit: BoxFit.cover,
@@ -209,12 +161,20 @@ class MainScreenState extends State<MainScreen> {
                     children: <Widget>[
                       new Container(
                         child: Text(
-                          info['name'],
+                          'Nickname: ${document['nickname']}',
                           style: TextStyle(color: primaryColor),
                         ),
                         alignment: Alignment.centerLeft,
                         margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
                       ),
+                      new Container(
+                        child: Text(
+                          'About me: ${document['aboutMe'] ?? 'Not available'}',
+                          style: TextStyle(color: primaryColor),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
+                      )
                     ],
                   ),
                   margin: EdgeInsets.only(left: 20.0),
@@ -228,7 +188,7 @@ class MainScreenState extends State<MainScreen> {
                 new MaterialPageRoute(
                     builder: (context) => new Chat(
                           chatId: document.documentID,
-                          chatAvatar: info['photoUrl'],
+                          chatAvatar: document['photoUrl'],
                         )));
           },
           color: greyColor2,
@@ -238,9 +198,19 @@ class MainScreenState extends State<MainScreen> {
         ),
         margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
       );
+    }
   }
 
   final GoogleSignIn googleSignIn = new GoogleSignIn();
+
+  void onItemMenuPress(Choice choice) {
+    if (choice.title == 'Log out') {
+      handleSignOut();
+    } else {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => Settings()));
+    }
+  }
 
   Future<Null> handleSignOut() async {
     this.setState(() {
@@ -248,12 +218,8 @@ class MainScreenState extends State<MainScreen> {
     });
 
     await FirebaseAuth.instance.signOut();
-
-    bool isLoggedIn = await googleSignIn.isSignedIn();
-    if (isLoggedIn) {
-      await googleSignIn.disconnect();
-      await googleSignIn.signOut();
-    }
+    await googleSignIn.disconnect();
+    await googleSignIn.signOut();
 
     this.setState(() {
       isLoading = false;
@@ -274,38 +240,31 @@ class MainScreenState extends State<MainScreen> {
         ),
         centerTitle: true,
         actions: <Widget>[
-
+          PopupMenuButton<Choice>(
+            onSelected: onItemMenuPress,
+            itemBuilder: (BuildContext context) {
+              return choices.map((Choice choice) {
+                return PopupMenuItem<Choice>(
+                    value: choice,
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          choice.icon,
+                          color: primaryColor,
+                        ),
+                        Container(
+                          width: 10.0,
+                        ),
+                        Text(
+                          choice.title,
+                          style: TextStyle(color: primaryColor),
+                        ),
+                      ],
+                    ));
+              }).toList();
+            },
+          ),
         ],
-      ),
-      drawer: new Drawer(
-        child: ListView(
-          children: <Widget>[
-            new UserAccountsDrawerHeader(
-              accountName: new Text(nickname),
-              currentAccountPicture: new CircleAvatar(
-                backgroundImage: new NetworkImage(photoUrl)
-              ),
-            ),
-            new ListTile(
-              title: new Text('Settings'),
-              onTap: (){
-                Navigator.of(context).pop();
-                Navigator.push(
-                context, MaterialPageRoute(builder: (context) => Settings()));
-              },
-            ),
-            new Divider(
-              color: Colors.black,
-              height: 5.0,
-            ),
-            new ListTile(
-              title: new Text('Log out'),
-              onTap: (){
-                handleSignOut();
-              },
-            ),
-          ],
-        ),
       ),
       body: WillPopScope(
         child: Stack(
@@ -313,7 +272,7 @@ class MainScreenState extends State<MainScreen> {
             // List
             Container(
               child: StreamBuilder(
-                stream: getChats(),
+                stream: Firestore.instance.collection('users').snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -325,7 +284,7 @@ class MainScreenState extends State<MainScreen> {
                     return ListView.builder(
                       padding: EdgeInsets.all(10.0),
                       itemBuilder: (context, index) =>
-                          buildItemFuture(context, snapshot.data.documents[index]),
+                          buildItem(context, snapshot.data.documents[index]),
                       itemCount: snapshot.data.documents.length,
                     );
                   }
