@@ -18,10 +18,10 @@ class _MyAppState extends State<MyApp> {
   bool _isUserLoggedIn;
 
   @override
-  void initState() async {
+  void initState() {
     super.initState();
 
-    this._isUserLoggedIn = await Environment.shared.credentialsSignInManager.isUserSignedIn();
+    Environment.shared.credentialsSignInManager.isUserSignedIn().then((isUserSignedIn) => this.setState(() => this._isUserLoggedIn = isUserSignedIn));
   }
 
   @override
@@ -38,6 +38,9 @@ class _MyAppState extends State<MyApp> {
 
   //Chooses which screen to start the application with, depending whether there is a logged user or not.
   Widget _chooseRightScreen() {
+
+    if (this._isUserLoggedIn == null) return Container();
+
     return this._isUserLoggedIn ? MainScreen() : LoginScreen();
   }
 

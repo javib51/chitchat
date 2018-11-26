@@ -1,5 +1,6 @@
 import 'package:chitchat/common/Environment/dao.dart';
 import 'package:chitchat/common/Environment/environment.dart';
+import 'package:chitchat/common/Environment/sign_in_manager.dart';
 import 'package:chitchat/common/Environment/sign_up_manager.dart';
 import 'package:chitchat/common/Models/signup_credentials.dart';
 import 'package:chitchat/common/Models/user.dart';
@@ -106,18 +107,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    SignUpManager<SignupCredentials> signupManager = Environment.shared.credentialsSignUpManager;
+    SignUpManager<SignupCredentials> signUpManager = Environment.shared.credentialsSignUpManager;
+    SignInManager<SignupCredentials> signInManager = Environment.shared.credentialsSignInManager;
+    DAO<User> userprofileDAO = Environment.shared.userProfileDAO;
 
     try {
-      await signupManager.signUp(SignupCredentials(
+      SignupCredentials credentials = SignupCredentials(
           email: this._emailController.text.trim(),
-          password: this._passController.text.trim()));
+          password: this._passController.text.trim());
+
+      String newUserID = await signUpManager.signUp(credentials);
+      print(newUserID);
+      await userprofileDAO.create(User(uid: newUserID));
+      await signInManager.signIn(credentials);
     } catch (e) {
-      Fluttertoast.showToast(msg: "Register fail. See stacktrace for more info.");
+      Fluttertoast.showToast(msg: "Registration failed: ${e.toString()}");
       print(e);
+      return;
     }
 
-    Fluttertoast.showToast(msg: "Register succes");
+    Fluttertoast.showToast(msg: "Registration succeeded");
 
     Navigator.pop(context);
     Navigator.push(context, MaterialPageRoute(builder: (context) => WelcomeScreen()));

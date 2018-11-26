@@ -1,5 +1,4 @@
 import 'package:codable/codable.dart';
-import 'package:meta/meta.dart';
 
 class User extends Coding implements Comparable<User> {
 

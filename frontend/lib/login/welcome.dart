@@ -23,17 +23,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   FirestoreUserProfileDAO _userProfileDAO = Environment.shared.userProfileDAO;
   User _loggedInUser;
 
-  TextEditingController _nickController;
-  TextEditingController _aboutController;
+  TextEditingController _nickController = TextEditingController();
+  TextEditingController _aboutController = TextEditingController();
   File _avatarImageFile;
 
   @override
-  void initState() async {
+  void initState() {
     super.initState();
 
-    this._loggedInUser = await Environment.shared.credentialsSignInManager.getSignedInUser();
-    this._nickController = new TextEditingController(text: this._loggedInUser.nickname ?? "");
-    this._aboutController = new TextEditingController(text: this._loggedInUser.aboutMe ?? "");
+    Environment.shared.credentialsSignInManager.getSignedInUser().then((User loggedInUser) {
+      print(loggedInUser);
+      this.setState(() {
+        this._loggedInUser = loggedInUser;
+        this._nickController.text = this._loggedInUser.nickname ?? "";
+        this._aboutController.text = this._loggedInUser.aboutMe?? "";
+      });
+    });
   }
 
   @override
@@ -103,26 +108,36 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  void _handleSubmitDataPress() {
+  Future<void> _handleSubmitDataPress() async {
+
+    print("***** CC *****");
 
     if (this._nickController.text.trim().isEmpty) {
       Fluttertoast.showToast(msg: "Please provide NickName");
       return;
     }
 
-    String aboutMeContent = "Hey there! I'm using ChitChat!";
+    print("***** DD *****");
 
-    if (this._aboutController.text.trim().isNotEmpty) {
-      aboutMeContent = this._aboutController.text.trim();
-    }
+    String aboutMeContent = this._aboutController.text == null || this._aboutController.text.trim().isEmpty ? "Hey there! I'm using ChitChat!" : this._aboutController.text.trim();
 
-    User userToSave = User(aboutMe: aboutMeContent, nickname: this._nickController.text.trim(), pictureURL: this._loggedInUser.pictureURL, uid: this._loggedInUser.uid);
+    print("***** EE *****");
 
-    this._userProfileDAO.create(userToSave, true);
+    print(this._loggedInUser);
+
+    User userToSave = User(
+        aboutMe: aboutMeContent,
+        nickname: this._nickController.text.trim(),
+        pictureURL: this._loggedInUser.pictureURL,
+        uid: this._loggedInUser.uid
+    );
+
+    await this._userProfileDAO.update(userToSave, true);
 
     this.setState(() {});
 
     Fluttertoast.showToast(msg: "Update success");
+    Navigator.pop(context);
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -136,7 +151,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     List<Widget> innerWidgets;
 
     if (this._avatarImageFile == null) {
-      String userPictureURL = this._loggedInUser.pictureURL;
+      String userPictureURL = this._loggedInUser?.pictureURL;
 
       if (userPictureURL == null) { // ignore: null_aware_in_condition
         innerWidgets = [Icon(
@@ -201,7 +216,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   Future<void> _handleProfileImageIconPress() async {
-    File image = await this._getImage();
+    File image = await ImagePicker.pickImage(source: ImageSource.gallery);
     try {
       await this._uploadFile(image: image);
       this.setState(() {});
@@ -209,10 +224,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     } catch (e) {
       Fluttertoast.showToast(msg: "Image upload failed.");
     }
-  }
-
-  Future<File> _getImage() async {
-    return await ImagePicker.pickImage(source: ImageSource.gallery);
   }
 
   Future<String> _uploadFile({@required File image}) async {

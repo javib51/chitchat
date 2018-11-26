@@ -28,7 +28,7 @@ class Environment {
   SignInManager<SignupCredentials> get credentialsSignInManager => this._credentialsSignInManager;
 
   SignInManager<GoogleCredentials> _googleSignInManager;
-  SignInManager<GoogleCredentials> get googleSignInManager => this.googleSignInManager;
+  SignInManager<GoogleCredentials> get googleSignInManager => this._googleSignInManager;
 
   SignUpManager<SignupCredentials> _credentialsSignUpManager;
   SignUpManager<SignupCredentials> get credentialsSignUpManager => this._credentialsSignUpManager;

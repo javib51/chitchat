@@ -24,11 +24,25 @@ class GoogleFirebaseauthSignInManager implements SignInManager<GoogleCredentials
   }
 
   @override
+  //Logic must be different because Google login flow is not preceded with a signup process. At every login, presence of the user profile in the database must be checked and, in case found, returned.
   Future<User> signIn(GoogleCredentials credentials) async {
 
     FirebaseUser user = await this._firebaseAuthInstance.signInWithGoogle(idToken: credentials.idToken, accessToken: credentials.accessToken);
 
-    return await this._userProfileDAO.get<String>({"id": QueryEntry(comparisonValue: user.uid, l: ValueComparisonLogic.e)});
+    print("Google signed-in user ID: ${user.uid}");
+
+    User userToCreate = User(uid: user.uid, nickname: user.displayName, pictureURL: user.photoUrl);
+    User userToReturn;
+
+    try {
+      await this._userProfileDAO.create(userToCreate, false);
+      userToReturn = userToCreate;
+    } on DAOException {
+      userToReturn = await this._userProfileDAO.get<String>({"id": QueryEntry(comparisonValue: user.uid, l: ValueComparisonLogic.e)});
+    }
+
+    print("Returning user: $userToReturn");
+    return userToReturn;
   }
 
   @override

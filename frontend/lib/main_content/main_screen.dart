@@ -25,15 +25,20 @@ class _MainScreenState extends State<MainScreen> {
   User _loggedUser;
 
   @override
-  void initState() async {
+  void initState() {
     super.initState();
 
-    this._loggedUser = await Environment.shared.credentialsSignInManager.getSignedInUser();
+    Environment.shared.credentialsSignInManager.getSignedInUser().then((User signedInUser) {
+      this.setState(() => this._loggedUser = signedInUser);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return this._loggedUser == null ?
+    Container()
+        :
+    Scaffold(
       appBar: AppBar(
         title: Text(
           'MAIN',
@@ -69,7 +74,7 @@ class _MainScreenState extends State<MainScreen> {
 
             // Loading
             Positioned(
-              child: _isLoading
+              child: this._isLoading
                   ? Container(
                 child: Center(
                   child: CircularProgressIndicator(
@@ -89,7 +94,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget buildItem(BuildContext context, DocumentSnapshot document) {
     if (document['id'] == this._loggedUser.uid) {       //???
-      return Container(child: Text("ASSSSS"),);
+      return Container();
     } else {
       return Container(
         child: FlatButton(
@@ -259,7 +264,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<Null> handleSignOut() async {
     this.setState(() {
-      _isLoading = true;
+      this._isLoading = true;
     });
 
     await FirebaseAuth.instance.signOut();
@@ -271,7 +276,7 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     this.setState(() {
-      _isLoading = false;
+      this._isLoading = false;
     });
 
     Navigator.of(context).pushAndRemoveUntil(

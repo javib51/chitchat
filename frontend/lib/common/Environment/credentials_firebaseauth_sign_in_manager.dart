@@ -44,6 +44,9 @@ class UserCredentialsFirebaseauthSignInManager implements SignInManager<SignupCr
   Future<User> getSignedInUser() async {
 
     FirebaseUser currentUser = await this._firebaseAuthInstance.currentUser();
+    print("*****");
+    print(currentUser);
+    print("*****");
 
     return await this._userProfileDAO.get<String>({"id": QueryEntry(comparisonValue: currentUser.uid, l: ValueComparisonLogic.e)});
   }

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:chitchat/common/Models/signup_credentials.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -116,51 +115,73 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin(_LoginType loginType) async {
-
     User loggedUser;
 
     try {
       switch (loginType) {
-        case _LoginType.google: {
-          GoogleSignInAuthentication googleAuth = await (await GoogleSignIn().signIn()).authentication;
+        case _LoginType.google:
+          {
+            GoogleSignInAuthentication googleAuth = await (await GoogleSignIn()
+                .signIn()).authentication;
 
-          loggedUser = await Environment.shared.googleSignInManager.signIn(GoogleCredentials(
-              accessToken: googleAuth.accessToken, idToken: googleAuth.idToken));
+            loggedUser = await Environment.shared.googleSignInManager.signIn(
+                GoogleCredentials(
+                    accessToken: googleAuth.accessToken,
+                    idToken: googleAuth.idToken));
           }
           break;
-        case _LoginType.signupCredentials: {
-            loggedUser = await Environment.shared.credentialsSignInManager.signIn(SignupCredentials(
-              email: this._emailController.text,
-              password: this._passController.text,
-            ));
+        case _LoginType.signupCredentials:
+          {
+            loggedUser =
+            await Environment.shared.credentialsSignInManager.signIn(
+                SignupCredentials(
+                  email: this._emailController.text,
+                  password: this._passController.text,
+                ));
           }
           break;
       }
     } catch (error) {
       Fluttertoast.showToast(msg: "Sign in fail");
       print("Sign in error: $error");
+      return;
     }
 
-    DAO<User> userProfileDAO = Environment.shared.userProfileDAO;
+    print(loggedUser);
+    Fluttertoast.showToast(msg: "Sign in success");
 
-    try {
-      await userProfileDAO.create(loggedUser, false);
-      Fluttertoast.showToast(msg: "Sign in success");
-
-      Navigator.push(
+    Navigator.pop(context);
+    Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => WelcomeScreen()
+            builder: (context) =>
+            loggedUser.aboutMe == null ? WelcomeScreen() : MainScreen()
         )
-      );
-    } on DAOException {         //User already existing
-      //User existing
-      MaterialPageRoute(
-          builder: (context) => loggedUser.nickname != null ? MainScreen() : WelcomeScreen()
-      );
-    } catch (e) {
-      Fluttertoast.showToast(msg: "Sign in failed");
-      print(e);
-    }
+    );
+
+//    try {
+//      //TODO: User creation step might be removed.
+//      await userProfileDAO.create(loggedUser, false);   //If no exception, user signed in for the first time.
+//      Fluttertoast.showToast(msg: "Sign in success");
+//      Navigator.pop(context);
+//      Navigator.push(
+//        context,
+//        MaterialPageRoute(
+//          builder: (context) => WelcomeScreen()
+//        )
+//      );
+//    } on DAOException {         //User already existing
+//      Fluttertoast.showToast(msg: "Sign in success");
+//      Navigator.pop(context);
+//      Navigator.push(
+//          context,
+//          MaterialPageRoute(
+//              builder: (context) => MainScreen()
+//          )
+//      );
+//    } catch (e) {
+//      Fluttertoast.showToast(msg: "Sign in failed");
+//      print(e);
+//    }
   }
 }

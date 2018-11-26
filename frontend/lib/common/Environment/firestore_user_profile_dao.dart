@@ -43,14 +43,22 @@ class FirestoreUserProfileDAO implements DAO<User> {
     
     bool userProfileExists = (await this._getUserByID(element.uid)) != null;
 
-    if (userProfileExists && !updateIfExist) throw UserExistingException();
+    print("userProfileExists? $userProfileExists");
 
-    await this._firestoreInstance.document(element.uid).setData({
-      "nickname": element.nickname,
-      "photoUrl": element.pictureURL,
-      "id": element.uid,
-      "aboutMe": element.aboutMe
-    });
+    if (userProfileExists && !updateIfExist) throw UserExistingException();
+    else if (userProfileExists) {
+      print("Updating existing user");
+      await this.update(element, false);
+    } else {
+      print("Creating new user");
+      await this._firestoreInstance.collection("users").document(element.uid).setData({
+        "nickname": element.nickname,
+        "photoUrl": element.pictureURL,
+        "id": element.uid,
+        "aboutMe": element.aboutMe
+      });
+      print("Created new user");
+    }
 
     return Future.value(null);
   }
@@ -61,10 +69,9 @@ class FirestoreUserProfileDAO implements DAO<User> {
     bool userProfileExists = (await this._getUserByID(element.uid)) != null;
 
     if (userProfileExists) {
-      await this._firestoreInstance.document(element.uid).updateData({
+      await this._firestoreInstance.collection("users").document(element.uid).updateData({
         "nickname": element.nickname,
         "photoUrl": element.pictureURL,
-        "id": element.uid,
         "aboutMe": element.aboutMe
       });
     } else {
@@ -87,9 +94,11 @@ class FirestoreUserProfileDAO implements DAO<User> {
   Future<User> get<T>(Map<String, QueryEntry<T>> filter) async {
     List<User> filteredQueryResult = await this.getAll(filter);
 
+    print(filteredQueryResult);
+
     if (filteredQueryResult.length > 1) throw FilterNotUniqueException();
 
-    return filteredQueryResult.elementAt(0);
+    return filteredQueryResult.isEmpty ? null : filteredQueryResult.elementAt(0);
   }
 
   @override
@@ -109,7 +118,7 @@ class FirestoreUserProfileDAO implements DAO<User> {
           nickname: documentSnapshot["nickname"],
           aboutMe: documentSnapshot["aboutMe"]
       );
-    });
+    }).toList(growable: false);
   }
 
   Query _getModifiedQueryForEntry(Query q, MapEntry<String, QueryEntry> entry) {

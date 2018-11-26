@@ -5,7 +5,7 @@ import 'package:meta/meta.dart';
 class SignupCredentials extends Coding {
 
   String _email;
-  String get email => this.email;
+  String get email => this._email;
 
   String _password;
   String get password => this._password;

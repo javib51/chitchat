@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chitchat/chat/chatSettings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -170,7 +169,7 @@ class ChatScreenState extends State<ChatScreen> {
     StorageUploadTask uploadTask = reference.putFile(imageFile, StorageMetadata(
         contentType: contentType,
         customMetadata: {
-      "resolution": ImageResolution.full.toString().split('.').last,
+      "resolution": "high",
     }));
     StorageTaskSnapshot storageTaskSnapshot = await uploadTask.onComplete;
     imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
