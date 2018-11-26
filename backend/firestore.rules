@@ -1,0 +1,23 @@
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+        return request.auth != null;
+    }
+
+    match /users/{user} {
+          allow read, write: if isSignedIn();
+          //allow write: if isSignedIn() && request.auth.uid == resource.id;
+    }
+    match /chats/{chat} {
+      allow read, write: if isSignedIn() && request.auth.uid in resource.users;
+
+    	function chatData() {
+            return get(/databases/$(database)/documents/chats/$(chat)).data
+      }
+
+    	match /messages/{message} {
+      	allow read, write: if isSignedIn() && request.auth.uid in chatData().users;
+    	}
+    }
+  }
+}

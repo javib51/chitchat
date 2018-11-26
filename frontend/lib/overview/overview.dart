@@ -33,6 +33,55 @@ class MainScreenState extends State<MainScreen> {
     const Choice(title: 'Log out', icon: Icons.exit_to_app),
   ];
 
+  Map<String,Map<String,String>> values = new Map();
+  SharedPreferences prefs;
+
+  String nickname = '';
+  String photoUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    readLocal();
+  }
+
+  void readLocal() async {
+    prefs = await SharedPreferences.getInstance();
+    nickname = prefs.getString('nickname') ?? '';
+    photoUrl = prefs.getString('photoUrl') ?? '';
+
+    String notificationToken = prefs.getString('notificationToken') ?? '';
+    if(notificationToken != '') {
+      updateToken(notificationToken);
+    }
+    // Force refresh input
+    setState(() {});
+  }
+
+  void updateToken(String notificationToken) async {
+    Firestore.instance.collection('users').document(currentUserId).updateData({"notificationToken": notificationToken});
+  }
+  
+  Stream<QuerySnapshot> getChats() {
+    return Firestore.instance.collection('chats')
+        .where("users",  arrayContains: currentUserId).snapshots();
+  }
+
+  Future<Map<String, String>> getChatInfo(DocumentSnapshot chat) async {
+    Map<String, String> map = new Map();
+    if(chat['type'] == 'G') {
+      map['photoUrl'] =
+      "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
+      map['name'] = chat['name'];
+    } else {
+      String userId = (chat['users'][0] == currentUserId)? chat['users'][1] : chat['users'][0];
+      DocumentSnapshot user = await Firestore.instance.collection('users').document(userId).get();
+      map['photoUrl'] = user['photoUrl'];
+      map['name'] = user['nickname'];
+    }
+    return map;
+  }
+
   Future<bool> onBackPress() {
     openDialog();
     return Future.value(false);
@@ -187,6 +236,7 @@ class MainScreenState extends State<MainScreen> {
                 context,
                 new MaterialPageRoute(
                     builder: (context) => new Chat(
+                          currentUserId: currentUserId,
                           chatId: document.documentID,
                           chatAvatar: document['photoUrl'],
                         )));
