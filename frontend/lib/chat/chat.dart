@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -16,6 +17,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:multi_image_picker/asset.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+
 
 const CHAT_SETTINGS_TEXT = "Settings/Members";
 
@@ -122,7 +128,12 @@ class ChatScreenState extends State<ChatScreen> {
   File imageFile;
   bool isLoading;
   bool isShowSticker;
+  bool isShowEmoji;
   String imageUrl;
+
+  //Load Image from Galerry
+  List<Asset> images = List<Asset>();
+  String _error;
 
   final TextEditingController textEditingController = new TextEditingController();
   final ScrollController listScrollController = new ScrollController();
@@ -138,6 +149,7 @@ class ChatScreenState extends State<ChatScreen> {
 
     isLoading = false;
     isShowSticker = false;
+    isShowEmoji = false;
     imageUrl = '';
 
     readLocal();
@@ -159,17 +171,6 @@ class ChatScreenState extends State<ChatScreen> {
     setState(() {});
   }
 
-  Future getImage() async {
-    imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
-
-    if (imageFile != null) {
-      setState(() {
-        isLoading = true;
-      });
-      uploadFile();
-    }
-  }
-
   void getSticker() {
     // Hide keyboard when sticker appear
     focusNode.unfocus();
@@ -178,11 +179,19 @@ class ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  Future uploadFile() async {
-    String contentType = lookupMimeType(imageFile.path);
+  void getEmoji() {
+    // Hide keyboard when sticker appear
+    focusNode.unfocus();
+    setState(() {
+      isShowEmoji = !isShowEmoji;
+    });
+  }
+
+  Future uploadFile(File file) async {
+    String contentType = lookupMimeType(file.path);
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
     StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(imageFile, StorageMetadata(
+    StorageUploadTask uploadTask = reference.putFile(file, StorageMetadata(
         contentType: contentType,
         customMetadata: {
       "resolution": ImageResolution.full.toString().split('.').last,
@@ -192,7 +201,6 @@ class ChatScreenState extends State<ChatScreen> {
     setState(() {
       isLoading = false;
     });
-
     onSendMessage(imageUrl, "photo");
   }
 
@@ -450,7 +458,7 @@ class ChatScreenState extends State<ChatScreen> {
               buildListMessage(),
 
               // Sticker
-              (isShowSticker ? buildSticker() : Container()),
+              (isShowSticker ? stickersEmojisWrapper() : Container()),
 
               // Input payload
               buildInput(),
@@ -598,7 +606,7 @@ class ChatScreenState extends State<ChatScreen> {
               margin: new EdgeInsets.symmetric(horizontal: 0),
               child: new IconButton(
                 icon: new Icon(Icons.image),
-                onPressed: getImage,
+                onPressed: loadAssets,
                 color: primaryColor,
               ),
             ),
@@ -695,5 +703,134 @@ class ChatScreenState extends State<ChatScreen> {
             ),
     );
   }
+  
+  Widget stickersEmojisWrapper() {
+    return new Container(
+      child: PageView(
+      children: [
+        new Container(color: Colors.red),
+        new Container(color: Colors.blue),
+        //galleryEmojis()
+      ]
+      ),
+      decoration: new BoxDecoration(
+      border: new Border(top: new BorderSide(color: greyColor2, width: 0.5)), color: Colors.white),
+      padding: EdgeInsets.all(5.0),
+      height: 180.0,
+    );
+  }
 
+  Widget galleryEmojis(){
+    print("gallery Emojis");
+     final file = new File('/images/emojis.json').toString();
+    Iterable iterable = json.decode(file);
+    for(var n in iterable){
+      print(n);
+    }
+    //List<String> emojis = l.map((Map model)=> ;
+
+    return Container(
+      child: new GridView.count(
+          crossAxisCount: 2,
+          childAspectRatio: 1,
+          controller: new ScrollController(keepScrollOffset: false),
+          shrinkWrap: true,
+          scrollDirection: Axis.vertical,
+          // children: widgetList.map((String value) {
+          //   return new Container(
+          //     color: Colors.green,
+          //     margin: new EdgeInsets.all(1.0),
+          //     child: new Center(
+          //       child: new Text(
+          //         value,
+          //         style: new TextStyle(
+          //           fontSize: 50.0,
+          //           color: Colors.white,
+          //         ),
+          //       ),
+          //     ),
+          //   );
+          // }).toList(),
+        ),
+    );
+  }
+
+  Widget buildEmojis() {
+    return Container(
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              InkWell(
+                  onTap: () {
+                  },
+                  child: Text(
+                  "🐣"+"😺",
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30.0),
+                  ),
+              ),
+              InkWell(
+                  onTap: () {
+                  },
+                  child: Text(
+                  "🐣"+"😺",
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30.0),
+                  ),
+              ),
+              InkWell(
+                  onTap: () {
+                  },
+                  child: Text(
+                  "🐣"+"😺",
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30.0),
+                  ),
+              ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          ),
+        ],
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      ),
+      decoration: new BoxDecoration(
+          border: new Border(top: new BorderSide(color: greyColor2, width: 0.5)), color: Colors.white),
+      padding: EdgeInsets.all(0.0),
+      height: 180.0,
+    );
+  }
+
+  Future<void> loadAssets() async {
+    setState(() {
+      images = List<Asset>();
+    });
+
+    List resultList;
+    String error;
+
+    try {
+        resultList = await MultiImagePicker.pickImages(
+        maxImages: 1,
+        enableCamera: true,
+      );
+      images = resultList;
+    } on PlatformException catch (e) {
+      error = e.message;
+    }
+
+
+    if (resultList.isNotEmpty) {
+      setState(() {
+        isLoading = true;
+        images = resultList;
+        if (error == null) _error = 'No Error Dectected';
+      });
+       //Write img into a temporary file and store it
+    String dir = (await getTemporaryDirectory()).path;
+    File temp = new File('$dir/temp.jpeg');
+    ByteData data = await images[0].requestOriginal();
+    final buffer = data.buffer;
+    await temp.writeAsBytes(buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+    await uploadFile(temp);
+    temp.delete();
+    }
+  }
 }
