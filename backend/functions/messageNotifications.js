@@ -11,7 +11,6 @@ exports.handler = functions.firestore
 
         const userFromRef = snap.data().userFrom;
         return userFromRef.get().then(userFrom => {
-
             const chatRef = admin.firestore().collection('chats').doc(chatId);
             chatRef.get().then(chat => {
                 if (!chat.exists) {
@@ -24,8 +23,16 @@ exports.handler = functions.firestore
                     const payload = {
                         notification: {
                             title: title,
-                            body: body
-                        }
+                            body: body,
+                            sound: 'default'
+                        },
+                        data: {
+                            click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                            id: '1',
+                            status: 'done',
+                            title: title,
+                            body: body,
+                        },
                     };
                     return sendNotifications(chat.data(), payload, userFrom.data());
                 }
