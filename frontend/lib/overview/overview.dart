@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/contacts/contacts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -278,7 +279,7 @@ class MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'MAIN',
+          'ChitChat',
           style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -291,9 +292,23 @@ class MainScreenState extends State<MainScreen> {
           children: <Widget>[
             new UserAccountsDrawerHeader(
               accountName: new Text(nickname),
+              accountEmail: new Text(""),
               currentAccountPicture: new CircleAvatar(
                 backgroundImage: new NetworkImage(photoUrl)
               ),
+            ),
+            new ListTile(
+              title: new Text('New Chat'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Contacts()),
+                );
+              }
+            ),
+            new Divider(
+              color: Colors.black,
+              height: 5.0,
             ),
             new ListTile(
               title: new Text('Settings'),
@@ -358,6 +373,19 @@ class MainScreenState extends State<MainScreen> {
           ],
         ),
         onWillPop: onBackPress,
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Add',
+        child: Icon(
+            Icons.add),
+            backgroundColor: Colors.amber,
+            foregroundColor: Colors.black,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Contacts()),
+          );
+        }
       ),
     );
   }
