@@ -10,6 +10,7 @@ import 'package:chitchat/const.dart';
 import 'package:chitchat/login/login.dart';
 import 'package:chitchat/settings/settings.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 

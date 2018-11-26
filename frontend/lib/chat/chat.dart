@@ -20,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:multi_image_picker/asset.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
 
 const CHAT_SETTINGS_TEXT = "Settings/Members";
@@ -170,17 +171,6 @@ class ChatScreenState extends State<ChatScreen> {
     setState(() {});
   }
 
-  Future getImage() async {
-    imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
-
-    if (imageFile != null) {
-      setState(() {
-        isLoading = true;
-      });
-      //uploadFile();
-    }
-  }
-
   void getSticker() {
     // Hide keyboard when sticker appear
     focusNode.unfocus();
@@ -198,8 +188,6 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Future uploadFile(File file) async {
-    print("upload file...");
-    print(file.toString());
     String contentType = lookupMimeType(file.path);
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
     StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
@@ -213,7 +201,6 @@ class ChatScreenState extends State<ChatScreen> {
     setState(() {
       isLoading = false;
     });
-
     onSendMessage(imageUrl, "photo");
   }
 
@@ -619,7 +606,6 @@ class ChatScreenState extends State<ChatScreen> {
               margin: new EdgeInsets.symmetric(horizontal: 0),
               child: new IconButton(
                 icon: new Icon(Icons.image),
-                //onPressed: getImage,
                 onPressed: loadAssets,
                 color: primaryColor,
               ),
@@ -825,29 +811,26 @@ class ChatScreenState extends State<ChatScreen> {
         maxImages: 1,
         enableCamera: true,
       );
+      images = resultList;
     } on PlatformException catch (e) {
       error = e.message;
     }
-    
-    print("Result...");
-    print(resultList[0].identifier);
-    //resultList.forEach((element) => print(element.identifier.toString()));
-    //resultList.forEach((element) => print(element._identifier));
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    //if (!mounted) return;
 
     if (resultList.isNotEmpty) {
       setState(() {
         isLoading = true;
         images = resultList;
-        //print("debug printing...");
-        //debugPrint(images.toString());
         if (error == null) _error = 'No Error Dectected';
       });
-      uploadFile(new File(resultList[0].identifier));
+       //Write img into a temporary file and store it
+    String dir = (await getTemporaryDirectory()).path;
+    File temp = new File('$dir/temp.jpeg');
+    ByteData data = await images[0].requestOriginal();
+    final buffer = data.buffer;
+    await temp.writeAsBytes(buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+    await uploadFile(temp);
+    temp.delete();
     }
   }
 }
