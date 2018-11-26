@@ -237,7 +237,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget buildItem(int index, DocumentSnapshot document) {
-    if (document['userFrom'] == id) {
+    if (document['userFrom'].documentID == id) {
       // Right (my message)
       return Row(
         children: <Widget>[
@@ -420,7 +420,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   bool isLastMessageLeft(int index) {
-    if ((index > 0 && listMessage != null && listMessage[index - 1]['idFrom'] == id) || index == 0) {
+    if ((index > 0 && listMessage != null && listMessage[index - 1]['userFrom'].documentID == id) || index == 0) {
       return true;
     } else {
       return false;
@@ -428,7 +428,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   bool isLastMessageRight(int index) {
-    if ((index > 0 && listMessage != null && listMessage[index - 1]['idFrom'] != id) || index == 0) {
+    if ((index > 0 && listMessage != null && listMessage[index - 1]['userFrom'].documentID != id) || index == 0) {
       return true;
     } else {
       return false;
