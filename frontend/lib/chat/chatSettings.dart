@@ -83,7 +83,6 @@ class ChatSettingsState extends State<ChatSettings> {
           ),
         ),
       );
-
   Widget profileColumn() => Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -118,7 +117,6 @@ class ChatSettingsState extends State<ChatSettings> {
           ],
         ),
       );
-
   Widget userList() => Container(
       height: deviceSize.height/4,
       padding: const EdgeInsets.all(0.0),
@@ -132,7 +130,6 @@ class ChatSettingsState extends State<ChatSettings> {
         ],
       ),
   );
-
   Widget usersCard() => Container(
         width: double.infinity,
         height: deviceSize.height / 2.75,
@@ -153,7 +150,6 @@ class ChatSettingsState extends State<ChatSettings> {
           ),
         ),
       );
-
   Widget leaveChatCard() => Container(
         height: deviceSize.height / 18,
         width: deviceSize.width / 2,
@@ -171,7 +167,6 @@ class ChatSettingsState extends State<ChatSettings> {
             padding: EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
           ),
       );
-
   Widget bodyData() => Container(
         child: Column(
           children: <Widget>[

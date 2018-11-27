@@ -26,7 +26,7 @@ class ChatGalleryState extends State<ChatGallery> {
         height: deviceSize.height,
         child: Column(
           children: <Widget>[
-            DropdownMenu(),
+            DropDownMenu(),
             GalleryPart(),
           ],
         ),
@@ -35,43 +35,43 @@ class ChatGalleryState extends State<ChatGallery> {
   }
 }
 
-class DropdownMenu extends StatelessWidget {
-  List<String> _options = ["Sender", "Features"];
-  String _option = "Sender";
+class DropDownMenu extends StatefulWidget {
+   @override
+   createState() => DropdownMenuState();
+}
+class DropdownMenuState extends State<DropDownMenu> {
+  List<String> _options = ["Sender", "Features"].toList();
+  String _option;
 
   @override
   void initState() {
-    _option = _options.elementAt(0);
-  }
-
-  @override
-  void setState(String option) {
-    _option = option;
-  }
-
-  void onChanged(String option) {
-    setState(option);
+    _option = _options.first;
+    super.initState();
   }
 
   Widget build(BuildContext context) {
-    return new Row(
-      children: <Widget>[
-        new DropdownButton(
+    Size deviceSize = MediaQuery.of(context).size;
+    final dropdownMenuOptions = _options
+      .map((String option) =>
+          new DropdownMenuItem<String>(value: option, child: new Text(option))
+        ).toList();
+
+    return new Container(
+      height: deviceSize.height / 10,
+      child: Center(
+        child: DropdownButton(
           value: _option,
-          items: _options.map((String option) {
-            return new DropdownMenuItem(value: option, child: new Text(option));
-          }).toList(),
-          onChanged: (String option) {
-            setState(option);
+          items: dropdownMenuOptions,
+          onChanged: (value) {
+            setState(() => this._option = value);
           },
         ),
-      ],
+      ),
     );
   }
 }
 
 class GalleryPart extends StatelessWidget {
-
   List<Widget> _buildGridTiles(numberOfTiles) {
     List<Container> containers =
         new List<Container>.generate(numberOfTiles, (int index) {
@@ -90,45 +90,29 @@ class GalleryPart extends StatelessWidget {
   Widget build(BuildContext context) {
     Size deviceSize = MediaQuery.of(context).size;
     return new Container(
-      height: deviceSize.height/3,
-      child: Flex(
-        direction: Axis.vertical,
-      verticalDirection: VerticalDirection.up,
-      children: <Widget>[
-        Text(
-          "Type",
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
-        ),
-        GridView.extent(
-          shrinkWrap: true,
-          maxCrossAxisExtent: 150.0,
-          mainAxisSpacing: 5.0,
-          crossAxisSpacing: 5.0,
-          padding: const EdgeInsets.all(5.0),
-          children: _buildGridTiles(15), //Where is this function ?
-        ),
-        Text(
-          "Type12",
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
-        ),
-        GridView.extent(
-          shrinkWrap: true,
-          maxCrossAxisExtent: 150.0,
-          mainAxisSpacing: 5.0,
-          crossAxisSpacing: 5.0,
-          padding: const EdgeInsets.all(5.0),
-          children: _buildGridTiles(7), //Where is this function ?
-        ),
-      ],
-    )
-
-        /* child: GridView.extent(
-        maxCrossAxisExtent: 150.0,
-        mainAxisSpacing: 5.0,
-        crossAxisSpacing: 5.0,
-        padding: const EdgeInsets.all(5.0),
-        children: _buildGridTiles(15),//Where is this function ?
-        ),  */
-        );
+      height: deviceSize.height / 1.4,
+      child: ListView(
+        shrinkWrap: true,
+        padding: EdgeInsets.all(15.0),
+        children: <Widget>[
+          Center(
+              child: Text(
+            "Type",
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
+          )),
+          IgnorePointer(
+            ignoring: true,
+            child: GridView.extent(
+              shrinkWrap: true,
+              maxCrossAxisExtent: 150.0,
+              mainAxisSpacing: 5.0,
+              crossAxisSpacing: 5.0,
+              padding: const EdgeInsets.all(5.0),
+              children: _buildGridTiles(10), //Where is this function ?
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
