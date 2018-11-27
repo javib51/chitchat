@@ -18,22 +18,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
   final String currentUserId;
+  final SharedPreferences prefs;
 
-  MainScreen({Key key, @required this.currentUserId}) : super(key: key);
+  MainScreen({Key key, @required this.currentUserId, @required this.prefs}) : super(key: key);
 
   @override
-  State createState() => new MainScreenState(currentUserId: currentUserId);
+  State createState() => new MainScreenState(currentUserId: currentUserId, prefs: this.prefs);
 }
 
 class MainScreenState extends State<MainScreen> {
-  MainScreenState({Key key, @required this.currentUserId});
+
+  MainScreenState({Key key, @required this.currentUserId, @required this.prefs});
 
   final String currentUserId;
+  final SharedPreferences prefs;
 
   bool isLoading = false;
 
   Map<String,Map<String,String>> values = new Map();
-  SharedPreferences prefs;
 
   String nickname = '';
   String photoUrl = '';
@@ -44,8 +46,8 @@ class MainScreenState extends State<MainScreen> {
     readLocal();
   }
 
-  void readLocal() async {
-    prefs = await SharedPreferences.getInstance();
+  void readLocal() {
+
     nickname = prefs.getString('nickname') ?? '';
     photoUrl = prefs.getString('photoUrl') ?? '';
 
@@ -57,7 +59,7 @@ class MainScreenState extends State<MainScreen> {
     setState(() {});
   }
 
-  void updateToken(String notificationToken) async {
+  void updateToken(String notificationToken) {
     Firestore.instance.collection('users').document(currentUserId).updateData({"notificationToken": notificationToken});
   }
   
@@ -183,7 +185,12 @@ class MainScreenState extends State<MainScreen> {
           if (snapshot.hasData && snapshot.data != null) {
             return buildItem(context, document, snapshot.data);
           } else {
-            return Container();
+            return Container(
+              child: Center(
+                child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+              ),
+              color: Colors.white.withOpacity(0.8),
+            );
           }
         }
     );
@@ -266,12 +273,14 @@ class MainScreenState extends State<MainScreen> {
       await googleSignIn.signOut();
     }
 
+    await this.prefs.clear();
+
     this.setState(() {
       isLoading = false;
     });
 
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => MyApp()),
+        MaterialPageRoute(builder: (context) => MyApp(prefs: this.prefs,)),
         (Route<dynamic> route) => false);
   }
 

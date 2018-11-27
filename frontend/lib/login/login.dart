@@ -16,6 +16,11 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 
 class MyApp extends StatelessWidget {
+
+  final SharedPreferences prefs;
+
+  MyApp({@required this.prefs});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -23,19 +28,20 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primaryColor: Colors.amber,
       ),
-      home: LoginScreen(),
+      home: this.prefs.get("id") == null ? LoginScreen(prefs: this.prefs,) : MainScreen(currentUserId: this.prefs.get("id"), prefs: this.prefs,),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class LoginScreen extends StatefulWidget {
-  LoginScreen({Key key, this.title}) : super(key: key);
 
-  final String title;
+  final SharedPreferences prefs;
+
+  LoginScreen({Key key, @required this.prefs}) : super(key: key);
 
   @override
-  LoginScreenState createState() => new LoginScreenState();
+  LoginScreenState createState() => new LoginScreenState(prefs: this.prefs);
 }
 
 class LoginScreenState extends State<LoginScreen> {
@@ -50,38 +56,17 @@ class LoginScreenState extends State<LoginScreen> {
   bool isLoggedIn = false;
   FirebaseUser currentUser;
 
+  LoginScreenState({@required this.prefs});
+
   FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
   @override
   void initState() {
     super.initState();
-    isSignedIn();
     initFlutterLocalNotifications();
     initFirebaseMessaging();
     initFireStore();
-  }
-
-  void isSignedIn() async {
-    this.setState(() {
-      isLoading = true;
-    });
-
-    prefs = await SharedPreferences.getInstance();
-
-    isLoggedIn = await googleSignIn.isSignedIn();
-    if (isLoggedIn) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-                MainScreen(currentUserId: prefs.getString('id'))),
-      );
-    }
-
-    this.setState(() {
-      isLoading = false;
-    });
   }
 
   void initFireStore() {
@@ -129,19 +114,18 @@ class LoginScreenState extends State<LoginScreen> {
       },
     );
 
-    _firebaseMessaging.getToken().then((token) async{
+    _firebaseMessaging.getToken().then((token) {
       print(token);
-      prefs = await SharedPreferences.getInstance();
-      prefs.setString("notificationToken", token);
+      this.prefs.setString("notificationToken", token);
     });
   }
 
   Future<Null> handleSignIn(String logintype) async {
-    prefs = await SharedPreferences.getInstance();
 
     this.setState(() {
       isLoading = true;
     });
+
     FirebaseUser firebaseUser;
     if(logintype == 'google') {
       GoogleSignInAccount googleUser = await googleSignIn.signIn();
@@ -150,8 +134,7 @@ class LoginScreenState extends State<LoginScreen> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-    }
-    else {
+    } else {
       firebaseUser = await firebaseAuth.signInWithEmailAndPassword(
           email: emailController.text, password: passController.text)
           .catchError((e) {
@@ -172,11 +155,10 @@ class LoginScreenState extends State<LoginScreen> {
         // Write data to local
         currentUser = firebaseUser;
         await prefs.clear();
-        await prefs.setString('id', currentUser.uid);
-        await prefs.setString('nickname', currentUser.displayName);
-        await prefs.setString('photoUrl', currentUser.photoUrl);
-        await prefs.setString('photosResolution',
-            ImageResolution.full.toString().split('.').last);
+        prefs.setString('id', currentUser.uid);
+        prefs.setString('nickname', currentUser.displayName);
+        prefs.setString('photoUrl', currentUser.photoUrl);
+        prefs.setString('photosResolution', ImageResolution.full.toString().split('.').last);
 
         Fluttertoast.showToast(msg: "Sign in success");
         this.setState(() {
@@ -189,15 +171,17 @@ class LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(
               builder: (context) => WelcomeScreen(
                 currentUserId: firebaseUser.uid,
+                prefs: this.prefs,
               )),
         );
 
       } else {
         // Write data to local
-        await prefs.setString('id', documents[0]['id']);
-        await prefs.setString('nickname', documents[0]['nickname']);
-        await prefs.setString('photoUrl', documents[0]['photoUrl']);
-        await prefs.setString('photosResolution', documents[0]['photosResolution']);
+        await prefs.clear();
+        prefs.setString('id', documents[0]['id']);
+        prefs.setString('nickname', documents[0]['nickname']);
+        prefs.setString('photoUrl', documents[0]['photoUrl']);
+        prefs.setString('photosResolution', documents[0]['photosResolution']);
 
         Fluttertoast.showToast(msg: "Sign in success");
         this.setState(() {
@@ -210,6 +194,7 @@ class LoginScreenState extends State<LoginScreen> {
             MaterialPageRoute(
                 builder: (context) => WelcomeScreen(
                   currentUserId: firebaseUser.uid,
+                  prefs: this.prefs,
                 )),
           );
         } else {
@@ -219,6 +204,7 @@ class LoginScreenState extends State<LoginScreen> {
                 builder: (context) =>
                     MainScreen(
                       currentUserId: firebaseUser.uid,
+                      prefs: this.prefs,
                     )),
           );
         }
@@ -293,7 +279,7 @@ class LoginScreenState extends State<LoginScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => RegisterScreen()),
+            MaterialPageRoute(builder: (context) => RegisterScreen(prefs: this.prefs,)),
           );
         }
 

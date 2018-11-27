@@ -7,19 +7,26 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterScreen extends StatefulWidget {
+
+  SharedPreferences prefs;
+
+  RegisterScreen({@required this.prefs});
+
   @override
-  RegisterScreenState createState() => new RegisterScreenState();
+  RegisterScreenState createState() => new RegisterScreenState(prefs: this.prefs);
 }
 
 class RegisterScreenState extends State<RegisterScreen> {
+
   SharedPreferences prefs;
   bool isLoading = false;
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   final emailController = TextEditingController();
   final passController = TextEditingController();
 
-  Future<Null> handleRegister() async {
-    prefs = await SharedPreferences.getInstance();
+  RegisterScreenState({@required this.prefs});
+
+  void handleRegister() async {
 
     this.setState(() {
       isLoading = true;
@@ -52,8 +59,8 @@ class RegisterScreenState extends State<RegisterScreen> {
     }
 
     await prefs.clear();
-    await prefs.setString('id', firebaseUser.uid);
-    await prefs.setString('photoUrl', "https://www.simplyweight.co.uk/images/default/chat/mck-icon-user.png");
+    prefs.setString('id', firebaseUser.uid);
+    prefs.setString('photoUrl', "https://www.simplyweight.co.uk/images/default/chat/mck-icon-user.png");
 
     Fluttertoast.showToast(msg: "Register succes");
     Navigator.push(
@@ -61,6 +68,7 @@ class RegisterScreenState extends State<RegisterScreen> {
       MaterialPageRoute(
           builder: (context) => WelcomeScreen(
             currentUserId: firebaseUser.uid,
+            prefs: this.prefs,
           )),
     );
   }
