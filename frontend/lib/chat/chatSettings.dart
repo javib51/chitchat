@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
+import 'package:chitchat/chat/chatGallery.dart';
 
-class ChatSettings extends StatelessWidget {
+
+class ChatSettings extends StatefulWidget {
+
+  @override
+    createState() => ChatSettingsState();
+}
+
+class ChatSettingsState extends State<ChatSettings> {
   Size deviceSize;
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
@@ -46,7 +54,11 @@ class ChatSettings extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: InkWell(
-                  onTap: () {//Open Gallery
+                  onTap: () {
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ChatGallery()),
+                    );
                   },
                   child: Text(
                   "Photos",
