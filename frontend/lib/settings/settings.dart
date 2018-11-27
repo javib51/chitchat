@@ -86,8 +86,8 @@ class SettingsScreenState extends State<SettingsScreen> {
     Firestore.instance
         .collection('users')
         .document(id)
-        .updateData({'nickname': nickname, 'photosResolution': photosResolution, 'photoUrl': photoUrl}).then((data) async {
-      await prefs.setString('photoUrl', photoUrl);
+        .updateData({'photoUrl': photoUrl}).then((data) async {
+      prefs.setString('photoUrl', photoUrl);
       setState(() {
         isLoading = false;
       });
@@ -103,27 +103,35 @@ class SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  void handleUpdateData() {
+  Future<void> handleUpdateData() async {
     focusNodeNickname.unfocus();
 
     setState(() {
       isLoading = true;
     });
 
+    List<DocumentSnapshot> usersWithGivenNickname = (await Firestore.instance.collection("users").where("nickname", isEqualTo: controllerNickname.text
+        .trim()).getDocuments()).documents;
+
+    if (usersWithGivenNickname.isNotEmpty) {
+      Fluttertoast.showToast(msg: "The nickname provided already exists");
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+
     Firestore.instance
         .collection('users')
         .document(id)
-        .updateData({'nickname': nickname, 'photosResolution': photosResolution, 'photoUrl': photoUrl}).then((data) async {
-      await prefs.setString('nickname', nickname);
-      await prefs.setString('photosResolution', photosResolution);
-      await prefs.setString('photoUrl', photoUrl);
+        .updateData({'nickname': nickname}).then((data) async {
+      prefs.setString('nickname', nickname);
 
       setState(() {
         isLoading = false;
       });
 
       Fluttertoast.showToast(msg: "Update success");
-
     }).catchError((err) {
       setState(() {
         isLoading = false;

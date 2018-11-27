@@ -102,6 +102,20 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         .trim()
         .length == 0) {
       Fluttertoast.showToast(msg: "Please provide NickName");
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    
+    List<DocumentSnapshot> usersWithGivenNickname = (await Firestore.instance.collection("users").where("nickname", isEqualTo: nickController.text
+        .trim()).getDocuments()).documents;
+
+    if (usersWithGivenNickname.isNotEmpty) {
+      Fluttertoast.showToast(msg: "The nickname provided already exists");
+      setState(() {
+        isLoading = false;
+      });
       return;
     }
 
@@ -110,7 +124,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         .where('id', isEqualTo: currentUserId)
         .getDocuments();
     final List<DocumentSnapshot> documents = result.documents;
-    if (documents.length == 0) {
+    if (documents.isEmpty) {
       // Update data to server if new user
       Firestore.instance
           .collection('users')

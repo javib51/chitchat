@@ -139,8 +139,12 @@ class LoginScreenState extends State<LoginScreen> {
           email: emailController.text, password: passController.text)
           .catchError((e) {
         Fluttertoast.showToast(msg: "Sign in fail");
+        this.setState(() {
+          isLoading = false;
+        });
       });
     }
+
     if (firebaseUser != null) {
       // Check is already sign up
       final QuerySnapshot result = await Firestore.instance

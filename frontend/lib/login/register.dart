@@ -34,11 +34,17 @@ class RegisterScreenState extends State<RegisterScreen> {
 
     if (emailController.text == null || emailController.text.length == 0) {
       Fluttertoast.showToast(msg: "Please provide email");
+      this.setState(() {
+        isLoading = false;
+      });
       return;
     }
 
     else if (passController.text == null || passController.text.length < 6) {
       Fluttertoast.showToast(msg: "Minimal password length is 6");
+      this.setState(() {
+        isLoading = false;
+      });
       return;
     }
 
@@ -46,6 +52,9 @@ class RegisterScreenState extends State<RegisterScreen> {
 
     if (providers != null && providers.length > 0) {
       Fluttertoast.showToast(msg: "email already exists");
+      this.setState(() {
+        isLoading = false;
+      });
       return;
     }
     FirebaseUser firebaseUser;
@@ -55,6 +64,9 @@ class RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       Fluttertoast.showToast(msg: "Register fail");
       print(e.toString());
+      this.setState(() {
+        isLoading = false;
+      });
       return;
     }
 
