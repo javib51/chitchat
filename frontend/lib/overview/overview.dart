@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:chitchat/chat/chat.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/login/login.dart';
+import 'package:chitchat/userSearch/search.dart';
 import 'package:chitchat/settings/settings.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -284,7 +285,17 @@ class MainScreenState extends State<MainScreen> {
         ),
         centerTitle: true,
         actions: <Widget>[
-
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        UserSearchScreen(currentUserId: this.currentUserId,)),
+              );
+            }
+          ),
         ],
       ),
       drawer: new Drawer(
