@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 import 'package:chitchat/common/Environment/dao.dart';
 import 'package:chitchat/common/Environment/environment.dart';
 import 'package:chitchat/common/Environment/sign_in_manager.dart';
 import 'package:chitchat/common/Environment/sign_up_manager.dart';
 import 'package:chitchat/common/Models/signup_credentials.dart';
 import 'package:chitchat/common/Models/user.dart';
+=======
+import 'package:chitchat/const.dart';
+>>>>>>> 83e4b079478b8ea2e192d33679414099c7d95982
 import 'package:chitchat/login/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -19,8 +23,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
 
+<<<<<<< HEAD
   @override
   Widget build(BuildContext context) {
+=======
+    await prefs.clear();
+    await prefs.setString('id', firebaseUser.uid);
+    await prefs.setString('photoUrl', "https://www.simplyweight.co.uk/images/default/chat/mck-icon-user.png");
+>>>>>>> 83e4b079478b8ea2e192d33679414099c7d95982
 
     final formFieldDecoration = (String hint) => InputDecoration(
         hintText: hint,
@@ -66,21 +76,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
     );
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: ListView(
-          shrinkWrap: true,
-          padding: EdgeInsets.only(left: 24.0, right: 24.0),
-          children: <Widget>[
-            new Text(
-              "Register",
-              textAlign: TextAlign.center,
-              style: new TextStyle(
-                fontFamily: "Roboto",
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold,
+    return Stack(
+
+    children: <Widget>[
+      Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            children: <Widget>[
+              new Text(
+                "Register",
+                textAlign: TextAlign.center,
+                style: new TextStyle(
+                  fontFamily: "Roboto",
+                  fontSize: 32.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+<<<<<<< HEAD
             ),
             SizedBox(height: 40.0),
             emailFormField,
@@ -90,8 +105,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
             registerButton,
             loginButton
           ],
+=======
+              SizedBox(height: 40.0),
+              email,
+              SizedBox(height: 8.0),
+              password,
+              SizedBox(height: 24.0),
+              registerButton,
+              loginButton
+            ],
+          ),
+>>>>>>> 83e4b079478b8ea2e192d33679414099c7d95982
         ),
       ),
+      Positioned(
+        child: isLoading
+            ? Container(
+          child: Center(
+            child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+          ),
+          color: Colors.white.withOpacity(0.8),
+        )
+            : Container(),
+      ),
+    ],
     );
   }
 

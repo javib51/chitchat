@@ -1,12 +1,21 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+<<<<<<< HEAD
 import 'package:chitchat/common/Environment/environment.dart';
 import 'package:chitchat/common/Environment/storage_manager.dart';
 import 'package:chitchat/common/Environment/firestore_user_profile_dao.dart';
 import 'package:chitchat/common/Models/user.dart';
 import 'package:chitchat/main_content/main_screen.dart';
 import 'package:chitchat/common/const.dart';
+=======
+import 'package:chitchat/common/imageResolution.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chitchat/const.dart';
+import 'package:chitchat/overview/overview.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+>>>>>>> 83e4b079478b8ea2e192d33679414099c7d95982
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -16,6 +25,20 @@ class WelcomeScreen extends StatefulWidget {
   @override
   _WelcomeScreenState createState() => new _WelcomeScreenState();
 }
+<<<<<<< HEAD
+=======
+class WelcomeScreenState extends State<WelcomeScreen> {
+  WelcomeScreenState({Key key, @required this.currentUserId});
+  var nickController = TextEditingController();
+  var aboutController = TextEditingController();
+  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+
+  final String currentUserId;
+  String id = '';
+  String nickname = '';
+  String photosResolution = '';
+  String photoUrl = '';
+>>>>>>> 83e4b079478b8ea2e192d33679414099c7d95982
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
 
@@ -30,6 +53,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
+<<<<<<< HEAD
+=======
+    readLocal();
+  }
+
+  void readLocal() async {
+    prefs = await SharedPreferences.getInstance();
+    id = prefs.getString('id') ?? '';
+    nickname = prefs.getString('nickname') ?? '';
+    photosResolution = prefs.getString('photosResolution') ?? ImageResolution.full.toString().split('.').last;
+    photoUrl = prefs.getString('photoUrl') ?? '';
+
+    nickController = new TextEditingController(text: nickname);
+    //aboutController = new TextEditingController(text: aboutMe);
+>>>>>>> 83e4b079478b8ea2e192d33679414099c7d95982
 
     Environment.shared.credentialsSignInManager.getSignedInUser().then((User loggedInUser) {
       print(loggedInUser);
@@ -39,6 +77,60 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         this._aboutController.text = this._loggedInUser.aboutMe?? "";
       });
     });
+<<<<<<< HEAD
+=======
+
+    if (nickController.text
+        .trim()
+        .length == 0) {
+      Fluttertoast.showToast(msg: "Please provide NickName");
+      return;
+    }
+
+    final QuerySnapshot result = await Firestore.instance
+        .collection('users')
+        .where('id', isEqualTo: currentUserId)
+        .getDocuments();
+    final List<DocumentSnapshot> documents = result.documents;
+    if (documents.length == 0) {
+      // Update data to server if new user
+      Firestore.instance
+          .collection('users')
+          .document(currentUserId)
+          .setData({
+        'nickname': nickController.text.trim(),
+        'photoUrl': photoUrl,
+        'id': currentUserId,
+        'photosResolution': photosResolution,
+      });
+    } else {
+      Firestore.instance
+          .collection('users')
+          .document(id)
+          .updateData({
+        'nickname': nickController.text.trim(),
+        'photosResolution': photosResolution,
+        'photoUrl': photoUrl
+      }).then((data) async {
+        await prefs.setString('nickname', nickController.text.trim());
+        await prefs.setString('photoUrl', photoUrl);
+        });
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+
+      Fluttertoast.showToast(msg: "Update success");
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                MainScreen(
+                  currentUserId: currentUserId,
+                )),
+      );
+>>>>>>> 83e4b079478b8ea2e192d33679414099c7d95982
   }
 
   @override
@@ -49,6 +141,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0)
     );
 
+<<<<<<< HEAD
     final nicknameTextField = TextField(
       controller: this._nickController,
       autofocus: false,
@@ -62,6 +155,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
 
     final completeRegistrationButton = Padding(
+=======
+    final finregButton = Padding(
+>>>>>>> 83e4b079478b8ea2e192d33679414099c7d95982
       padding: EdgeInsets.symmetric(vertical: 16.0),
       child: FlatButton(
           onPressed: this._handleSubmitDataPress,
@@ -79,20 +175,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     final profilePictureContainer = this._getProfilePictureContainer();
 
-    return Scaffold(
-      body: Center(
-        child: ListView(
-          shrinkWrap: true,
-          padding: EdgeInsets.only(left: 24.0, right: 24.0),
-          children: <Widget>[
-            new Text(
-              "Set your Profile",
-              textAlign: TextAlign.center,
-              style: new TextStyle(
-                fontFamily: "Roboto",
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold,
+    return Stack(
+
+    children: <Widget>[
+      Scaffold(
+        body: Center(
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            children: <Widget>[
+              new Text(
+                "Set your Profile",
+                textAlign: TextAlign.center,
+                style: new TextStyle(
+                  fontFamily: "Roboto",
+                  fontSize: 32.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+<<<<<<< HEAD
             ),
             SizedBox(height: 40.0),
             profilePictureContainer,
@@ -103,8 +204,29 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             SizedBox(height: 40.0),
             completeRegistrationButton,
           ],
+=======
+              SizedBox(height: 40.0),
+              profilephoto,
+              SizedBox(height: 40.0),
+              nickname,
+              SizedBox(height: 40.0),
+              finregButton,
+            ],
+          ),
+>>>>>>> 83e4b079478b8ea2e192d33679414099c7d95982
         ),
       ),
+      Positioned(
+        child: isLoading
+            ? Container(
+          child: Center(
+            child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+          ),
+          color: Colors.white.withOpacity(0.8),
+        )
+            : Container(),
+      ),
+    ],
     );
   }
 

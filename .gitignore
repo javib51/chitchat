@@ -13,6 +13,21 @@ build/
 *.ipr
 *.iws
 .idea/
+frontend/pubspec\.lock
+.vscode/
+
 
 backend/image_thumbnail/package-lock.json
 frontend/pubspec.lock
+
+frontend/android/app/\.classpath
+
+frontend/android/\.settings/org\.eclipse\.buildship\.core\.prefs
+
+frontend/android/app/\.project
+
+frontend/android/app/\.settings/org\.eclipse\.buildship\.core\.prefs
+
+frontend/android/\.project
+
+frontend/lib/overview/overview-copy\.dart
