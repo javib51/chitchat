@@ -45,16 +45,15 @@ class ChatGallery extends StatelessWidget {
 
 class DropDownMenu extends StatefulWidget {
   final List<String> _options = ["Sender", "Features"].toList();
-  ValueListenable<String> option;
+  final option;
   DropDownMenu({Key key, @required this.option}) : super(key: key);
 
   @override
-  createState() => DropdownMenuState(this.option);
+  createState() => DropdownMenuState();
 }
 
 class DropdownMenuState extends State<DropDownMenu> {
-  ValueListenable<String> option;
-  DropdownMenuState(this.option);
+  DropdownMenuState();
   //final option = new ValueNotifier("Sender");
   //ValueListenable<String> _option;
   @override
@@ -79,9 +78,7 @@ class DropdownMenuState extends State<DropDownMenu> {
               value: valueListened,
               items: dropdownMenuOptions,
               onChanged: (value) {
-                print("BEFORE " + valueListened);
-                valueListened = value;
-                print("AFTER " + valueListened);
+                widget.option.value = value;
               },
             ),
           );
@@ -92,7 +89,7 @@ class DropdownMenuState extends State<DropDownMenu> {
 }
 
 class GalleryPart extends StatefulWidget {
-  ValueListenable<String> option;
+  final ValueListenable<String> option;
 
   GalleryPart({Key key, @required this.option}) : super(key: key);
 
@@ -104,6 +101,9 @@ class GalleryPartState extends State<GalleryPart> {
   ValueListenable<String> option;
 
   GalleryPartState(this.option);
+
+
+
   List<Widget> _buildGridTiles(numberOfTiles) {
     List<Container> containers =
         new List<Container>.generate(numberOfTiles, (int index) {
@@ -120,6 +120,11 @@ class GalleryPartState extends State<GalleryPart> {
 
   @override
   Widget build(BuildContext context) {
+    option.addListener(() {
+      print("Updating...");
+    });
+
+
     Size deviceSize = MediaQuery.of(context).size;
     return new Container(
       height: deviceSize.height / 1.4,
