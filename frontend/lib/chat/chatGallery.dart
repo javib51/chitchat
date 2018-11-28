@@ -1,19 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 // Uncomment lines 7 and 10 to view the visual layout at runtime.
 //import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
 
-class ChatGallery extends StatefulWidget {
+/* class ChatGallery extends StatefulWidget {
   @override
   createState() => ChatGalleryState();
-}
+} */
 
-class ChatGalleryState extends State<ChatGallery> {
-  Size deviceSize;
-
+class ChatGallery extends StatelessWidget {
+  final option = new ValueNotifier("Sender");
   @override
   Widget build(BuildContext context) {
-    deviceSize = MediaQuery.of(context).size;
     return new Scaffold(
       appBar: new AppBar(
         title: new Text(
@@ -22,56 +21,89 @@ class ChatGalleryState extends State<ChatGallery> {
         ),
         centerTitle: true,
       ),
-      body: Container(
-        height: deviceSize.height,
-        child: Column(
-          children: <Widget>[
-            DropDownMenu(),
-            GalleryPart(),
-          ],
-        ),
+      body: ValueListenableBuilder<String>(
+        valueListenable: option,
+        builder: (context, value, child) {
+          return Container(
+            height: MediaQuery.of(context).size.height,
+            child: Column(
+              children: <Widget>[
+                DropDownMenu(
+                  option: option,
+                ),
+                GalleryPart(
+                  option: option,
+                ),
+              ],
+            ),
+          );
+        },
       ), //new ChatSettingsScreen(),
     );
   }
 }
 
 class DropDownMenu extends StatefulWidget {
-   @override
-   createState() => DropdownMenuState();
-}
-class DropdownMenuState extends State<DropDownMenu> {
-  List<String> _options = ["Sender", "Features"].toList();
-  String _option;
+  final List<String> _options = ["Sender", "Features"].toList();
+  ValueListenable<String> option;
+  DropDownMenu({Key key, @required this.option}) : super(key: key);
 
   @override
+  createState() => DropdownMenuState(this.option);
+}
+
+class DropdownMenuState extends State<DropDownMenu> {
+  ValueListenable<String> option;
+  DropdownMenuState(this.option);
+  //final option = new ValueNotifier("Sender");
+  //ValueListenable<String> _option;
+  @override
   void initState() {
-    _option = _options.first;
     super.initState();
   }
 
   Widget build(BuildContext context) {
     Size deviceSize = MediaQuery.of(context).size;
-    final dropdownMenuOptions = _options
-      .map((String option) =>
-          new DropdownMenuItem<String>(value: option, child: new Text(option))
-        ).toList();
+    final dropdownMenuOptions = widget._options
+        .map((String option) => new DropdownMenuItem<String>(
+            value: option, child: new Text(option)))
+        .toList();
 
     return new Container(
       height: deviceSize.height / 10,
-      child: Center(
-        child: DropdownButton(
-          value: _option,
-          items: dropdownMenuOptions,
-          onChanged: (value) {
-            setState(() => this._option = value);
-          },
-        ),
+      child: ValueListenableBuilder<String>(
+        valueListenable: widget.option,
+        builder: (context, valueListened, child) {
+          return Center(
+            child: DropdownButton(
+              value: valueListened,
+              items: dropdownMenuOptions,
+              onChanged: (value) {
+                print("BEFORE " + valueListened);
+                valueListened = value;
+                print("AFTER " + valueListened);
+              },
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-class GalleryPart extends StatelessWidget {
+class GalleryPart extends StatefulWidget {
+  ValueListenable<String> option;
+
+  GalleryPart({Key key, @required this.option}) : super(key: key);
+
+  @override
+  createState() => GalleryPartState(this.option);
+}
+
+class GalleryPartState extends State<GalleryPart> {
+  ValueListenable<String> option;
+
+  GalleryPartState(this.option);
   List<Widget> _buildGridTiles(numberOfTiles) {
     List<Container> containers =
         new List<Container>.generate(numberOfTiles, (int index) {
