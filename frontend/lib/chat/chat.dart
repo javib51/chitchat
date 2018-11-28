@@ -44,15 +44,37 @@ class ChatState extends State<Chat> {
 
   ChatState({Key key, @required this.currentUserId, @required this.chatId, @required this.chatAvatar});
 
+
   List<Choice> choices = const <Choice>[
     const Choice(title: CHAT_SETTINGS_TEXT, icon: Icons.settings),
   ];
 
 
+  Future<Map<String, DocumentSnapshot>> getUsers() async {
+    DocumentSnapshot chat = await Firestore.instance
+      .collection('chats')
+      .document(this.chatId)
+      .get();
+
+    List<dynamic> usersList = chat['users'];
+    Map<String, DocumentSnapshot> usersMap = new Map();
+
+    for(var user in usersList) {
+      var userData = await Firestore.instance
+        .collection('users')
+        .document(user)
+        .get();
+      usersMap.putIfAbsent(userData["id"], () => userData);
+    }
+
+    return usersMap;
+  }
+
+
   void onItemMenuPress(Choice choice) {
     if (choice.title == CHAT_SETTINGS_TEXT) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => ChatSettings()));
+          context, MaterialPageRoute(builder: (context) => ChatSettings(this.getUsers(), chatId)));
     }  else {
 
     }

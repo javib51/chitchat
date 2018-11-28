@@ -1,16 +1,21 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/chat/chatGallery.dart';
 
-
 class ChatSettings extends StatefulWidget {
+  final String chatId;
+  final Future<Map<String, DocumentSnapshot>> chatUsers;
+
+  ChatSettings(this.chatUsers, this.chatId);
 
   @override
-    createState() => ChatSettingsState();
+  createState() => ChatSettingsState();
 }
 
 class ChatSettingsState extends State<ChatSettings> {
   Size deviceSize;
+
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
         width: double.infinity,
@@ -43,7 +48,8 @@ class ChatSettingsState extends State<ChatSettings> {
             ),
           ),
         ),
-  );
+      );
+
   Widget imagesCard() => Container(
         height: deviceSize.height / 6,
         child: Padding(
@@ -56,13 +62,14 @@ class ChatSettingsState extends State<ChatSettings> {
                 child: InkWell(
                   onTap: () {
                     Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ChatGallery()),
+                      context,
+                      MaterialPageRoute(builder: (context) => ChatGallery()),
                     );
                   },
                   child: Text(
-                  "Photos",
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
+                    "Photos",
+                    style:
+                        TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
                   ),
                 ),
               ),
@@ -83,53 +90,73 @@ class ChatSettingsState extends State<ChatSettings> {
           ),
         ),
       );
-  Widget profileColumn() => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            CircleAvatar(
-              backgroundImage: NetworkImage(
-                  "https://avatars0.githubusercontent.com/u/12619420?s=460&v=4"),
+
+  Widget profileColumn(user, length) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          CircleAvatar(
+            backgroundImage: NetworkImage(
+                user["photoUrl"]),
+          ),
+          Expanded(
+              child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  user["nickname"],
+                ),
+                SizedBox(
+                  height: 8.0,
+                ),
+              ],
             ),
-            Expanded(
-                child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Javier's friend",
-                  ),
-                  SizedBox(
-                    height: 8.0,
-                  ),
-                ],
-              ),
-            )
-            ),
-            IconButton(
-              icon: Icon(Icons.delete),
-              tooltip: 'Delete a user of the group',
-              onPressed: () {},
-            ),
-          ],
-        ),
-      );
+          )),
+
+          IconButton(
+            icon: Icon(Icons.delete),
+            tooltip: 'Delete a user of the group',
+            onPressed: () {},
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget userList() => Container(
-      height: deviceSize.height/4,
+      height: deviceSize.height / 4,
       padding: const EdgeInsets.all(0.0),
-      child: new ListView(
+      child: FutureBuilder(
+          future: widget.chatUsers,
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              return ListView.builder(
+                padding: EdgeInsets.all(10.0),
+                itemBuilder: (context, index) => profileColumn(snapshot.data.values.toList()[index], snapshot.data.values.length),
+                itemCount: snapshot.data.length,
+                reverse: true,
+              );
+            } else {
+              return Container();
+            }
+          }
+      ),
+
+      /*new ListView(
         scrollDirection: Axis.vertical,
         children: <Widget>[
           profileColumn(),
           profileColumn(),
           profileColumn(),
           profileColumn()
-        ],
-      ),
-  );
+        ],*/
+      );
+
   Widget usersCard() => Container(
         width: double.infinity,
         height: deviceSize.height / 2.75,
@@ -150,23 +177,25 @@ class ChatSettingsState extends State<ChatSettings> {
           ),
         ),
       );
+
   Widget leaveChatCard() => Container(
         height: deviceSize.height / 18,
         width: deviceSize.width / 2,
         //padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 1.0),
         child: FlatButton(
-            onPressed: () => leaveChat(),
-            child: Text(
-              'Leave chat',
-              style: TextStyle(fontSize: 16.0, color: Colors.white),
-            ),
-            color: Colors.red,
-            highlightColor: Colors.white30,
-            splashColor: Colors.transparent,
-            textColor: Colors.white,
-            padding: EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
+          onPressed: () => leaveChat(),
+          child: Text(
+            'Leave chat',
+            style: TextStyle(fontSize: 16.0, color: Colors.white),
           ),
+          color: Colors.red,
+          highlightColor: Colors.white30,
+          splashColor: Colors.transparent,
+          textColor: Colors.white,
+          padding: EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
+        ),
       );
+
   Widget bodyData() => Container(
         child: Column(
           children: <Widget>[
@@ -197,13 +226,26 @@ class ChatSettingsState extends State<ChatSettings> {
     //TODO when pressed leave the chat
     print("living chat...");
   }
+
+  List<QuerySnapshot> getParticipants() {
+    var participants = Firestore.instance
+        .collection('chats')
+        .document(widget.chatId)
+        .collection('users')
+        .snapshots()
+        .toList();
+
+    return null;
+  }
 }
 
 class ProfileTile extends StatelessWidget {
   final title;
   final subtitle;
   final textColor;
+
   ProfileTile({this.title, this.subtitle, this.textColor = Colors.white});
+
   @override
   Widget build(BuildContext context) {
     return Column(
