@@ -40,7 +40,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   String id = '';
   String nickname = '';
   String photoUrl = '';
-  String photosResolution = '';
+  String photosResolution = 'full';
   bool isLoading = false;
   File avatarImageFile;
 
@@ -56,7 +56,9 @@ class SettingsScreenState extends State<SettingsScreen> {
     prefs = await SharedPreferences.getInstance();
     id = prefs.getString('id') ?? '';
     nickname = prefs.getString('nickname') ?? '';
-    photosResolution = prefs.getString('photosResolution') ?? '';
+    photosResolution = (prefs.getString('photosResolution') == null ||
+        prefs.getString('photosResolution') == '')? 'full' : prefs.getString(
+        'photosResolution');
     photoUrl = prefs.getString('photoUrl') ?? '';
 
     controllerNickname = new TextEditingController(text: nickname);
@@ -113,6 +115,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     List<DocumentSnapshot> usersWithGivenNickname = (await Firestore.instance.collection("users").where("nickname", isEqualTo: controllerNickname.text
         .trim()).getDocuments()).documents;
 
+    usersWithGivenNickname.removeWhere((user) => user.documentID == id);
     if (usersWithGivenNickname.isNotEmpty) {
       Fluttertoast.showToast(msg: "The nickname provided already exists");
       setState(() {
@@ -124,8 +127,9 @@ class SettingsScreenState extends State<SettingsScreen> {
     Firestore.instance
         .collection('users')
         .document(id)
-        .updateData({'nickname': nickname}).then((data) async {
-      prefs.setString('nickname', nickname);
+        .updateData({'nickname': nickname, 'photosResolution': photosResolution}).then((data) async {
+          prefs.setString('nickname', nickname);
+          prefs.setString('photosResolution', photosResolution);
 
       setState(() {
         isLoading = false;
@@ -236,10 +240,34 @@ class SettingsScreenState extends State<SettingsScreen> {
                     ),
                     margin: EdgeInsets.only(left: 30.0, right: 30.0),
                   ),
+                  Container(
+                    child: Text(
+                      'Photos resolution',
+                      style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, color: primaryColor),
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
+                  Container(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: photosResolution,
+                      items: <String>['full', 'high', 'low'].map((String value) {
+                        return new DropdownMenuItem<String>(
+                          value: value,
+                          child: new Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (newResolution) {
+                        setState(() {
+                          photosResolution = newResolution;
+                        });
+                      },
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  )
                 ],
                 crossAxisAlignment: CrossAxisAlignment.start,
               ),
-
               // Button
               Container(
                 child: FlatButton(
