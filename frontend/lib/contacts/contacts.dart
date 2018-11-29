@@ -76,11 +76,12 @@ class ContactsScreen extends State<Contacts> {
       Fluttertoast.showToast(msg: "Please select contact(s)");
     }
     else if(selected.length > 1){
+      selected.add(currentUserId);
       Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) =>
-                GroupInitScreen()),
+                GroupInitScreen(selectedUsers: selected,)),
       );
     } else {
       this.setState(() {
@@ -133,6 +134,7 @@ class ContactsScreen extends State<Contacts> {
                 chatAvatar: 'https://www.simplyweight.co.uk/images/default/chat/mck-icon-user.png',
               )));
       }
+
   }
 
 

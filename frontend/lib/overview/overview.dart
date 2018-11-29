@@ -71,8 +71,7 @@ class MainScreenState extends State<MainScreen> {
   Future<Map<String, String>> getChatInfo(DocumentSnapshot chat) async {
     Map<String, String> map = new Map();
     if(chat['type'] == 'G') {
-      map['photoUrl'] =
-      "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
+      map['photoUrl'] = chat['photoUrl'];
       map['name'] = chat['name'];
     } else {
       String userId = (chat['users'][0] == currentUserId)? chat['users'][1] : chat['users'][0];
