@@ -77,6 +77,7 @@ class ContactsScreen extends State<Contacts> {
     }
     else if(selected.length > 1){
       selected.add(currentUserId);
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -124,7 +125,7 @@ class ContactsScreen extends State<Contacts> {
       this.setState(() {
         isLoading = false;
       });
-      Navigator.push(
+      Navigator.pushReplacement(
           context,
           new MaterialPageRoute(
               builder: (context) =>
@@ -179,6 +180,12 @@ class ContactsScreen extends State<Contacts> {
         ),
         centerTitle: true,
         actions: <Widget>[
+          IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+
+              }
+          ),
         ],
       ),
       // body is the majority of the screen.

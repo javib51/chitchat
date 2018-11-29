@@ -83,8 +83,8 @@ class GroupInitScreenState extends State<GroupInitScreen> {
           .updateData({
         'id': id.documentID,
       });
-      
-      Navigator.push(
+
+      Navigator.pushReplacement(
           context,
           new MaterialPageRoute(
               builder: (context) =>
