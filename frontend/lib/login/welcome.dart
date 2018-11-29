@@ -15,14 +15,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomeScreen extends StatefulWidget {
   final String currentUserId;
+  final SharedPreferences prefs;
 
-  WelcomeScreen({Key key, @required this.currentUserId}) : super(key: key);
+  WelcomeScreen({Key key, @required this.currentUserId, @required this.prefs}) : super(key: key);
 
   @override
-  WelcomeScreenState createState() => new WelcomeScreenState(currentUserId: currentUserId);
+  WelcomeScreenState createState() => new WelcomeScreenState(currentUserId: currentUserId, prefs: this.prefs);
 }
 class WelcomeScreenState extends State<WelcomeScreen> {
-  WelcomeScreenState({Key key, @required this.currentUserId});
+
+  final SharedPreferences prefs;
+
+  WelcomeScreenState({Key key, @required this.currentUserId, @required this.prefs});
+
   var nickController = TextEditingController();
   var aboutController = TextEditingController();
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
@@ -37,16 +42,13 @@ class WelcomeScreenState extends State<WelcomeScreen> {
 
   File avatarImageFile;
 
-  SharedPreferences prefs;
-
   @override
   void initState() {
     super.initState();
     readLocal();
   }
 
-  void readLocal() async {
-    prefs = await SharedPreferences.getInstance();
+  void readLocal() {
     id = prefs.getString('id') ?? '';
     nickname = prefs.getString('nickname') ?? '';
     photosResolution = prefs.getString('photosResolution') ?? ImageResolution.full.toString().split('.').last;
@@ -100,6 +102,20 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         .trim()
         .length == 0) {
       Fluttertoast.showToast(msg: "Please provide NickName");
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    
+    List<DocumentSnapshot> usersWithGivenNickname = (await Firestore.instance.collection("users").where("nickname", isEqualTo: nickController.text
+        .trim()).getDocuments()).documents;
+
+    if (usersWithGivenNickname.isNotEmpty) {
+      Fluttertoast.showToast(msg: "The nickname provided already exists");
+      setState(() {
+        isLoading = false;
+      });
       return;
     }
 
@@ -108,7 +124,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         .where('id', isEqualTo: currentUserId)
         .getDocuments();
     final List<DocumentSnapshot> documents = result.documents;
-    if (documents.length == 0) {
+    if (documents.isEmpty) {
       // Update data to server if new user
       Firestore.instance
           .collection('users')
@@ -128,8 +144,8 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         'photosResolution': photosResolution,
         'photoUrl': photoUrl
       }).then((data) async {
-        await prefs.setString('nickname', nickController.text.trim());
-        await prefs.setString('photoUrl', photoUrl);
+        prefs.setString('nickname', nickController.text.trim());
+        prefs.setString('photoUrl', photoUrl);
         });
       }
 
@@ -144,6 +160,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
             builder: (context) =>
                 MainScreen(
                   currentUserId: currentUserId,
+                  prefs: this.prefs,
                 )),
       );
   }
