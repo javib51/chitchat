@@ -302,7 +302,7 @@ class MainScreenState extends State<MainScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Contacts()),
+                  MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId,)),
                 );
               }
             ),
@@ -383,7 +383,7 @@ class MainScreenState extends State<MainScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Contacts()),
+            MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId,)),
           );
         }
       ),
