@@ -195,7 +195,7 @@ class ContactsScreen extends State<Contacts> {
               // List
               Container(
                 child: StreamBuilder(
-                    stream: Firestore.instance.collection('users').snapshots(),
+                    stream: Firestore.instance.collection('users').orderBy('nickname').snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return Center(
