@@ -51,6 +51,9 @@
       <meta-data
         android:name="android.support.FILE_PROVIDER_PATHS"
         android:resource="@xml/file_paths_public"></meta-data>
+        <meta-data
+        android:name="com.google.firebase.ml.vision.DEPENDENCIES"
+        android:value="label"></meta-data>
   </provider>
     </application>
 </manifest>

@@ -6,6 +6,7 @@ import 'package:chitchat/chat/chatGallery.dart';
 class ChatSettings extends StatefulWidget {
   final String chatId;
   final Future<Map<String, DocumentSnapshot>> chatUsers;
+  Stream<QuerySnapshot> streamMessage;
 
   ChatSettings(this.chatUsers, this.chatId);
 
@@ -23,7 +24,6 @@ class ChatSettingsState extends State<ChatSettings> {
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Container(
-            //clipBehavior: Clip.antiAlias,
             color: themeColor,
             child: FittedBox(
               child: Column(
@@ -63,7 +63,7 @@ class ChatSettingsState extends State<ChatSettings> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ChatGallery()),
+                      MaterialPageRoute(builder: (context) => ChatGallery(widget.chatId, widget.chatUsers)),
                     );
                   },
                   child: Text(
@@ -146,16 +146,7 @@ class ChatSettingsState extends State<ChatSettings> {
             }
           }
       ),
-
-      /*new ListView(
-        scrollDirection: Axis.vertical,
-        children: <Widget>[
-          profileColumn(),
-          profileColumn(),
-          profileColumn(),
-          profileColumn()
-        ],*/
-      );
+    );
 
   Widget usersCard() => Container(
         width: double.infinity,

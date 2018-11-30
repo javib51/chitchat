@@ -25,6 +25,8 @@ dependencies:
   multi_image_picker: ^2.2.55
   path_provider: ^0.4.1  
   flutter_local_notifications: ^0.4.2
+  quiver: '>=2.0.0 <3.0.0'
+  firebase_ml_vision: ^0.2.0+2
 
 dependency_overrides:
   http: ^0.12.0

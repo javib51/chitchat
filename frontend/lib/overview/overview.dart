@@ -239,6 +239,7 @@ class MainScreenState extends State<MainScreen> {
                           currentUserId: currentUserId,
                           chatId: document.documentID,
                           chatAvatar: info['photoUrl'],
+                          userNickname: nickname,
                         )));
           },
           color: greyColor2,

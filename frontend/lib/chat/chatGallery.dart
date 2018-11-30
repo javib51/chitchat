@@ -1,16 +1,19 @@
+import 'dart:collection';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
-// Uncomment lines 7 and 10 to view the visual layout at runtime.
-//import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
-
-/* class ChatGallery extends StatefulWidget {
-  @override
-  createState() => ChatGalleryState();
-} */
+import 'package:quiver/collection.dart';
 
 class ChatGallery extends StatelessWidget {
+  final String groupChatId;
+  final Future<Map<String, DocumentSnapshot>> chatUsers;
   final option = new ValueNotifier("Sender");
+
+  ChatGallery(this.groupChatId, this.chatUsers);
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -32,6 +35,7 @@ class ChatGallery extends StatelessWidget {
                   option: option,
                 ),
                 GalleryPart(
+                  groupChatId: groupChatId,
                   option: option,
                 ),
               ],
@@ -54,8 +58,7 @@ class DropDownMenu extends StatefulWidget {
 
 class DropdownMenuState extends State<DropDownMenu> {
   DropdownMenuState();
-  //final option = new ValueNotifier("Sender");
-  //ValueListenable<String> _option;
+
   @override
   void initState() {
     super.initState();
@@ -90,66 +93,156 @@ class DropdownMenuState extends State<DropDownMenu> {
 
 class GalleryPart extends StatefulWidget {
   final ValueListenable<String> option;
+  final String groupChatId;
 
-  GalleryPart({Key key, @required this.option}) : super(key: key);
+  GalleryPart({Key key, @required this.groupChatId, @required this.option})
+      : super(key: key);
 
   @override
-  createState() => GalleryPartState(this.option);
+  createState() => GalleryPartState(this.groupChatId, this.option);
 }
 
 class GalleryPartState extends State<GalleryPart> {
   ValueListenable<String> option;
+  String groupChatId;
+  Future<QuerySnapshot> images;
+  
+  var listMessages;
+  GalleryPartState(this.groupChatId, this.option);
 
-  GalleryPartState(this.option);
+  Future<Multimap<String, ImageData>> getImagesBySender() async {
+    Multimap<String, ImageData> multimap = new Multimap<String, ImageData>();
+    
+    var result = await Firestore.instance
+        .collection('chats')
+        .document(widget.groupChatId)
+        .collection('messages')
+        .where("type", isEqualTo: "photo")
+        //.orderBy('timestamp', descending: true)
+        .limit(10)
+        .getDocuments();
+    result.documents.forEach((f) => multimap.add(
+        f.data['nickname'],
+        new ImageData(f.data['nickname'], f.data['payload'],
+            f.data['timestamp'], f.data['label'])));
+    
+    return multimap;
+  }
 
+  Future<Multimap<String, ImageData>> getImagesLabel() async {
+    Multimap<String, ImageData> multimap = new Multimap<String, ImageData>();
+    
+    var result = await Firestore.instance
+        .collection('chats')
+        .document(widget.groupChatId)
+        .collection('messages')
+        .where("type", isEqualTo: "photo")
+        //.orderBy('timestamp', descending: true)
+        .limit(10)
+        .getDocuments();
 
+    result.documents.forEach((f) => multimap.add(
+        f.data['label'],
+        new ImageData(f.data['nickname'], f.data['payload'],
+            f.data['timestamp'], f.data['label'])));
 
-  List<Widget> _buildGridTiles(numberOfTiles) {
-    List<Container> containers =
-        new List<Container>.generate(numberOfTiles, (int index) {
-      //index = 0, 1, 2,...
-      final imageName = index < 9
-          ? 'images_1/image0${index + 1}.JPG'
-          : 'images_1/image${index + 1}.JPG';
-      return new Container(
-        child: new Image.asset(imageName, fit: BoxFit.fill),
-      );
-    });
-    return containers;
+    return multimap;
   }
 
   @override
   Widget build(BuildContext context) {
+    Size deviceSize = MediaQuery.of(context).size;
     option.addListener(() {
       print("Updating...");
+      if(option.value == "Sender"){
+
+      }
     });
-
-
-    Size deviceSize = MediaQuery.of(context).size;
+  
     return new Container(
       height: deviceSize.height / 1.4,
-      child: ListView(
-        shrinkWrap: true,
-        padding: EdgeInsets.all(15.0),
-        children: <Widget>[
-          Center(
-              child: Text(
-            "Type",
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
-          )),
-          IgnorePointer(
-            ignoring: true,
-            child: GridView.extent(
-              shrinkWrap: true,
-              maxCrossAxisExtent: 150.0,
-              mainAxisSpacing: 5.0,
-              crossAxisSpacing: 5.0,
-              padding: const EdgeInsets.all(5.0),
-              children: _buildGridTiles(10), //Where is this function ?
-            ),
-          ),
-        ],
+      child: FutureBuilder(
+          future: getImagesBySender(),
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              return ListView(
+                shrinkWrap: true,
+                padding: EdgeInsets.all(15.0),
+                children: listMyWidgets(snapshot.data),
+              );
+            } else {
+              return Container();
+            }
+          }
       ),
     );
+  }
+
+  List<Widget> listMyWidgets(Multimap<String, ImageData> mapImageData) {
+    List<Widget> list = new List();
+    mapImageData.forEachKey((k, v) {
+      list.add(
+        Center(
+            child: Text(
+              k,
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
+            )
+        ),
+      );
+      List<Container> imagesContainer =
+          new List<Container>.generate(v.length, (int index) {
+        return Container(
+          child: CachedNetworkImage(
+            errorWidget: Material(
+              child: Image.asset(
+                'images/img_not_available.jpeg',
+                fit: BoxFit.fill,
+              ),
+            ),
+            imageUrl: v.elementAt(index).payload,
+            fit: BoxFit.fill,
+          ),
+        );
+      });
+      list.add(
+        IgnorePointer(
+          ignoring: true,
+          child: GridView.extent(
+            shrinkWrap: true,
+            maxCrossAxisExtent: 150.0,
+            mainAxisSpacing: 5.0,
+            crossAxisSpacing: 5.0,
+            padding: const EdgeInsets.all(5.0),
+            children: imagesContainer, //Where is this function ?
+          ),
+        ),
+      );
+    });
+    return list;
+  }
+}
+
+class ImageData {
+  String _nickname;
+  String _payload;
+  String _timestamp;
+  String _label;
+
+  ImageData(String n, String p, String t, String f) {
+    this._nickname = n;
+    this._payload = p;
+    this._timestamp = t;
+    this._label = f;
+  }
+
+  String get nickname => this._nickname;
+  String get payload => this._payload;
+  String get timestamp => this._timestamp;
+  String get label => this._label;
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return "Nickname: $nickname, Payload: $payload, Timestamp: $timestamp, Feature: $label";
   }
 }
