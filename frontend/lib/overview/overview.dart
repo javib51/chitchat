@@ -71,11 +71,13 @@ class MainScreenState extends State<MainScreen> {
       map['photoUrl'] =
       "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
       map['name'] = chat['name'];
+      map['type'] = chat['type'];
     } else {
       String userId = (chat['users'][0] == currentUserId)? chat['users'][1] : chat['users'][0];
       DocumentSnapshot user = await Firestore.instance.collection('users').document(userId).get();
       map['photoUrl'] = user['photoUrl'];
       map['name'] = user['nickname'];
+      map['type'] = chat['type'];
     }
     return map;
   }
@@ -232,6 +234,7 @@ class MainScreenState extends State<MainScreen> {
             ],
           ),
           onPressed: () {
+            print(info);
             Navigator.push(
                 context,
                 new MaterialPageRoute(
@@ -240,6 +243,7 @@ class MainScreenState extends State<MainScreen> {
                           chatId: document.documentID,
                           chatAvatar: info['photoUrl'],
                           userNickname: nickname,
+                          chatType: info['type'],
                         )));
           },
           color: greyColor2,

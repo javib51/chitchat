@@ -30,17 +30,19 @@ class Chat extends StatefulWidget {
   final String chatAvatar;
   final String currentUserId;
   final String userNickname;
+  final String chatType;
   Chat(
       {Key key,
       @required this.currentUserId,
       @required this.chatId,
       @required this.chatAvatar,
-      @required this.userNickname})
+      @required this.userNickname,
+      @required this.chatType})
       : super(key: key);
 
   @override
   State createState() => new ChatState(
-      currentUserId: currentUserId, chatId: chatId, chatAvatar: chatAvatar, userNickname: userNickname);
+      currentUserId: currentUserId, chatId: chatId, chatAvatar: chatAvatar, userNickname: userNickname, chatType: chatType);
 }
 
 class ChatState extends State<Chat> {
@@ -48,6 +50,7 @@ class ChatState extends State<Chat> {
   final String chatAvatar;
   final String currentUserId;
   final String userNickname;
+  final String chatType;
   Stream<QuerySnapshot> streamMessage;
 
   ChatState(
@@ -55,7 +58,8 @@ class ChatState extends State<Chat> {
       @required this.currentUserId,
       @required this.chatId,
       @required this.chatAvatar,
-      @required this.userNickname}) {
+      @required this.userNickname,
+      @required this.chatType}) {
       this.streamMessage = getMessages();
   }
 
@@ -97,7 +101,7 @@ class ChatState extends State<Chat> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => ChatSettings(this.getUsers(), chatId)));
+              builder: (context) => ChatSettings(this.getUsers(), chatId, chatType, currentUserId)));
     } else {}
   }
 
@@ -143,6 +147,7 @@ class ChatState extends State<Chat> {
         chatAvatar: chatAvatar,
         streamMessage: streamMessage,
         userNickname: userNickname,
+        chatType: chatType,
       ),
     );
   }
@@ -153,6 +158,7 @@ class ChatScreen extends StatefulWidget {
   final String chatAvatar;
   final String currentUserId;
   final String userNickname;
+  final String chatType;
   final Stream<QuerySnapshot> streamMessage;
   
   ChatScreen(
@@ -161,6 +167,7 @@ class ChatScreen extends StatefulWidget {
       @required this.chatId,
       @required this.chatAvatar,
       @required this.userNickname,
+      @required this.chatType,
       this.streamMessage})
       : super(key: key);
 
@@ -174,13 +181,15 @@ class ChatScreenState extends State<ChatScreen> {
   String chatId;
   String chatAvatar;
   String userNickname;
+  String chatType;
 
   ChatScreenState(
       {Key key,
       @required this.id,
       @required this.chatId,
       @required this.chatAvatar,
-      @required this.userNickname});
+      @required this.userNickname,
+      @required this.chatType});
 
   var listMessage;
   String groupChatId;
@@ -353,7 +362,7 @@ class ChatScreenState extends State<ChatScreen> {
                           placeholder: Container(
                             child: CircularProgressIndicator(
                               valueColor:
-                                  AlwaysStoppedAnimation<Color>(themeColor),
+                                AlwaysStoppedAnimation<Color>(themeColor),
                             ),
                             width: 200.0,
                             height: 200.0,

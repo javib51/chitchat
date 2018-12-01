@@ -1,3 +1,4 @@
+import 'package:chitchat/overview/overview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
@@ -6,9 +7,11 @@ import 'package:chitchat/chat/chatGallery.dart';
 class ChatSettings extends StatefulWidget {
   final String chatId;
   final Future<Map<String, DocumentSnapshot>> chatUsers;
+  final String chatType;
+  final String currentUserId;
   Stream<QuerySnapshot> streamMessage;
 
-  ChatSettings(this.chatUsers, this.chatId);
+  ChatSettings(this.chatUsers, this.chatId, this.chatType, this.currentUserId);
 
   @override
   createState() => ChatSettingsState();
@@ -103,26 +106,28 @@ class ChatSettingsState extends State<ChatSettings> {
           ),
           Expanded(
               child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  user["nickname"],
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      user["nickname"],
+                    ),
+                    SizedBox(
+                      height: 8.0,
+                    ),
+                  ],
                 ),
-                SizedBox(
-                  height: 8.0,
-                ),
-              ],
-            ),
-          )),
-
-          IconButton(
+              )
+          ),
+          /* widget.chatType == "G"
+           ? IconButton(
             icon: Icon(Icons.delete),
             tooltip: 'Delete a user of the group',
             onPressed: () {},
-          ),
+          )
+          : Container(), */
         ],
       ),
     );
@@ -193,7 +198,9 @@ class ChatSettingsState extends State<ChatSettings> {
             profileHeader(),
             imagesCard(),
             usersCard(),
-            leaveChatCard(),
+            widget.chatType == "G"
+            ? leaveChatCard()
+            : Container(),
           ],
         ),
       );
@@ -213,9 +220,37 @@ class ChatSettingsState extends State<ChatSettings> {
     );
   }
 
-  void leaveChat() {
-    //TODO when pressed leave the chat
-    print("living chat...");
+  void leaveChat() async {
+
+    Map<String, DocumentSnapshot> listUsers = await widget.chatUsers;
+    listUsers.remove(widget.currentUserId);
+    await Firestore.instance
+        .collection('chats')
+        .document(widget.chatId)
+        .updateData({'users': listUsers.keys.toList() });
+    //Check if chat is empty and delete it
+    if(listUsers.isEmpty){
+      await Firestore.instance
+        .collection('chats')
+        .document(widget.chatId)
+        .delete();
+    }
+    Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                  MainScreen(currentUserId: widget.currentUserId),
+            )
+    );
+    /*
+    Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                  MainScreen(currentUserId: widget.currentUserId),
+            )
+          );
+          */
   }
 
   List<QuerySnapshot> getParticipants() {

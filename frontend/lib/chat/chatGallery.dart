@@ -152,17 +152,15 @@ class GalleryPartState extends State<GalleryPart> {
   @override
   Widget build(BuildContext context) {
     Size deviceSize = MediaQuery.of(context).size;
+
     option.addListener(() {
       print("Updating...");
-      if(option.value == "Sender"){
-
-      }
     });
   
     return new Container(
       height: deviceSize.height / 1.4,
       child: FutureBuilder(
-          future: getImagesBySender(),
+          future: getImagesLabel(),
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             if (snapshot.hasData && snapshot.data != null) {
               return ListView(
@@ -230,6 +228,7 @@ class ImageData {
 
   ImageData(String n, String p, String t, String f) {
     this._nickname = n;
+
     this._payload = p;
     this._timestamp = t;
     this._label = f;
