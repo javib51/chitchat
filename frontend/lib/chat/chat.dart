@@ -22,7 +22,7 @@ import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
- 
+
 const CHAT_SETTINGS_TEXT = "Settings/Members";
 
 class Chat extends StatefulWidget {
@@ -160,7 +160,7 @@ class ChatScreen extends StatefulWidget {
   final String userNickname;
   final String chatType;
   final Stream<QuerySnapshot> streamMessage;
-  
+
   ChatScreen(
       {Key key,
       @required this.currentUserId,
@@ -270,7 +270,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Future uploadFile(File file) async {
-  
+
     String contentType = lookupMimeType(file.path);
     String label = await getLabel(file);
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
@@ -539,7 +539,7 @@ class ChatScreenState extends State<ChatScreen> {
   bool isLastMessageLeft(int index) {
     if ((index > 0 &&
             listMessage != null &&
-            listMessage[index - 1]['idFrom'] == currentUserId) ||
+            listMessage[index - 1]['userFrom'].documentID == currentUserId) ||
         index == 0) {
       return true;
     } else {
@@ -550,7 +550,7 @@ class ChatScreenState extends State<ChatScreen> {
   bool isLastMessageRight(int index) {
     if ((index > 0 &&
             listMessage != null &&
-            listMessage[index - 1]['idFrom'] != currentUserId) ||
+            listMessage[index - 1]['userFrom'].documentID != currentUserId) ||
         index == 0) {
       return true;
     } else {
@@ -572,7 +572,7 @@ class ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-  
+
     return WillPopScope(
       child: Stack(
         children: <Widget>[
