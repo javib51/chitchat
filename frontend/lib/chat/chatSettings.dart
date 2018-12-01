@@ -235,13 +235,7 @@ class ChatSettingsState extends State<ChatSettings> {
         .document(widget.chatId)
         .delete();
     }
-    Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                  MainScreen(currentUserId: widget.currentUserId),
-            )
-    );
+    Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName));
     /*
     Navigator.push(
             context,

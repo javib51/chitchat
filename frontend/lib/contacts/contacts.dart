@@ -16,7 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Contacts extends StatefulWidget {
   final String currentUserId;
-  Contacts({Key key, @required this.currentUserId}) : super(key: key);
+  final String userNickname;
+  Contacts({Key key, @required this.currentUserId, this.userNickname}) : super(key: key);
 
   @override
   State createState() => new ContactsScreen(currentUserId: currentUserId);
@@ -82,7 +83,7 @@ class ContactsScreen extends State<Contacts> {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                GroupInitScreen(selectedUsers: selected,)),
+                GroupInitScreen(selectedUsers: selected, userNickname: nickname,)),
       );
     } else {
       this.setState(() {
@@ -133,6 +134,8 @@ class ContactsScreen extends State<Contacts> {
                 currentUserId: currentUserId,
                 chatId: push_chat,
                 chatAvatar: 'https://www.simplyweight.co.uk/images/default/chat/mck-icon-user.png',
+                chatType: "P",
+                userNickname: widget.userNickname,
               )));
       }
 

@@ -335,7 +335,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget buildItem(int index, DocumentSnapshot document) {
-    if (document['userFrom'].documentID == document.data["userFrom"].documentID) {
+    if (document['userFrom'].documentID == currentUserId) {
       // Right (my message)
       return Row(
         children: <Widget>[

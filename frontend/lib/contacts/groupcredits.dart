@@ -12,7 +12,9 @@ import 'package:image_picker/image_picker.dart';
 
 class GroupInitScreen extends StatefulWidget {
   final Set selectedUsers;
-  GroupInitScreen({Key key, @required this.selectedUsers}) : super(key: key);
+  final String userNickname;
+
+  GroupInitScreen({Key key, @required this.selectedUsers, this.userNickname}) : super(key: key);
 
   @override
   State createState() => new GroupInitScreenState(selectedUsers: selectedUsers);
@@ -92,6 +94,8 @@ class GroupInitScreenState extends State<GroupInitScreen> {
                 currentUserId: selectedUsers.last,
                 chatId: id.documentID,
                 chatAvatar: photoUrl,
+                userNickname: widget.userNickname,
+                chatType: "G",
               )));
     }
     setState(() {
