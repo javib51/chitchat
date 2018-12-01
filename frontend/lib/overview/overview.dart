@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:chitchat/chat/chat.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/login/login.dart';
+import 'package:chitchat/userSearch/search.dart';
 import 'package:chitchat/settings/settings.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,22 +18,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
   final String currentUserId;
+  final SharedPreferences prefs;
 
-  MainScreen({Key key, @required this.currentUserId}) : super(key: key);
+  MainScreen({Key key, @required this.currentUserId, @required this.prefs}) : super(key: key);
 
   @override
-  State createState() => new MainScreenState(currentUserId: currentUserId);
+  State createState() => new MainScreenState(currentUserId: currentUserId, prefs: this.prefs);
 }
 
 class MainScreenState extends State<MainScreen> {
-  MainScreenState({Key key, @required this.currentUserId});
+
+  MainScreenState({Key key, @required this.currentUserId, @required this.prefs});
 
   final String currentUserId;
+  final SharedPreferences prefs;
 
   bool isLoading = false;
 
   Map<String,Map<String,String>> values = new Map();
-  SharedPreferences prefs;
 
   String nickname = '';
   String photoUrl = '';
@@ -43,8 +46,8 @@ class MainScreenState extends State<MainScreen> {
     readLocal();
   }
 
-  void readLocal() async {
-    prefs = await SharedPreferences.getInstance();
+  void readLocal() {
+
     nickname = prefs.getString('nickname') ?? '';
     photoUrl = prefs.getString('photoUrl') ?? '';
 
@@ -56,7 +59,7 @@ class MainScreenState extends State<MainScreen> {
     setState(() {});
   }
 
-  void updateToken(String notificationToken) async {
+  void updateToken(String notificationToken) {
     Firestore.instance.collection('users').document(currentUserId).updateData({"notificationToken": notificationToken});
   }
   
@@ -68,8 +71,7 @@ class MainScreenState extends State<MainScreen> {
   Future<Map<String, String>> getChatInfo(DocumentSnapshot chat) async {
     Map<String, String> map = new Map();
     if(chat['type'] == 'G') {
-      map['photoUrl'] =
-      "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
+      map['photoUrl'] = chat['photoUrl'];
       map['name'] = chat['name'];
       map['type'] = chat['type'];
     } else {
@@ -184,7 +186,12 @@ class MainScreenState extends State<MainScreen> {
           if (snapshot.hasData && snapshot.data != null) {
             return buildItem(context, document, snapshot.data);
           } else {
-            return Container();
+            return Container(
+              child: Center(
+                child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+              ),
+              color: Colors.white.withOpacity(0.8),
+            );
           }
         }
     );
@@ -270,12 +277,14 @@ class MainScreenState extends State<MainScreen> {
       await googleSignIn.signOut();
     }
 
+    await this.prefs.clear();
+
     this.setState(() {
       isLoading = false;
     });
 
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => MyApp()),
+        MaterialPageRoute(builder: (context) => MyApp(prefs: this.prefs,)),
         (Route<dynamic> route) => false);
   }
 
@@ -289,7 +298,17 @@ class MainScreenState extends State<MainScreen> {
         ),
         centerTitle: true,
         actions: <Widget>[
-
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        UserSearchScreen(currentUserId: this.currentUserId,)),
+              );
+            }
+          ),
         ],
       ),
       drawer: new Drawer(
@@ -307,7 +326,7 @@ class MainScreenState extends State<MainScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Contacts()),
+                  MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId,)),
                 );
               }
             ),
@@ -388,7 +407,7 @@ class MainScreenState extends State<MainScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Contacts()),
+            MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId,)),
           );
         }
       ),

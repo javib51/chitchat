@@ -115,6 +115,7 @@ class ChatState extends State<Chat> {
         ),
         centerTitle: true,
         actions: <Widget>[
+
           PopupMenuButton<Choice>(
             onSelected: onItemMenuPress,
             itemBuilder: (BuildContext context) {
