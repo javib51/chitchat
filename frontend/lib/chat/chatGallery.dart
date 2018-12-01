@@ -106,9 +106,19 @@ class GalleryPartState extends State<GalleryPart> {
   ValueListenable<String> option;
   String groupChatId;
   Future<QuerySnapshot> images;
-  
+
+  var currentState;
+  Map<String, Future<Multimap<String, ImageData>>> states = {"Sender": null, "Features": null};
+
   var listMessages;
+
   GalleryPartState(this.groupChatId, this.option);
+
+  void initState() {
+    super.initState();
+
+    currentState = states["Sender"] = this.getImagesBySender();
+  }
 
   Future<Multimap<String, ImageData>> getImagesBySender() async {
     Multimap<String, ImageData> multimap = new Multimap<String, ImageData>();
@@ -129,7 +139,7 @@ class GalleryPartState extends State<GalleryPart> {
     return multimap;
   }
 
-  Future<Multimap<String, ImageData>> getImagesLabel() async {
+  Future<Multimap<String, ImageData>> getImagesByFeature() async {
     Multimap<String, ImageData> multimap = new Multimap<String, ImageData>();
     
     var result = await Firestore.instance
@@ -154,13 +164,24 @@ class GalleryPartState extends State<GalleryPart> {
     Size deviceSize = MediaQuery.of(context).size;
 
     option.addListener(() {
-      print("Updating...");
+      if(states[option.value] == null) {
+        switch (option.value) {
+          case "Sender":
+            states[option.value] = this.getImagesBySender();
+            break;
+          case "Features":
+            states[option.value] = this.getImagesByFeature();
+            break;
+        }
+      }
+
+      currentState = states[option.value];
     });
   
     return new Container(
       height: deviceSize.height / 1.4,
       child: FutureBuilder(
-          future: getImagesLabel(),
+          future: currentState,
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             if (snapshot.hasData && snapshot.data != null) {
               return ListView(

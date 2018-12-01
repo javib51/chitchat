@@ -253,7 +253,7 @@ class ChatSettingsState extends State<ChatSettings> {
           */
   }
 
-  List<QuerySnapshot> getParticipants() {
+  /*List<QuerySnapshot> getParticipants() {
     var participants = Firestore.instance
         .collection('chats')
         .document(widget.chatId)
@@ -262,7 +262,7 @@ class ChatSettingsState extends State<ChatSettings> {
         .toList();
 
     return null;
-  }
+  }*/
 }
 
 class ProfileTile extends StatelessWidget {

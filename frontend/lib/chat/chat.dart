@@ -173,7 +173,7 @@ class ChatScreen extends StatefulWidget {
 
   @override
   State createState() => new ChatScreenState(
-      id: currentUserId, chatId: chatId, chatAvatar: chatAvatar, userNickname: userNickname);
+      id: currentUserId, chatId: chatId, chatAvatar: chatAvatar, userNickname: userNickname, chatType: chatType);
 }
 
 class ChatScreenState extends State<ChatScreen> {
