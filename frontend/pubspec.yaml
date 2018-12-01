@@ -25,6 +25,7 @@ dependencies:
   multi_image_picker: ^2.2.55
   path_provider: ^0.4.1  
   flutter_local_notifications: ^0.4.2
+  image: ^2.0.4
 
 dependency_overrides:
   http: ^0.12.0
