@@ -173,11 +173,11 @@ class ChatScreen extends StatefulWidget {
 
   @override
   State createState() => new ChatScreenState(
-      id: currentUserId, chatId: chatId, chatAvatar: chatAvatar, userNickname: userNickname, chatType: chatType);
+      currentUserId: currentUserId, chatId: chatId, chatAvatar: chatAvatar, userNickname: userNickname, chatType: chatType);
 }
 
 class ChatScreenState extends State<ChatScreen> {
-  String id;
+  String currentUserId;
   String chatId;
   String chatAvatar;
   String userNickname;
@@ -185,7 +185,7 @@ class ChatScreenState extends State<ChatScreen> {
 
   ChatScreenState(
       {Key key,
-      @required this.id,
+      @required this.currentUserId,
       @required this.chatId,
       @required this.chatAvatar,
       @required this.userNickname,
@@ -306,7 +306,7 @@ class ChatScreenState extends State<ChatScreen> {
           await transaction.set(
           documentReference,
           {
-            'userFrom': Firestore.instance.collection('users').document(id),
+            'userFrom': Firestore.instance.collection('users').document(currentUserId),
             'nickname': this.userNickname,
             'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
             'payload': payload,
@@ -318,7 +318,7 @@ class ChatScreenState extends State<ChatScreen> {
           await transaction.set(
           documentReference,
           {
-            'userFrom': Firestore.instance.collection('users').document(id),
+            'userFrom': Firestore.instance.collection('users').document(currentUserId),
             'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
             'payload': payload,
             'type': type
@@ -334,7 +334,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget buildItem(int index, DocumentSnapshot document) {
-    if (document['userFrom'] == id) {
+    if (document['userFrom'].documentID == document.data["userFrom"].documentID) {
       // Right (my message)
       return Row(
         children: <Widget>[
@@ -539,7 +539,7 @@ class ChatScreenState extends State<ChatScreen> {
   bool isLastMessageLeft(int index) {
     if ((index > 0 &&
             listMessage != null &&
-            listMessage[index - 1]['idFrom'] == id) ||
+            listMessage[index - 1]['idFrom'] == currentUserId) ||
         index == 0) {
       return true;
     } else {
@@ -550,7 +550,7 @@ class ChatScreenState extends State<ChatScreen> {
   bool isLastMessageRight(int index) {
     if ((index > 0 &&
             listMessage != null &&
-            listMessage[index - 1]['idFrom'] != id) ||
+            listMessage[index - 1]['idFrom'] != currentUserId) ||
         index == 0) {
       return true;
     } else {
