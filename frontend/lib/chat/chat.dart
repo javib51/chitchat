@@ -149,6 +149,7 @@ class ChatState extends State<Chat> {
         streamMessage: streamMessage,
         userNickname: userNickname,
         chatType: chatType,
+        chatUsers: this.getUsers(),
       ),
     );
   }
@@ -161,6 +162,7 @@ class ChatScreen extends StatefulWidget {
   final String userNickname;
   final String chatType;
   final Stream<QuerySnapshot> streamMessage;
+  final Future<Map<String, DocumentSnapshot>> chatUsers;
 
   ChatScreen(
       {Key key,
@@ -169,7 +171,7 @@ class ChatScreen extends StatefulWidget {
       @required this.chatAvatar,
       @required this.userNickname,
       @required this.chatType,
-      this.streamMessage})
+      this.streamMessage, this.chatUsers})
       : super(key: key);
 
   @override
@@ -422,28 +424,46 @@ class ChatScreenState extends State<ChatScreen> {
             Row(
               children: <Widget>[
                 isLastMessageLeft(index)
-                    ? Material(
-                        child: CachedNetworkImage(
-                          placeholder: Container(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.0,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(themeColor),
-                            ),
-                            width: 35.0,
-                            height: 35.0,
-                            padding: EdgeInsets.all(10.0),
-                          ),
-                          imageUrl: chatAvatar,
-                          width: 35.0,
-                          height: 35.0,
-                          fit: BoxFit.cover,
-                        ),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(18.0),
-                        ),
-                        clipBehavior: Clip.hardEdge,
-                      )
+                    ? FutureBuilder(
+                        future: widget.chatUsers,
+                        builder: (BuildContext context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasData && snapshot.data != null) {
+
+                            return Material(
+                              child: CachedNetworkImage(
+                                placeholder: Container(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.0,
+                                    valueColor:
+                                    AlwaysStoppedAnimation<Color>(themeColor),
+                                  ),
+                                  width: 35.0,
+                                  height: 35.0,
+                                  padding: EdgeInsets.all(10.0),
+                                ),
+                                imageUrl: snapshot.data[document['userFrom'].documentID]["photoUrl"],
+                                width: 35.0,
+                                height: 35.0,
+                                fit: BoxFit.cover,
+                              ),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(18.0),
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                            );
+                          } else {
+                            return Container(
+                              width: 35.0,
+                              height: 35.0,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.0,
+                                valueColor:
+                                AlwaysStoppedAnimation<Color>(themeColor),
+                              ),
+                            );
+                          }
+                        }
+                    )
                     : Container(width: 35.0),
                 document['type'] == "text"
                     ? Container(
@@ -540,7 +560,7 @@ class ChatScreenState extends State<ChatScreen> {
   bool isLastMessageLeft(int index) {
     if ((index > 0 &&
             listMessage != null &&
-            listMessage[index - 1]['userFrom'].documentID == currentUserId) ||
+            listMessage[index - 1]['userFrom'].documentID != listMessage[index]['userFrom'].documentID) ||
         index == 0) {
       return true;
     } else {

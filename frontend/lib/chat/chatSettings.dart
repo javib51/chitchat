@@ -147,7 +147,16 @@ class ChatSettingsState extends State<ChatSettings> {
                 reverse: true,
               );
             } else {
-              return Container();
+              return Container(
+                  alignment: Alignment(0.0, 0.0),
+                  width: 50,
+                  height: 50,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.0,
+                    valueColor:
+                    AlwaysStoppedAnimation<Color>(themeColor),
+                  )
+              );
             }
           }
       ),
