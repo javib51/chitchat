@@ -275,7 +275,7 @@ class ChatScreenState extends State<ChatScreen> {
     return label;
   }
 
-  void onSendMessage(String payload, String type, String label) {
+  void onSendMessage(String payload, String type, String label) async {
     // type: 0 = text, 1 = image, 2 = sticker
     if (payload.trim() != '') {
       textEditingController.clear();
@@ -294,6 +294,13 @@ class ChatScreenState extends State<ChatScreen> {
         messagePayload["label"] = label;
         messagePayload["nickname"] = this.userNickname;
         messagePayload["maxResolution"] = this._imageResolutionSet.toString();
+      } else if (type == "text") {
+        Match urlFirstMatch = _getLinkMatchFromText(payload);
+        if (urlFirstMatch != null) {
+          messagePayload["url"] = payload.substring(urlFirstMatch.start, urlFirstMatch.end);
+          messagePayload["matchStart"] = urlFirstMatch.start;
+          messagePayload["matchEnd"] = urlFirstMatch.end;
+        }
       }
 
       var documentReference = Firestore.instance
@@ -407,7 +414,7 @@ class ChatScreenState extends State<ChatScreen> {
         children: <Widget>[
           document['type'] == "text"
           // Text
-              ? this._buildMessageText(index, document['payload'], this.isLastMessageRight(index))
+              ? this._buildMessageText(index, document, this.isLastMessageRight(index))
               : document['type'] == "photo"
           // Image
               ? this._buildImageContainer(document, isLastMessageRight(index), ChatSide.right)
@@ -455,7 +462,7 @@ class ChatScreenState extends State<ChatScreen> {
                 )
                     : Container(width: 35.0),
                 document['type'] == "text"
-                    ? this._buildMessageText(index, document['payload'], this.isLastMessageRight(index))
+                    ? this._buildMessageText(index, document, this.isLastMessageRight(index))
                     : document['type'] == "photo"
                     ? this._buildImageContainer(document, isLastMessageLeft(index), ChatSide.left)
                     : Container(
@@ -489,12 +496,13 @@ class ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Widget _buildMessageText(int index, String text, bool isLast) {
+  Widget _buildMessageText(int index, DocumentSnapshot document, bool isLast) {
 
-    Match urlFirstMatch = getLinkMatchFromText(text);
+    String text = document["payload"];
+    String url = document["url"];
 
-    if (urlFirstMatch != null) {
-      return  LinkPreview(text, urlFirstMatch, isLast);
+    if (url != null) {
+      return  LinkPreview(text, document["matchStart"], document["matchEnd"], isLast);
     } else {
       return Container(
         child: Text(
@@ -759,8 +767,7 @@ class ChatScreenState extends State<ChatScreen> {
               margin: new EdgeInsets.symmetric(horizontal: 8.0),
               child: new IconButton(
                 icon: new Icon(Icons.send),
-                onPressed: () =>
-                    onSendMessage(textEditingController.text, "text", "text"),
+                onPressed: () => onSendMessage(textEditingController.text, "text", null),
                 color: primaryColor,
               ),
             ),
@@ -985,5 +992,32 @@ class ChatScreenState extends State<ChatScreen> {
       isLoading = false;
     });
     onSendMessage(fileName, "photo", label);
+  }
+
+  Match _getLinkMatchFromText(String text) {
+    RegExp regex = new RegExp(
+        "(?:(?:(?:https?):)?\\/\\/)" +
+            "(?:\\S+(?::\\S*)?@)?" +
+            "(?:" +
+            "(?!(?:10|127)(?:\\.\\d{1,3}){3})" +
+            "(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})" +
+            "(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})" +
+            "(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])" +
+            "(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}" +
+            "(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))" +
+            "|" +
+            "(?:" +
+            "(?:" +
+            "[a-z0-9\\u00a1-\\uffff]" +
+            "[a-z0-9\\u00a1-\\uffff_-]{0,62}" +
+            ")?" +
+            "[a-z0-9\\u00a1-\\uffff]\\." +
+            ")+" +
+            "(?:[a-z\\u00a1-\\uffff]{2,}\\.?)" +
+            ")" +
+            "(?::\\d{2,5})?" +
+            "(?:[/?#]\\S*)?"
+    );
+    return regex.firstMatch(text);
   }
 }
