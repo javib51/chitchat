@@ -491,10 +491,10 @@ class ChatScreenState extends State<ChatScreen> {
 
   Widget _buildMessageText(int index, String text, bool isLast) {
 
-    String url = getLinkFromText(text);
+    Match urlFirstMatch = getLinkMatchFromText(text);
 
-    if (url != null) {
-      return  LinkPreview(text, url, isLast);
+    if (urlFirstMatch != null) {
+      return  LinkPreview(text, urlFirstMatch, isLast);
     } else {
       return Container(
         child: Text(
