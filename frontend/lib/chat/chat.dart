@@ -21,6 +21,9 @@ import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
+enum ChatSide {
+  left, right
+}
 
 const CHAT_SETTINGS_TEXT = "Settings/Members";
 
@@ -223,6 +226,93 @@ class ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Widget _buildImageContainer(DocumentSnapshot document, bool isLastMessage, ChatSide side) {
+    return Container(
+      child: Material(
+        child: () {
+          String imageName = document["payload"];
+
+          if (this.pictureURLs[imageName] == null) {
+            String completeImageName = imageName;
+            String imageResolutionMaxStringPicture = document['maxResolution'];
+            print("Image seen for the first time, no URL fetched.");
+
+            if (imageResolutionMaxStringPicture == null) {    //Retro-compatibility
+              print("Downloaded an old image message that was not properly formatted.");
+            } else if (completeImageName.startsWith("http")) {
+              print("Downloaded an image using the old way of sending data.");
+            } else {
+              ImageResolution pictureImageResolutionMax = getEnumFromString(imageResolutionMaxStringPicture);
+              ImageResolution localMaxResolution = this._imageResolutionSet;
+              String prefixToPrepend = getPrefix(localMaxResolution, pictureImageResolutionMax);
+              completeImageName = "$prefixToPrepend$completeImageName";
+            }
+
+            print("Image name: $imageName");
+
+            Future.delayed(Duration(seconds: side == ChatSide.left ? 1 : 0), () {     //One second of delay because scaled-down image is not immediately ready to be downloaded.
+              print("Timer expired.");
+              FirebaseStorage.instance.ref().child(completeImageName).getDownloadURL().then((downloadURL) {
+                print("URL fetched. URL: $downloadURL");
+                this.setState(() => this.pictureURLs[imageName] = downloadURL);
+              });
+            });
+
+            return Container(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+              ),
+              width: 200.0,
+              height: 200.0,
+              padding: EdgeInsets.all(70.0),
+              decoration: BoxDecoration(
+                color: greyColor2,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(8.0),
+                ),
+              ),
+            );
+          } else {
+            print("Image already fetched previously. Downloading the image from cloud storage.");
+            return CachedNetworkImage(
+              placeholder: Container(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                ),
+                width: 200.0,
+                height: 200.0,
+                padding: EdgeInsets.all(70.0),
+                decoration: BoxDecoration(
+                  color: greyColor2,
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(8.0),
+                  ),
+                ),
+              ),
+              errorWidget: Material(
+                child: Image.asset(
+                  'images/img_not_available.jpeg',
+                  width: 200.0,
+                  height: 200.0,
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(8.0),
+                ),
+                clipBehavior: Clip.hardEdge,
+              ),
+              imageUrl: this.pictureURLs[imageName],
+              width: 200.0,
+              height: 200.0,
+              fit: BoxFit.cover,
+            );}}(),
+        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+        clipBehavior: Clip.hardEdge,
+      ),
+      margin: EdgeInsets.only(bottom: isLastMessage ? 20.0 : 10.0, right: 10.0),
+    );
+  }
+
   Widget buildItem(int index, DocumentSnapshot document) {
     if (document['userFrom'].documentID == id) {
       // Right (my message)
@@ -242,72 +332,7 @@ class ChatScreenState extends State<ChatScreen> {
           )
               : document['type'] == "photo"
           // Image
-              ? Container(
-            child: Material(
-              child: () {
-                String imageName = document['payload'];
-                if (this.pictureURLs[imageName] == null) {
-                  String completeImageName = imageName;
-                  String imageResolutionMaxStringPicture = document['maxResolution'];
-                  print("Image seen for the first time at index $index, no URL fetched.");
-
-                  if (imageResolutionMaxStringPicture == null) {    //Retro-compatibility
-                    print("Downloaded an old image message that was not properly formatted.");
-                  } else if (completeImageName.startsWith("http")) {
-                    print("Downloaded an image using the old way of sending data.");
-                  } else {
-                    ImageResolution pictureImageResolutionMax = getEnumFromString(imageResolutionMaxStringPicture);
-                    ImageResolution localMaxResolution = this._imageResolutionSet;
-                    String prefixToPrepend = getPrefix(localMaxResolution, pictureImageResolutionMax);
-                    completeImageName = "$prefixToPrepend$completeImageName";
-                  }
-
-                  print("Image name: $imageName");
-                  FirebaseStorage.instance.ref().child(completeImageName).getDownloadURL().then((downloadURL) {
-                    print("URL fetched for index $index. URL: $downloadURL");
-                    this.setState(() => this.pictureURLs[imageName] = downloadURL);
-                  }).catchError((error) => print(error.toString()));
-
-                  return null;
-                } else {
-                  print("Image already fetched previously for index $index. Downloading the image from cloud storage.");
-                  return CachedNetworkImage(
-                    placeholder: Container(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                      ),
-                      width: 200.0,
-                      height: 200.0,
-                      padding: EdgeInsets.all(70.0),
-                      decoration: BoxDecoration(
-                        color: greyColor2,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(8.0),
-                        ),
-                      ),
-                    ),
-                    errorWidget: Material(
-                      child: Image.asset(
-                        'images/img_not_available.jpeg',
-                        width: 200.0,
-                        height: 200.0,
-                        fit: BoxFit.cover,
-                      ),
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(8.0),
-                      ),
-                      clipBehavior: Clip.hardEdge,
-                    ),
-                    imageUrl: this.pictureURLs[imageName],
-                    width: 200.0,
-                    height: 200.0,
-                    fit: BoxFit.cover,
-                  );}}(),
-              borderRadius: BorderRadius.all(Radius.circular(8.0)),
-              clipBehavior: Clip.hardEdge,
-            ),
-            margin: EdgeInsets.only(bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0),
-          )
+              ? this._buildImageContainer(document, isLastMessageRight(index), ChatSide.right)
           // Sticker
               : Container(
             child: new Image.asset(
@@ -363,76 +388,7 @@ class ChatScreenState extends State<ChatScreen> {
                   margin: EdgeInsets.only(left: 10.0),
                 )
                     : document['type'] == "photo"
-                    ? Container(
-                  child: Material(
-                    child: Material(
-                      child: () {
-                        String imageName = document['payload'];
-                        if (this.pictureURLs[imageName] == null) {
-                          String completeImageName = imageName;
-                          String imageResolutionMaxStringPicture = document['maxResolution'];
-                          print("Image seen for the first time at index $index, no URL fetched.");
-
-                          if (imageResolutionMaxStringPicture == null) {    //Retro-compatibility
-                            print("Downloaded an old image message that was not properly formatted.");
-                          } else if (completeImageName.startsWith("http")) {
-                            print("Downloaded an image using the old way of sending data.");
-                          } else {
-                            ImageResolution pictureImageResolutionMax = getEnumFromString(imageResolutionMaxStringPicture);
-                            ImageResolution localMaxResolution = this._imageResolutionSet;
-                            String prefixToPrepend = getPrefix(localMaxResolution, pictureImageResolutionMax);
-                            completeImageName = "$prefixToPrepend$completeImageName";
-                          }
-
-                          print("Image name: $imageName");
-                          FirebaseStorage.instance.ref().child(completeImageName).getDownloadURL().then((downloadURL) {
-                            print("URL fetched for index $index. URL: $downloadURL");
-                            this.setState(() => this.pictureURLs[imageName] = downloadURL);
-                          }).catchError((error) => print(error.toString()));
-
-                          return null;
-                        } else {
-                          print("Image already fetched previously for index $index. Downloading the image from cloud storage.");
-                          return CachedNetworkImage(
-                            placeholder: Container(
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                              ),
-                              width: 200.0,
-                              height: 200.0,
-                              padding: EdgeInsets.all(70.0),
-                              decoration: BoxDecoration(
-                                color: greyColor2,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(8.0),
-                                ),
-                              ),
-                            ),
-                            errorWidget: Material(
-                              child: Image.asset(
-                                'images/img_not_available.jpeg',
-                                width: 200.0,
-                                height: 200.0,
-                                fit: BoxFit.cover,
-                              ),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(8.0),
-                              ),
-                              clipBehavior: Clip.hardEdge,
-                            ),
-                            imageUrl: this.pictureURLs[imageName],
-                            width: 200.0,
-                            height: 200.0,
-                            fit: BoxFit.cover,
-                          );}}(),
-                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                      clipBehavior: Clip.hardEdge,
-                    ),
-                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                    clipBehavior: Clip.hardEdge,
-                  ),
-                  margin: EdgeInsets.only(left: 10.0),
-                )
+                    ? this._buildImageContainer(document, isLastMessageLeft(index), ChatSide.left)
                     : Container(
                   child: new Image.asset(
                     'images/${document['payload']}.gif',
@@ -440,7 +396,7 @@ class ChatScreenState extends State<ChatScreen> {
                     height: 100.0,
                     fit: BoxFit.cover,
                   ),
-                  margin: EdgeInsets.only(bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0),
+                  margin: EdgeInsets.only(bottom: isLastMessageLeft(index) ? 20.0 : 10.0, right: 10.0),
                 ),
               ],
             ),
