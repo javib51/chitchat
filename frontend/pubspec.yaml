@@ -27,6 +27,7 @@ dependencies:
   flutter_local_notifications: ^0.4.2
   quiver: '>=2.0.0 <3.0.0'
   firebase_ml_vision: ^0.2.0+2
+  url_launcher:
 
 dependency_overrides:
   http: ^0.12.0

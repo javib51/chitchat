@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:chitchat/chat/link_preview.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/chat/chatRecorder.dart';
@@ -406,16 +407,7 @@ class ChatScreenState extends State<ChatScreen> {
         children: <Widget>[
           document['type'] == "text"
           // Text
-              ? Container(
-            child: Text(
-              document['payload'],
-              style: TextStyle(color: primaryColor),
-            ),
-            padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-            width: 200.0,
-            decoration: BoxDecoration(color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
-            margin: EdgeInsets.only(bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0),
-          )
+              ? this._buildMessageText(index, document['payload'], this.isLastMessageRight(index))
               : document['type'] == "photo"
           // Image
               ? this._buildImageContainer(document, isLastMessageRight(index), ChatSide.right)
@@ -463,16 +455,7 @@ class ChatScreenState extends State<ChatScreen> {
                 )
                     : Container(width: 35.0),
                 document['type'] == "text"
-                    ? Container(
-                  child: Text(
-                    document['payload'],
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                  width: 200.0,
-                  decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(8.0)),
-                  margin: EdgeInsets.only(left: 10.0),
-                )
+                    ? this._buildMessageText(index, document['payload'], this.isLastMessageRight(index))
                     : document['type'] == "photo"
                     ? this._buildImageContainer(document, isLastMessageLeft(index), ChatSide.left)
                     : Container(
@@ -502,6 +485,26 @@ class ChatScreenState extends State<ChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
         ),
         margin: EdgeInsets.only(bottom: 10.0),
+      );
+    }
+  }
+
+  Widget _buildMessageText(int index, String text, bool isLast) {
+
+    String url = getLinkFromText(text);
+
+    if (url != null) {
+      return  LinkPreview(text, url, isLast);
+    } else {
+      return Container(
+        child: Text(
+          text,
+          style: TextStyle(color: primaryColor),
+        ),
+        padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+        width: 200.0,
+        decoration: BoxDecoration(color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
+        margin: EdgeInsets.only(bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0),
       );
     }
   }
