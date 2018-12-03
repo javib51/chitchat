@@ -229,6 +229,18 @@ class ChatSettingsState extends State<ChatSettings> {
     );
   }
 
+  Future<Null> deleteChatForUser(String userId, DocumentReference chat) async {
+    DocumentSnapshot user = await Firestore.instance.collection("users")
+        .document(userId)
+        .get();
+
+    List<dynamic> chats = (user.data.containsKey("chats")) ?
+    new List<dynamic>.from(user['chats']) : new List();
+    chats.removeWhere((el) => el.documentID == chat.documentID);
+
+    Firestore.instance.collection('users').document(userId).updateData({"chats": chats});
+  }
+
   void leaveChat() async {
 
     Map<String, DocumentSnapshot> listUsers = await widget.chatUsers;
@@ -244,6 +256,11 @@ class ChatSettingsState extends State<ChatSettings> {
         .document(widget.chatId)
         .delete();
     }
+
+    deleteChatForUser(widget.currentUserId, Firestore.instance
+        .collection('chats')
+        .document(widget.chatId));
+
     Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName));
     /*
     Navigator.push(

@@ -25,9 +25,11 @@ exports.updateHandler = functions.firestore
 
         if (newChat.type == "G") {
             let users = newChat.users.slice();
-            users = users.filter(val => !oldChat.users.includes(val));
+            users = users.filter((user) => {
+                return !userIncluded(oldChat.users, user);
+            });
 
-            if(users.length > 0) {
+            if (users.length > 0) {
                 console.log(users);
                 const title = newChat.name;
                 const body = "Added to group";
@@ -36,6 +38,28 @@ exports.updateHandler = functions.firestore
         }
         return 0;
     });
+
+function userIncluded(oldUsers, newUser) {
+    let included = false;
+    for(let oldUser in oldUsers) {
+        if (objectsAreSame(newUser, oldUser)) {
+            included = true;
+            break;
+        }
+    }
+    return included;
+}
+
+function objectsAreSame(x, y) {
+    let objectsAreSame = true;
+    for (let propertyName in x) {
+        if (x[propertyName] !== y[propertyName]) {
+            objectsAreSame = false;
+            break;
+        }
+    }
+    return objectsAreSame;
+}
 
 function sendNotifications(users, title, body) {
     console.log("Send notifications");
@@ -54,8 +78,8 @@ function sendNotifications(users, title, body) {
             body: body,
         },
     };
-    users.forEach(userId => {
-        const userRef = admin.firestore().collection('users').doc(userId);
+    users.forEach(user => {
+        const userRef = admin.firestore().collection('users').doc(user['id']);
         userRef.get().then(user => {
             admin.messaging().sendToDevice(user.data().notificationToken, payload)
                 .then((response) => {
