@@ -72,6 +72,18 @@ class ContactsScreen extends State<Contacts> {
     });
   }
 
+  Future<Null> addChatToUser(String userId, DocumentReference chat) async {
+    DocumentSnapshot user = await Firestore.instance.collection("users")
+        .document(userId)
+        .get();
+
+    List<dynamic> chats = (user.data.containsKey("chats")) ?
+        new List<dynamic>.from(user['chats']) : new List();
+    chats.add(chat);
+
+    Firestore.instance.collection('users').document(userId).updateData({"chats": chats});
+  }
+
   Future<Null> handleInitiation() async {
     if(selected.length == 0) {
       Fluttertoast.showToast(msg: "Please select contact(s)");
@@ -83,7 +95,7 @@ class ContactsScreen extends State<Contacts> {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                GroupInitScreen(selectedUsers: selected, userNickname: nickname,)),
+                GroupInitScreen(selectedUsers: selected, userNickname: nickname, currentUserId: currentUserId,)),
       );
     } else {
       this.setState(() {
@@ -101,17 +113,25 @@ class ContactsScreen extends State<Contacts> {
           'users', isEqualTo: [currentUserId, selected.first]).getDocuments();
 
       if(order_1.documents.length > 0) {
-        push_chat = order_1.documents.first.documentID;
+        push_chat = order_1.documents.first;
       }
       else if(order_2.documents.length > 0) {
-        push_chat = order_2.documents.first.documentID;
+        push_chat = order_2.documents.first;
       }
       else {
+        var date = DateTime.now().millisecondsSinceEpoch.toString();
         var id = await Firestore.instance.collection('chats').add({
           'type': "P",
           'users': (
-              [currentUserId,
-              selected.first
+              [
+                {
+                  "id": currentUserId,
+                  "join_date": date,
+                },
+                {
+                  "id": selected.first,
+                  "join_date": date,
+                }
               ]
           )
         });
@@ -121,21 +141,29 @@ class ContactsScreen extends State<Contacts> {
             .updateData({
           'id': id.documentID,
         });
-        push_chat = id.documentID;
+        push_chat = id;
+        addChatToUser(currentUserId, push_chat);
+        addChatToUser(selected.first, push_chat);
       }
+
+      DocumentSnapshot chat = await push_chat.get();
+      final int index = chat['users'].indexWhere((val) => val['id'] == currentUserId);
+
       this.setState(() {
         isLoading = false;
       });
+
       Navigator.pushReplacement(
           context,
           new MaterialPageRoute(
               builder: (context) =>
               new Chat(
                 currentUserId: currentUserId,
-                chatId: push_chat,
+                chatId: push_chat.documentID,
                 chatAvatar: 'https://www.simplyweight.co.uk/images/default/chat/mck-icon-user.png',
                 chatType: "P",
                 userNickname: widget.userNickname,
+                joinDate: chat['users'][index]['join_date'],
               )));
       }
 

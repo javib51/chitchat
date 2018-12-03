@@ -43,9 +43,9 @@ exports.handler = functions.firestore
 function sendNotifications(chat, payload, userFrom) {
     console.log("Send notifications");
 
-    chat.users.forEach(userId => {
-        if (userId != userFrom.id) {
-            const userRef = admin.firestore().collection('users').doc(userId);
+    chat.users.forEach(user => {
+        if (user['id'] != userFrom.id) {
+            const userRef = admin.firestore().collection('users').doc(user['id']);
             userRef.get().then(user => {
                 admin.messaging().sendToDevice(user.data().notificationToken, payload)
                     .then((response) => {

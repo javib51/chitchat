@@ -35,18 +35,27 @@ class Chat extends StatefulWidget {
   final String currentUserId;
   final String userNickname;
   final String chatType;
+  final String joinDate;
   Chat(
       {Key key,
         @required this.currentUserId,
         @required this.chatId,
         @required this.chatAvatar,
         @required this.userNickname,
-        @required this.chatType})
+        @required this.chatType,
+        @required this.joinDate
+      })
       : super(key: key);
 
   @override
-  State createState() => new ChatState(
-      currentUserId: currentUserId, chatId: chatId, chatAvatar: chatAvatar, userNickname: userNickname, chatType: chatType);
+  State createState() =>
+      new ChatState(
+          currentUserId: currentUserId,
+          chatId: chatId,
+          chatAvatar: chatAvatar,
+          userNickname: userNickname,
+          chatType: chatType,
+          joinDate: joinDate);
 }
 
 class ChatState extends State<Chat> {
@@ -55,6 +64,8 @@ class ChatState extends State<Chat> {
   final String currentUserId;
   final String userNickname;
   final String chatType;
+  final String joinDate;
+
   Stream<QuerySnapshot> streamMessage;
 
   ChatState(
@@ -63,7 +74,9 @@ class ChatState extends State<Chat> {
         @required this.chatId,
         @required this.chatAvatar,
         @required this.userNickname,
-        @required this.chatType}) {
+        @required this.chatType,
+        @required this.joinDate
+      }) {
     this.streamMessage = _getMessages();
   }
 
@@ -73,6 +86,7 @@ class ChatState extends State<Chat> {
         .document(this.chatId)
         .collection('messages')
         .orderBy('timestamp', descending: true)
+        .where('timestamp', isGreaterThanOrEqualTo: joinDate)
         .limit(100)
         .snapshots();
   }
@@ -101,7 +115,7 @@ class ChatState extends State<Chat> {
 
     for (var user in usersList) {
       var userData =
-      await Firestore.instance.collection('users').document(user).get();
+      await Firestore.instance.collection('users').document(user['id']).get();
       usersMap.putIfAbsent(userData["id"], () => userData);
     }
 
