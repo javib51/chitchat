@@ -180,7 +180,6 @@ class LoginScreenState extends State<LoginScreen> {
 
       } else {
         // Write data to local
-        await prefs.clear();
         prefs.setString('id', documents[0]['id']);
         prefs.setString('nickname', documents[0]['nickname']);
         prefs.setString('photoUrl', documents[0]['photoUrl']);
