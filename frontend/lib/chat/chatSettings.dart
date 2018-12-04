@@ -1,8 +1,25 @@
+import 'package:chitchat/overview/overview.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
+import 'package:chitchat/chat/chatGallery.dart';
 
-class ChatSettings extends StatelessWidget {
+class ChatSettings extends StatefulWidget {
+  final String chatId;
+  final Future<Map<String, DocumentSnapshot>> chatUsers;
+  final String chatType;
+  final String currentUserId;
+  Stream<QuerySnapshot> streamMessage;
+
+  ChatSettings(this.chatUsers, this.chatId, this.chatType, this.currentUserId);
+
+  @override
+  createState() => ChatSettingsState();
+}
+
+class ChatSettingsState extends State<ChatSettings> {
   Size deviceSize;
+
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
         width: double.infinity,
@@ -10,7 +27,6 @@ class ChatSettings extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Container(
-            //clipBehavior: Clip.antiAlias,
             color: themeColor,
             child: FittedBox(
               child: Column(
@@ -35,7 +51,8 @@ class ChatSettings extends StatelessWidget {
             ),
           ),
         ),
-  );
+      );
+
   Widget imagesCard() => Container(
         height: deviceSize.height / 6,
         child: Padding(
@@ -46,11 +63,16 @@ class ChatSettings extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: InkWell(
-                  onTap: () {//Open Gallery
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ChatGallery(widget.chatId, widget.chatUsers)),
+                    );
                   },
                   child: Text(
-                  "Photos",
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
+                    "Photos",
+                    style:
+                        TextStyle(fontWeight: FontWeight.w700, fontSize: 18.0),
                   ),
                 ),
               ),
@@ -72,54 +94,73 @@ class ChatSettings extends StatelessWidget {
         ),
       );
 
-  Widget profileColumn() => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            CircleAvatar(
-              backgroundImage: NetworkImage(
-                  "https://avatars0.githubusercontent.com/u/12619420?s=460&v=4"),
-            ),
-            Expanded(
-                child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Javier's friend",
-                  ),
-                  SizedBox(
-                    height: 8.0,
-                  ),
-                ],
-              ),
-            )
-            ),
-            IconButton(
-              icon: Icon(Icons.delete),
-              tooltip: 'Delete a user of the group',
-              onPressed: () {},
-            ),
-          ],
-        ),
-      );
-
-  Widget userList() => Container(
-      height: deviceSize.height/4,
-      padding: const EdgeInsets.all(0.0),
-      child: new ListView(
-        scrollDirection: Axis.vertical,
+  Widget profileColumn(user, length) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          profileColumn(),
-          profileColumn(),
-          profileColumn(),
-          profileColumn()
+          CircleAvatar(
+            backgroundImage: NetworkImage(
+                user["photoUrl"]),
+          ),
+          Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      user["nickname"],
+                    ),
+                    SizedBox(
+                      height: 8.0,
+                    ),
+                  ],
+                ),
+              )
+          ),
+          /* widget.chatType == "G"
+           ? IconButton(
+            icon: Icon(Icons.delete),
+            tooltip: 'Delete a user of the group',
+            onPressed: () {},
+          )
+          : Container(), */
         ],
       ),
-  );
+    );
+  }
+
+  Widget userList() => Container(
+      height: deviceSize.height / 4,
+      padding: const EdgeInsets.all(0.0),
+      child: FutureBuilder(
+          future: widget.chatUsers,
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              return ListView.builder(
+                padding: EdgeInsets.all(10.0),
+                itemBuilder: (context, index) => profileColumn(snapshot.data.values.toList()[index], snapshot.data.values.length),
+                itemCount: snapshot.data.length,
+                reverse: true,
+              );
+            } else {
+              return Container(
+                  alignment: Alignment(0.0, 0.0),
+                  width: 50,
+                  height: 50,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.0,
+                    valueColor:
+                    AlwaysStoppedAnimation<Color>(themeColor),
+                  )
+              );
+            }
+          }
+      ),
+    );
 
   Widget usersCard() => Container(
         width: double.infinity,
@@ -147,17 +188,17 @@ class ChatSettings extends StatelessWidget {
         width: deviceSize.width / 2,
         //padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 1.0),
         child: FlatButton(
-            onPressed: () => leaveChat(),
-            child: Text(
-              'Leave chat',
-              style: TextStyle(fontSize: 16.0, color: Colors.white),
-            ),
-            color: Colors.red,
-            highlightColor: Colors.white30,
-            splashColor: Colors.transparent,
-            textColor: Colors.white,
-            padding: EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
+          onPressed: () => leaveChat(),
+          child: Text(
+            'Leave chat',
+            style: TextStyle(fontSize: 16.0, color: Colors.white),
           ),
+          color: Colors.red,
+          highlightColor: Colors.white30,
+          splashColor: Colors.transparent,
+          textColor: Colors.white,
+          padding: EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
+        ),
       );
 
   Widget bodyData() => Container(
@@ -166,7 +207,9 @@ class ChatSettings extends StatelessWidget {
             profileHeader(),
             imagesCard(),
             usersCard(),
-            leaveChatCard(),
+            widget.chatType == "G"
+            ? leaveChatCard()
+            : Container(),
           ],
         ),
       );
@@ -186,17 +229,69 @@ class ChatSettings extends StatelessWidget {
     );
   }
 
-  void leaveChat() {
-    //TODO when pressed leave the chat
-    print("living chat...");
+  Future<Null> deleteChatForUser(String userId, DocumentReference chat) async {
+    DocumentSnapshot user = await Firestore.instance.collection("users")
+        .document(userId)
+        .get();
+
+    List<dynamic> chats = (user.data.containsKey("chats")) ?
+    new List<dynamic>.from(user['chats']) : new List();
+    chats.removeWhere((el) => el.documentID == chat.documentID);
+
+    Firestore.instance.collection('users').document(userId).updateData({"chats": chats});
   }
+
+  void leaveChat() async {
+
+    Map<String, DocumentSnapshot> listUsers = await widget.chatUsers;
+    listUsers.remove(widget.currentUserId);
+    await Firestore.instance
+        .collection('chats')
+        .document(widget.chatId)
+        .updateData({'users': listUsers.keys.toList() });
+    //Check if chat is empty and delete it
+    if(listUsers.isEmpty){
+      await Firestore.instance
+        .collection('chats')
+        .document(widget.chatId)
+        .delete();
+    }
+
+    deleteChatForUser(widget.currentUserId, Firestore.instance
+        .collection('chats')
+        .document(widget.chatId));
+
+    Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName));
+    /*
+    Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                  MainScreen(currentUserId: widget.currentUserId),
+            )
+          );
+          */
+  }
+
+  /*List<QuerySnapshot> getParticipants() {
+    var participants = Firestore.instance
+        .collection('chats')
+        .document(widget.chatId)
+        .collection('users')
+        .snapshots()
+        .toList();
+
+    return null;
+  }*/
 }
 
 class ProfileTile extends StatelessWidget {
   final title;
   final subtitle;
   final textColor;
+
   ProfileTile({this.title, this.subtitle, this.textColor = Colors.white});
+
   @override
   Widget build(BuildContext context) {
     return Column(

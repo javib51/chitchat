@@ -155,7 +155,6 @@ class LoginScreenState extends State<LoginScreen> {
       if (documents.length == 0) {
         // Update data to server if new user
 
-
         // Write data to local
         currentUser = firebaseUser;
         await prefs.clear();
@@ -181,7 +180,6 @@ class LoginScreenState extends State<LoginScreen> {
 
       } else {
         // Write data to local
-        await prefs.clear();
         prefs.setString('id', documents[0]['id']);
         prefs.setString('nickname', documents[0]['nickname']);
         prefs.setString('photoUrl', documents[0]['photoUrl']);

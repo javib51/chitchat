@@ -12,15 +12,25 @@ import 'package:image_picker/image_picker.dart';
 
 class GroupInitScreen extends StatefulWidget {
   final Set selectedUsers;
-  GroupInitScreen({Key key, @required this.selectedUsers}) : super(key: key);
+  final String userNickname;
+  final String currentUserId;
+
+  GroupInitScreen(
+      {Key key, @required this.selectedUsers, this.userNickname, @required this.currentUserId})
+      : super(key: key);
 
   @override
-  State createState() => new GroupInitScreenState(selectedUsers: selectedUsers);
+  State createState() =>
+      new GroupInitScreenState(
+          selectedUsers: selectedUsers, currentUserId: currentUserId);
 }
 
 class GroupInitScreenState extends State<GroupInitScreen> {
+  final String currentUserId;
   final Set selectedUsers;
-  GroupInitScreenState({Key key, @required this.selectedUsers});
+
+  GroupInitScreenState(
+      {Key key, @required this.selectedUsers, @required this.currentUserId});
 
   var nickController = TextEditingController();
   File avatarImageFile;
@@ -60,6 +70,18 @@ class GroupInitScreenState extends State<GroupInitScreen> {
     Fluttertoast.showToast(msg: "Upload success");
   }
 
+  Future<Null> addChatToUser(String userId, DocumentReference chat) async {
+    DocumentSnapshot user = await Firestore.instance.collection("users")
+        .document(userId)
+        .get();
+
+    List<dynamic> chats = (user.data.containsKey("chats"))?
+        new List<dynamic>.from(user['chats']) : new List();
+    chats.add(chat);
+
+    Firestore.instance.collection('users').document(userId).updateData({"chats": chats});
+  }
+
   Future handleUpdateData() async {
     setState(() {
       isLoading = true;
@@ -71,18 +93,33 @@ class GroupInitScreenState extends State<GroupInitScreen> {
       Fluttertoast.showToast(msg: "Please provide NickName");
     }
     else{
-      var id = await Firestore.instance.collection('chats').add({
+      var users = [];
+      var date = DateTime.now().millisecondsSinceEpoch.toString();
+      for(var userId in selectedUsers) {
+          users.add({
+            "id": userId,
+            "join_date": date,
+          });
+      }
+
+      var chatRef = await Firestore.instance.collection('chats').add({
         'type': "G",
         'name': nickController.text.trim(),
         'photoUrl': photoUrl,
-        'users': selectedUsers.toList()
+        'users': users
       });
       await Firestore.instance
           .collection('chats')
-          .document(id.documentID)
+          .document(chatRef.documentID)
           .updateData({
-        'id': id.documentID,
+        'id': chatRef.documentID,
       });
+
+      //add chat to users
+      selectedUsers.forEach((userId) => addChatToUser(userId, chatRef));
+
+      DocumentSnapshot chat = await chatRef.get();
+      final int index = chat['users'].indexWhere((val) => val['id'] == currentUserId);
 
       Navigator.pushReplacement(
           context,
@@ -90,8 +127,11 @@ class GroupInitScreenState extends State<GroupInitScreen> {
               builder: (context) =>
               new Chat(
                 currentUserId: selectedUsers.last,
-                chatId: id.documentID,
+                chatId: chatRef.documentID,
                 chatAvatar: photoUrl,
+                userNickname: widget.userNickname,
+                chatType: "G",
+                joinDate: chat['users'][index]['join_date'],
               )));
     }
     setState(() {

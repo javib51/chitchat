@@ -63,9 +63,14 @@ class MainScreenState extends State<MainScreen> {
     Firestore.instance.collection('users').document(currentUserId).updateData({"notificationToken": notificationToken});
   }
   
-  Stream<QuerySnapshot> getChats() {
-    return Firestore.instance.collection('chats')
-        .where("users",  arrayContains: currentUserId).snapshots();
+  Future<List<DocumentSnapshot>> getChats() async {
+    List<DocumentSnapshot> chats = new List();
+    DocumentSnapshot user = await Firestore.instance.collection('users').document(currentUserId).get();
+
+    for(var chat in user['chats']) {
+      chats.add(await chat.get());
+    }
+    return chats;
   }
 
   Future<Map<String, String>> getChatInfo(DocumentSnapshot chat) async {
@@ -73,12 +78,16 @@ class MainScreenState extends State<MainScreen> {
     if(chat['type'] == 'G') {
       map['photoUrl'] = chat['photoUrl'];
       map['name'] = chat['name'];
+      map['type'] = chat['type'];
     } else {
-      String userId = (chat['users'][0] == currentUserId)? chat['users'][1] : chat['users'][0];
+      String userId = (chat['users'][0]['id'] == currentUserId)? chat['users'][1]['id'] : chat['users'][0]['id'];
       DocumentSnapshot user = await Firestore.instance.collection('users').document(userId).get();
       map['photoUrl'] = user['photoUrl'];
       map['name'] = user['nickname'];
+      map['type'] = chat['type'];
     }
+    final int index = chat['users'].indexWhere((val) => val['id'] == currentUserId);
+    map['joinDate'] = chat['users'][index]['join_date'];
     return map;
   }
 
@@ -239,6 +248,7 @@ class MainScreenState extends State<MainScreen> {
             ],
           ),
           onPressed: () {
+            print(info);
             Navigator.push(
                 context,
                 new MaterialPageRoute(
@@ -246,6 +256,9 @@ class MainScreenState extends State<MainScreen> {
                           currentUserId: currentUserId,
                           chatId: document.documentID,
                           chatAvatar: info['photoUrl'],
+                          userNickname: nickname,
+                          chatType: info['type'],
+                          joinDate: info['joinDate'],
                         )));
           },
           color: greyColor2,
@@ -321,7 +334,7 @@ class MainScreenState extends State<MainScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId,)),
+                  MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId, userNickname: nickname,)),
                 );
               }
             ),
@@ -355,8 +368,8 @@ class MainScreenState extends State<MainScreen> {
           children: <Widget>[
             // List
             Container(
-              child: StreamBuilder(
-                stream: getChats(),
+              child: FutureBuilder(
+                future: getChats(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -368,8 +381,8 @@ class MainScreenState extends State<MainScreen> {
                     return ListView.builder(
                       padding: EdgeInsets.all(10.0),
                       itemBuilder: (context, index) =>
-                          buildItemFuture(context, snapshot.data.documents[index]),
-                      itemCount: snapshot.data.documents.length,
+                          buildItemFuture(context, snapshot.data[index]),
+                      itemCount: snapshot.data.length,
                     );
                   }
                 },
