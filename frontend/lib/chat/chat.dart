@@ -889,8 +889,8 @@ class ChatScreenState extends State<ChatScreen> {
     return new Container(
       child: PageView(
           children: [
-            new Container(color: Colors.red),
-            new Container(color: Colors.blue),
+            new Container(child: galleryEmojis()),
+            new Container(color: Colors.blue, child: buildSticker()),
             //galleryEmojis()
           ]
       ),
@@ -901,38 +901,55 @@ class ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget galleryEmojis() {
+  dynamic galleryEmojis() {
     print("gallery Emojis");
-    final file = new File('/images/emojis.json').toString();
-    Iterable iterable = json.decode(file);
-    for (var n in iterable) {
-      print(n);
-    }
-    //List<String> emojis = l.map((Map model)=> ;
 
-    return Container(
-      child: new GridView.count(
-        crossAxisCount: 2,
-        childAspectRatio: 1,
-        controller: new ScrollController(keepScrollOffset: false),
-        shrinkWrap: true,
-        scrollDirection: Axis.vertical,
-        // children: widgetList.map((String value) {
-        //   return new Container(
-        //     color: Colors.green,
-        //     margin: new EdgeInsets.all(1.0),
-        //     child: new Center(
-        //       child: new Text(
-        //         value,
-        //         style: new TextStyle(
-        //           fontSize: 50.0,
-        //           color: Colors.white,
-        //         ),
-        //       ),
-        //     ),
-        //   );
-        // }).toList(),
-      ),
+    var contents = rootBundle.loadString('images/emojis.json');
+
+
+    return FutureBuilder(
+        future: contents,
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData && snapshot.data != null) {
+            List emojiList = jsonDecode(snapshot.data);
+
+            return Container(
+              child: new GridView.count(
+                crossAxisCount: 10,
+                childAspectRatio: 1,
+                controller: new ScrollController(keepScrollOffset: false),
+                shrinkWrap: true,
+                scrollDirection: Axis.vertical,
+                children: emojiList.map((emoji) {
+                  return GestureDetector(
+                    onTap: () {
+                      //textEditingController.text = textEditingController.text.substring(0, textEditingController.selection.start) + emoji["value"] + textEditingController.text.substring(textEditingController.selection.end);
+                      textEditingController.text = textEditingController.text + emoji["value"];
+                    },
+                    child: Container(
+                      color: Colors.green,
+                      margin: new EdgeInsets.all(1.0),
+                      child: new Center(
+                        child: new Text(
+                          emoji["value"],
+                          style: new TextStyle(
+                            fontSize: 20.0,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          } else {
+            return Center(
+                child: CircularProgressIndicator(
+                    valueColor:
+                    AlwaysStoppedAnimation<Color>(themeColor)));
+          }
+        }
     );
   }
 
