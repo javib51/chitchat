@@ -25,6 +25,8 @@ dependencies:
   multi_image_picker: ^2.2.55
   path_provider: ^0.4.1  
   flutter_local_notifications: ^0.4.2
+  speech_recognition: ^0.3.0
+  canary_recorder: ^0.0.3
 
 dependency_overrides:
   http: ^0.12.0

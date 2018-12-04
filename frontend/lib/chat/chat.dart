@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:canary_recorder/canary_recorder.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/chat/chatRecorder.dart';
@@ -21,6 +22,7 @@ import 'package:multi_image_picker/asset.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 
 const CHAT_SETTINGS_TEXT = "Settings/Members";
@@ -117,7 +119,7 @@ class ChatScreen extends StatefulWidget {
 
 class ChatScreenState extends State<ChatScreen> {
   ChatScreenState({Key key, @required this.id, @required this.chatId, @required this.chatAvatar});
-
+  var recordColor;
   String chatId;
   String chatAvatar;
   String id;
@@ -132,6 +134,9 @@ class ChatScreenState extends State<ChatScreen> {
   bool isShowEmoji;
   String imageUrl;
 
+  bool _isRecording;
+  String _outputFile = '';
+
   //Load Image from Galerry
   List<Asset> images = List<Asset>();
   String _error;
@@ -145,13 +150,14 @@ class ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     focusNode.addListener(onFocusChange);
-
+    recordColor = new Color(0xff203152);
     groupChatId = '';
-
+    _isRecording = false;
     isLoading = false;
     isShowSticker = false;
     isShowEmoji = false;
     imageUrl = '';
+
 
     readLocal();
   }
@@ -448,6 +454,47 @@ class ChatScreenState extends State<ChatScreen> {
     return Future.value(false);
   }
 
+    void startRecorder() async{
+    this.setState(() {
+      _isRecording = true;
+    });
+    recordColor = Colors.red;
+    var path = await CanaryRecorder.initializeRecorder('recordertester.wav');
+    await CanaryRecorder.startRecording();
+
+    setState(() { _outputFile = path; });
+  }
+
+    void stopRecorder() async{
+    this.setState(() {
+      isLoading = true;
+      _isRecording = false;
+    });
+
+    recordColor = new Color(0xff203152);
+    await CanaryRecorder.stopRecording();
+    File testFile = new File(_outputFile);
+    List<int> bytes = testFile.readAsBytesSync();
+    String base64 = base64Encode(bytes);
+    var url = "https://speech.googleapis.com/v1/speech:recognize?key=AIzaSyDsrc2qBpvk2XzFvRN1yD-gYr5eSZnzUmA";
+    await http.post(url, body:json.encode({"config":{"languageCode":"en_US","enableWordTimeOffsets":false,"enableAutomaticPunctuation":true,"model":"video"},"audio":{"content": base64}}))
+
+        .then((response) {
+      if(response.body.length != 3) {
+        var jon = Response.fromJson(json.decode(response.body));
+        textEditingController.text =
+            jon.results.first.alternatives.first.transcript;
+      }
+      else{
+        Fluttertoast.showToast(msg: "recognition unsuccessful");
+      }
+    });
+
+    this.setState(() {
+      isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -630,10 +677,12 @@ class ChatScreenState extends State<ChatScreen> {
               child: new IconButton(
                 icon: new Icon(Icons.mic),
                 onPressed: () {
-                  Navigator.push(
-                      context, MaterialPageRoute(builder: (context) => RecorderScreen()));
+                  if (!this._isRecording) {
+                    return this.startRecorder();
+                  }
+                  this.stopRecorder();
                 },
-                color: primaryColor,
+                color: recordColor,
               ),
             ),
             color: Colors.white,
