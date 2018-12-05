@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/chat/chatImage.dart';
 import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -126,7 +127,6 @@ class GalleryPartState extends State<GalleryPart> {
 
   void initState() {
     super.initState();
-
     currentState = states["Date"] = this.getImagesByDate();
   }
 
@@ -138,7 +138,7 @@ class GalleryPartState extends State<GalleryPart> {
         .document(widget.groupChatId)
         .collection('messages')
         .where("type", isEqualTo: "photo")
-        //.orderBy('timestamp', descending: true)
+        .orderBy('timestamp', descending: true)
         .limit(30)
         .getDocuments();
 
@@ -188,7 +188,7 @@ class GalleryPartState extends State<GalleryPart> {
         .getDocuments();
 
     result.documents.forEach((f) => multimap.add(
-        "",
+        " ",
         new ImageData(f.data['nickname'], f.data['payload'],
             f.data['timestamp'], f.data['label'], f.data["maxResolution"])));
 
@@ -203,8 +203,8 @@ class GalleryPartState extends State<GalleryPart> {
       if(states[option.value] == null) {
         switch (option.value) {
           case "Date":
-          states[option.value] = this.getImagesByDate();
-          break;
+            states[option.value] = this.getImagesByDate();
+            break;
           case "Sender":
             states[option.value] = this.getImagesBySender();
             break;
@@ -239,6 +239,7 @@ class GalleryPartState extends State<GalleryPart> {
   List<Widget> listMyWidgets(Multimap<String, ImageData> mapImageData) {
     List<Widget> list = new List();
     mapImageData.forEachKey((k, v) {
+      print(k);
       list.add(
         Center(
             child: Text(
@@ -303,7 +304,15 @@ class GalleryPartState extends State<GalleryPart> {
             } else {
               print(
                   "Image already fetched previously. Downloading the image from cloud storage.");
-              return CachedNetworkImage(
+              return GestureDetector(
+                onTap: (){
+                Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ChatImage(this.pictureURLs[imageName]))
+                      );
+                },
+                child: CachedNetworkImage(
                 placeholder: Container(
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(themeColor),
@@ -324,7 +333,7 @@ class GalleryPartState extends State<GalleryPart> {
                 ),
                 imageUrl: this.pictureURLs[imageName],
                 fit: BoxFit.fill,
-              );
+              ),);
             }
           }(),/*CachedNetworkImage(
             errorWidget: Material(
