@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/chat/chatImage.dart';
 import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -303,7 +304,15 @@ class GalleryPartState extends State<GalleryPart> {
             } else {
               print(
                   "Image already fetched previously. Downloading the image from cloud storage.");
-              return CachedNetworkImage(
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ChatImage(this.pictureURLs[imageName]))
+                      );
+                },
+                child: CachedNetworkImage(
                 placeholder: Container(
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(themeColor),
@@ -324,6 +333,7 @@ class GalleryPartState extends State<GalleryPart> {
                 ),
                 imageUrl: this.pictureURLs[imageName],
                 fit: BoxFit.fill,
+              ),
               );
             }
           }(),/*CachedNetworkImage(
@@ -340,8 +350,9 @@ class GalleryPartState extends State<GalleryPart> {
       });
       list.add(
         IgnorePointer(
-          ignoring: true,
+          ignoring: false,
           child: GridView.extent(
+            physics: NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             maxCrossAxisExtent: 150.0,
             mainAxisSpacing: 5.0,

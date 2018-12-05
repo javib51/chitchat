@@ -1,12 +1,16 @@
 import 'dart:collection';
+import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker_saver/image_picker_saver.dart';
+
 
 class ChatImage extends StatefulWidget {
   final String imageUrl;
@@ -44,12 +48,26 @@ class ChatImageState extends State<ChatImage> {
           IconButton(
             icon: Icon(Icons.file_download),
             onPressed: () {
-              print("Downloading image...");
+              downloadImage(widget.imageUrl);
             }
           ),
         ],
       ),
       body: imageDisplay(), //new ChatSettingsScreen(),
+    );
+  }
+
+  void downloadImage(String url) async {
+    print("downloading...");
+    print(url);
+    var response = await get(url);
+    var filePath = await ImagePickerSaver.saveFile(fileData: response.bodyBytes);
+    print(filePath.toString());
+    var savedFile = File.fromUri(Uri.file(filePath));
+    Fluttertoast.showToast(
+      msg: "Image saved to gallery",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.CENTER,
     );
   }
 }
