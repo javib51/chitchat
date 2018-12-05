@@ -164,6 +164,7 @@ class ContactsScreen extends State<Contacts> {
                 chatType: "P",
                 userNickname: widget.userNickname,
                 joinDate: chat['users'][index]['join_date'],
+                chatName: "Private chat",
               )));
       }
 

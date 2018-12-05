@@ -259,6 +259,7 @@ class MainScreenState extends State<MainScreen> {
                           userNickname: nickname,
                           chatType: info['type'],
                           joinDate: info['joinDate'],
+                          chatName: info['name'],
                         )));
           },
           color: greyColor2,
