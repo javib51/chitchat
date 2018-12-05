@@ -132,6 +132,7 @@ class GroupInitScreenState extends State<GroupInitScreen> {
                 userNickname: widget.userNickname,
                 chatType: "G",
                 joinDate: chat['users'][index]['join_date'],
+                chatName: nickController.text.trim(),
               )));
     }
     setState(() {

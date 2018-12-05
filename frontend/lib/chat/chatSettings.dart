@@ -1,5 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/common/imageResolution.dart';
 import 'package:chitchat/overview/overview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/chat/chatGallery.dart';
@@ -9,9 +12,13 @@ class ChatSettings extends StatefulWidget {
   final Future<Map<String, DocumentSnapshot>> chatUsers;
   final String chatType;
   final String currentUserId;
-  Stream<QuerySnapshot> streamMessage;
+  final String chatName;
+  final String chatAvatar;
 
-  ChatSettings(this.chatUsers, this.chatId, this.chatType, this.currentUserId);
+
+
+  ChatSettings(this.chatUsers, this.chatId, this.chatType, this.currentUserId,
+      this.chatName, this.chatAvatar);
 
   @override
   createState() => ChatSettingsState();
@@ -19,6 +26,9 @@ class ChatSettings extends StatefulWidget {
 
 class ChatSettingsState extends State<ChatSettings> {
   Size deviceSize;
+  Map<String, String> pictureURLs = Map<String, String>();
+  ImageResolution _imageResolutionSet;
+
 
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
@@ -38,12 +48,11 @@ class ChatSettingsState extends State<ChatSettings> {
                         border: Border.all(width: 2.0, color: Colors.white)),
                     child: CircleAvatar(
                       radius: 40.0,
-                      backgroundImage: NetworkImage(
-                          "https://cdn.pixabay.com/photo/2017/03/24/07/28/whatsapp-2170427_960_720.png"),
+                      backgroundImage: NetworkImage(widget.chatAvatar),
                     ),
                   ),
                   Text(
-                    "Name of the chat",
+                    widget.chatName,
                     style: TextStyle(color: Colors.white, fontSize: 20.0),
                   ),
                 ],
@@ -66,7 +75,9 @@ class ChatSettingsState extends State<ChatSettings> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ChatGallery(widget.chatId, widget.chatUsers)),
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ChatGallery(widget.chatId, widget.chatUsers)),
                     );
                   },
                   child: Text(
@@ -78,21 +89,131 @@ class ChatSettingsState extends State<ChatSettings> {
               ),
               Expanded(
                 child: Card(
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: 5,
-                    itemBuilder: (context, i) => Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Image.network(
-                              "https://cdn.pixabay.com/photo/2016/10/31/18/14/ice-1786311_960_720.jpg"),
-                        ),
-                  ),
-                ),
+                    child: FutureBuilder(
+                        future: getPreviewImages(widget.chatId),
+                        builder:
+                            (BuildContext context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasData && snapshot.data != null) {
+                            return ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: snapshot.data.documents.length,
+                              itemBuilder: (context, i) => Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: () {
+                                      String imageName = snapshot.data.documents[i]["payload"];
+
+                                      if (this.pictureURLs[imageName] == null) {
+                                        String completeImageName = imageName;
+                                        String imageResolutionMaxStringPicture = snapshot.data.documents[i]['maxResolution'];
+                                        print("Image seen for the first time, no URL fetched.");
+
+                                        if (imageResolutionMaxStringPicture == null) {
+                                          //Retro-compatibility
+                                          print(
+                                              "Downloaded an old image message that was not properly formatted.");
+                                        } else if (completeImageName.startsWith("http")) {
+                                          print("Downloaded an image using the old way of sending data.");
+                                        } else {
+                                          ImageResolution pictureImageResolutionMax =
+                                          getEnumFromString(imageResolutionMaxStringPicture);
+                                          ImageResolution localMaxResolution = this._imageResolutionSet;
+                                          String prefixToPrepend =
+                                          getPrefix(localMaxResolution, pictureImageResolutionMax);
+                                          completeImageName = "$prefixToPrepend$completeImageName";
+                                        }
+
+                                        print("Image name: $imageName");
+
+                                        Future.delayed(Duration(seconds: 1),
+                                                () {
+                                              //One second of delay because scaled-down image is not immediately ready to be downloaded.
+                                              print("Timer expired.");
+                                              FirebaseStorage.instance
+                                                  .ref()
+                                                  .child(completeImageName)
+                                                  .getDownloadURL()
+                                                  .then((downloadURL) {
+                                                print("URL fetched. URL: $downloadURL");
+                                                this.setState(() => this.pictureURLs[imageName] = downloadURL);
+                                              });
+                                            });
+
+                                        return Container(
+                                          child: CircularProgressIndicator(
+                                            valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                                          ),
+                                          height: 30.0,
+                                          padding: EdgeInsets.all(5.0),
+                                          decoration: BoxDecoration(
+                                            color: greyColor2,
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(8.0),
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        print(
+                                            "Image already fetched previously. Downloading the image from cloud storage.");
+                                        return CachedNetworkImage(
+                                          placeholder: Container(
+                                            child: CircularProgressIndicator(
+                                              valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                                            ),
+                                            height: 30.0,
+                                            padding: EdgeInsets.all(5.0),
+                                            decoration: BoxDecoration(
+                                              color: greyColor2,
+                                              borderRadius: BorderRadius.all(
+                                                Radius.circular(8.0),
+                                              ),
+                                            ),
+                                          ),
+                                          errorWidget: Material(
+                                            child: Image.asset(
+                                              'images/img_not_available.jpeg',
+                                              height: 30.0,
+                                              fit: BoxFit.cover,
+                                            ),
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(8.0),
+                                            ),
+                                            clipBehavior: Clip.hardEdge,
+                                          ),
+                                          imageUrl: this.pictureURLs[imageName],
+                                          height: 30.0,
+                                          fit: BoxFit.cover,
+                                        );
+                                      }
+                                    }()),
+                            );
+                          } else {
+                            return Container(
+                                alignment: Alignment(0.0, 0.0),
+                                width: 50,
+                                height: 50,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.0,
+                                  valueColor:
+                                      AlwaysStoppedAnimation<Color>(themeColor),
+                                ));
+                          }
+                        })),
               ),
             ],
           ),
         ),
       );
+
+  getPreviewImages(chatId) {
+    return Firestore.instance
+        .collection('chats')
+        .document(chatId)
+        .collection('messages')
+        .where("type", isEqualTo: "photo")
+        .orderBy('timestamp', descending: true)
+        .limit(6)
+        .getDocuments();
+  }
 
   Widget profileColumn(user, length) {
     return Padding(
@@ -101,26 +222,24 @@ class ChatSettingsState extends State<ChatSettings> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           CircleAvatar(
-            backgroundImage: NetworkImage(
-                user["photoUrl"]),
+            backgroundImage: NetworkImage(user["photoUrl"]),
           ),
           Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      user["nickname"],
-                    ),
-                    SizedBox(
-                      height: 8.0,
-                    ),
-                  ],
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  user["nickname"],
                 ),
-              )
-          ),
+                SizedBox(
+                  height: 8.0,
+                ),
+              ],
+            ),
+          )),
           /* widget.chatType == "G"
            ? IconButton(
             icon: Icon(Icons.delete),
@@ -134,33 +253,32 @@ class ChatSettingsState extends State<ChatSettings> {
   }
 
   Widget userList() => Container(
-      height: deviceSize.height / 4,
-      padding: const EdgeInsets.all(0.0),
-      child: FutureBuilder(
-          future: widget.chatUsers,
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.hasData && snapshot.data != null) {
-              return ListView.builder(
-                padding: EdgeInsets.all(10.0),
-                itemBuilder: (context, index) => profileColumn(snapshot.data.values.toList()[index], snapshot.data.values.length),
-                itemCount: snapshot.data.length,
-                reverse: true,
-              );
-            } else {
-              return Container(
-                  alignment: Alignment(0.0, 0.0),
-                  width: 50,
-                  height: 50,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.0,
-                    valueColor:
-                    AlwaysStoppedAnimation<Color>(themeColor),
-                  )
-              );
-            }
-          }
-      ),
-    );
+        height: deviceSize.height / 4,
+        padding: const EdgeInsets.all(0.0),
+        child: FutureBuilder(
+            future: widget.chatUsers,
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              if (snapshot.hasData && snapshot.data != null) {
+                return ListView.builder(
+                  padding: EdgeInsets.all(10.0),
+                  itemBuilder: (context, index) => profileColumn(
+                      snapshot.data.values.toList()[index],
+                      snapshot.data.values.length),
+                  itemCount: snapshot.data.length,
+                  reverse: true,
+                );
+              } else {
+                return Container(
+                    alignment: Alignment(0.0, 0.0),
+                    width: 50,
+                    height: 50,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.0,
+                      valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                    ));
+              }
+            }),
+      );
 
   Widget usersCard() => Container(
         width: double.infinity,
@@ -207,9 +325,7 @@ class ChatSettingsState extends State<ChatSettings> {
             profileHeader(),
             imagesCard(),
             usersCard(),
-            widget.chatType == "G"
-            ? leaveChatCard()
-            : Container(),
+            widget.chatType == "G" ? leaveChatCard() : Container(),
           ],
         ),
       );
@@ -230,38 +346,40 @@ class ChatSettingsState extends State<ChatSettings> {
   }
 
   Future<Null> deleteChatForUser(String userId, DocumentReference chat) async {
-    DocumentSnapshot user = await Firestore.instance.collection("users")
-        .document(userId)
-        .get();
+    DocumentSnapshot user =
+        await Firestore.instance.collection("users").document(userId).get();
 
-    List<dynamic> chats = (user.data.containsKey("chats")) ?
-    new List<dynamic>.from(user['chats']) : new List();
+    List<dynamic> chats = (user.data.containsKey("chats"))
+        ? new List<dynamic>.from(user['chats'])
+        : new List();
     chats.removeWhere((el) => el.documentID == chat.documentID);
 
-    Firestore.instance.collection('users').document(userId).updateData({"chats": chats});
+    Firestore.instance
+        .collection('users')
+        .document(userId)
+        .updateData({"chats": chats});
   }
 
   void leaveChat() async {
-
     Map<String, DocumentSnapshot> listUsers = await widget.chatUsers;
     listUsers.remove(widget.currentUserId);
     await Firestore.instance
         .collection('chats')
         .document(widget.chatId)
-        .updateData({'users': listUsers.keys.toList() });
+        .updateData({'users': listUsers.keys.toList()});
     //Check if chat is empty and delete it
-    if(listUsers.isEmpty){
+    if (listUsers.isEmpty) {
       await Firestore.instance
-        .collection('chats')
-        .document(widget.chatId)
-        .delete();
+          .collection('chats')
+          .document(widget.chatId)
+          .delete();
     }
 
-    deleteChatForUser(widget.currentUserId, Firestore.instance
-        .collection('chats')
-        .document(widget.chatId));
+    deleteChatForUser(widget.currentUserId,
+        Firestore.instance.collection('chats').document(widget.chatId));
 
-    Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName));
+    Navigator.popUntil(
+        context, ModalRoute.withName(Navigator.defaultRouteName));
     /*
     Navigator.push(
             context,
@@ -273,7 +391,7 @@ class ChatSettingsState extends State<ChatSettings> {
           */
   }
 
-  /*List<QuerySnapshot> getParticipants() {
+/*List<QuerySnapshot> getParticipants() {
     var participants = Firestore.instance
         .collection('chats')
         .document(widget.chatId)
