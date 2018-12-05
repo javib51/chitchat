@@ -1,7 +1,9 @@
 import 'dart:collection';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
@@ -107,6 +109,11 @@ class GalleryPartState extends State<GalleryPart> {
   String groupChatId;
   Future<QuerySnapshot> images;
 
+
+  Map<String, String> pictureURLs = Map<String, String>();
+  ImageResolution _imageResolutionSet;
+
+
   var currentState;
   Map<String, Future<Multimap<String, ImageData>>> states = {"Sender": null, "Features": null};
 
@@ -134,7 +141,7 @@ class GalleryPartState extends State<GalleryPart> {
     result.documents.forEach((f) => multimap.add(
         f.data['nickname'],
         new ImageData(f.data['nickname'], f.data['payload'],
-            f.data['timestamp'], f.data['label'])));
+            f.data['timestamp'], f.data['label'], f.data["maxResolution"])));
     
     return multimap;
   }
@@ -154,7 +161,7 @@ class GalleryPartState extends State<GalleryPart> {
     result.documents.forEach((f) => multimap.add(
         f.data['label'],
         new ImageData(f.data['nickname'], f.data['payload'],
-            f.data['timestamp'], f.data['label'])));
+            f.data['timestamp'], f.data['label'], f.data["maxResolution"])));
 
     return multimap;
   }
@@ -211,7 +218,83 @@ class GalleryPartState extends State<GalleryPart> {
       List<Container> imagesContainer =
           new List<Container>.generate(v.length, (int index) {
         return Container(
-          child: CachedNetworkImage(
+          child: () {
+            String imageName = v.elementAt(index).payload;
+
+            if (this.pictureURLs[imageName] == null) {
+              String completeImageName = imageName;
+              String imageResolutionMaxStringPicture = v.elementAt(index).maxResolution;
+              print("Image seen for the first time, no URL fetched.");
+
+              if (imageResolutionMaxStringPicture == null) {
+                //Retro-compatibility
+                print(
+                    "Downloaded an old image message that was not properly formatted.");
+              } else if (completeImageName.startsWith("http")) {
+                print("Downloaded an image using the old way of sending data.");
+              } else {
+                ImageResolution pictureImageResolutionMax =
+                getEnumFromString(imageResolutionMaxStringPicture);
+                ImageResolution localMaxResolution = this._imageResolutionSet;
+                String prefixToPrepend =
+                getPrefix(localMaxResolution, pictureImageResolutionMax);
+                completeImageName = "$prefixToPrepend$completeImageName";
+              }
+
+              print("Image name: $imageName");
+
+              Future.delayed(Duration(seconds: 1),
+                      () {
+                    //One second of delay because scaled-down image is not immediately ready to be downloaded.
+                    print("Timer expired.");
+                    FirebaseStorage.instance
+                        .ref()
+                        .child(completeImageName)
+                        .getDownloadURL()
+                        .then((downloadURL) {
+                      print("URL fetched. URL: $downloadURL");
+                      this.setState(() => this.pictureURLs[imageName] = downloadURL);
+                    });
+                  });
+
+              return Container(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                ),
+                decoration: BoxDecoration(
+                  color: greyColor2,
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(8.0),
+                  ),
+                ),
+              );
+            } else {
+              print(
+                  "Image already fetched previously. Downloading the image from cloud storage.");
+              return CachedNetworkImage(
+                placeholder: Container(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                  ),
+                  decoration: BoxDecoration(
+                    color: greyColor2,
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(8.0),
+                    ),
+                  ),
+                ),
+                errorWidget: Material(
+                  child: Image.asset(
+                    'images/img_not_available.jpeg',
+                    fit: BoxFit.fill,
+                  ),
+                  clipBehavior: Clip.hardEdge,
+                ),
+                imageUrl: this.pictureURLs[imageName],
+                fit: BoxFit.fill,
+              );
+            }
+          }(),/*CachedNetworkImage(
             errorWidget: Material(
               child: Image.asset(
                 'images/img_not_available.jpeg',
@@ -220,7 +303,7 @@ class GalleryPartState extends State<GalleryPart> {
             ),
             imageUrl: v.elementAt(index).payload,
             fit: BoxFit.fill,
-          ),
+          )*/
         );
       });
       list.add(
@@ -246,19 +329,22 @@ class ImageData {
   String _payload;
   String _timestamp;
   String _label;
+  String _maxResolution;
 
-  ImageData(String n, String p, String t, String f) {
+  ImageData(String n, String p, String t, String f, String maxResolution) {
     this._nickname = n;
 
     this._payload = p;
     this._timestamp = t;
     this._label = f;
+    this._maxResolution = maxResolution;
   }
 
   String get nickname => this._nickname;
   String get payload => this._payload;
   String get timestamp => this._timestamp;
   String get label => this._label;
+  String get maxResolution => this._maxResolution;
 
   @override
   String toString() {
