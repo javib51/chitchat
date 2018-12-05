@@ -453,27 +453,47 @@ class ChatScreenState extends State<ChatScreen> {
             Row(
               children: <Widget>[
                 isLastMessageLeft(index)
-                    ? Material(
-                  child: CachedNetworkImage(
-                    placeholder: Container(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.0,
-                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                      ),
-                      width: 35.0,
-                      height: 35.0,
-                      padding: EdgeInsets.all(10.0),
-                    ),
-                    imageUrl: chatAvatar,
-                    width: 35.0,
-                    height: 35.0,
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(18.0),
-                  ),
-                  clipBehavior: Clip.hardEdge,
+                    ? FutureBuilder(
+                    future: widget.chatUsers,
+                    builder: (BuildContext context, AsyncSnapshot snapshot) {
+                      if (snapshot.hasData && snapshot.data != null) {
+
+                        return Material(
+                          child: CachedNetworkImage(
+                            placeholder: Container(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.0,
+                                valueColor:
+                                AlwaysStoppedAnimation<Color>(themeColor),
+                              ),
+                              width: 35.0,
+                              height: 35.0,
+                              padding: EdgeInsets.all(10.0),
+                            ),
+                            imageUrl: snapshot.data[document['userFrom'].documentID]["photoUrl"],
+                            width: 35.0,
+                            height: 35.0,
+                            fit: BoxFit.cover,
+                          ),
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(18.0),
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                        );
+                      } else {
+                        return Container(
+                          width: 35.0,
+                          height: 35.0,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.0,
+                            valueColor:
+                            AlwaysStoppedAnimation<Color>(themeColor),
+                          ),
+                        );
+                      }
+                    }
                 )
+
                     : Container(width: 35.0),
                 document['type'] == "text"
                     ? this._buildMessageText(index, document, this.isLastMessageRight(index))
