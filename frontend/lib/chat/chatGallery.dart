@@ -39,6 +39,7 @@ class ChatGallery extends StatelessWidget {
                 GalleryPart(
                   groupChatId: groupChatId,
                   option: option,
+                  chatUsers: chatUsers,
                 ),
               ],
             ),
@@ -96,8 +97,10 @@ class DropdownMenuState extends State<DropDownMenu> {
 class GalleryPart extends StatefulWidget {
   final ValueListenable<String> option;
   final String groupChatId;
+  final Future<Map<String, DocumentSnapshot>> chatUsers;
 
-  GalleryPart({Key key, @required this.groupChatId, @required this.option})
+
+  GalleryPart({Key key, @required this.groupChatId, @required this.option, @required this.chatUsers})
       : super(key: key);
 
   @override
@@ -138,10 +141,16 @@ class GalleryPartState extends State<GalleryPart> {
         //.orderBy('timestamp', descending: true)
         .limit(30)
         .getDocuments();
-    result.documents.forEach((f) => multimap.add(
-        f.data['nickname'],
-        new ImageData(f.data['nickname'], f.data['payload'],
-            f.data['timestamp'], f.data['label'], f.data["maxResolution"])));
+
+    result.documents.forEach((f) async {
+      var nickname = (await widget.chatUsers)[f.data["userFrom"].documentID]["nickname"];
+      print("aaaaaaaaaa" + nickname);
+      multimap.add(
+          nickname,
+          new ImageData(nickname, f.data['payload'],
+          f.data['timestamp'], f.data['label'], f.data["maxResolution"]));
+      }
+    );
     
     return multimap;
   }
