@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:chitchat/chat/chatImage.dart';
 import 'package:chitchat/chat/link_preview.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -403,7 +404,16 @@ class ChatScreenState extends State<ChatScreen> {
           } else {
             print(
                 "Image already fetched previously. Downloading the image from cloud storage.");
-            return CachedNetworkImage(
+          
+            return GestureDetector(
+              onTap: (){
+                Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ChatImage(this.pictureURLs[imageName]))
+                      );
+              },
+              child: CachedNetworkImage(
               placeholder: Container(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(themeColor),
@@ -434,6 +444,7 @@ class ChatScreenState extends State<ChatScreen> {
               width: 200.0,
               height: 200.0,
               fit: BoxFit.cover,
+            ),
             );
           }
         }(),

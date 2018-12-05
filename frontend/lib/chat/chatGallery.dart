@@ -12,7 +12,7 @@ import 'package:quiver/collection.dart';
 class ChatGallery extends StatelessWidget {
   final String groupChatId;
   final Future<Map<String, DocumentSnapshot>> chatUsers;
-  final option = new ValueNotifier("Sender");
+  final option = new ValueNotifier("Date");
 
   ChatGallery(this.groupChatId, this.chatUsers);
 
@@ -50,7 +50,7 @@ class ChatGallery extends StatelessWidget {
 }
 
 class DropDownMenu extends StatefulWidget {
-  final List<String> _options = ["Sender", "Features"].toList();
+  final List<String> _options = ["Date", "Sender", "Features"].toList();
   final option;
   DropDownMenu({Key key, @required this.option}) : super(key: key);
 
@@ -115,7 +115,7 @@ class GalleryPartState extends State<GalleryPart> {
 
 
   var currentState;
-  Map<String, Future<Multimap<String, ImageData>>> states = {"Sender": null, "Features": null};
+  Map<String, Future<Multimap<String, ImageData>>> states = {"Date": null, "Sender": null, "Features": null};
 
   var listMessages;
 
@@ -124,7 +124,7 @@ class GalleryPartState extends State<GalleryPart> {
   void initState() {
     super.initState();
 
-    currentState = states["Sender"] = this.getImagesBySender();
+    currentState = states["Date"] = this.getImagesByDate();
   }
 
   Future<Multimap<String, ImageData>> getImagesBySender() async {
@@ -136,7 +136,7 @@ class GalleryPartState extends State<GalleryPart> {
         .collection('messages')
         .where("type", isEqualTo: "photo")
         //.orderBy('timestamp', descending: true)
-        .limit(10)
+        .limit(30)
         .getDocuments();
     result.documents.forEach((f) => multimap.add(
         f.data['nickname'],
@@ -155,11 +155,31 @@ class GalleryPartState extends State<GalleryPart> {
         .collection('messages')
         .where("type", isEqualTo: "photo")
         //.orderBy('timestamp', descending: true)
-        .limit(10)
+        .limit(30)
         .getDocuments();
 
     result.documents.forEach((f) => multimap.add(
         f.data['label'],
+        new ImageData(f.data['nickname'], f.data['payload'],
+            f.data['timestamp'], f.data['label'], f.data["maxResolution"])));
+
+    return multimap;
+  }
+
+  Future<Multimap<String, ImageData>> getImagesByDate() async {
+    Multimap<String, ImageData> multimap = new Multimap<String, ImageData>();
+    
+    var result = await Firestore.instance
+        .collection('chats')
+        .document(widget.groupChatId)
+        .collection('messages')
+        .where("type", isEqualTo: "photo")
+        .orderBy('timestamp', descending: true)
+        .limit(30)
+        .getDocuments();
+
+    result.documents.forEach((f) => multimap.add(
+        "",
         new ImageData(f.data['nickname'], f.data['payload'],
             f.data['timestamp'], f.data['label'], f.data["maxResolution"])));
 
@@ -173,6 +193,9 @@ class GalleryPartState extends State<GalleryPart> {
     option.addListener(() {
       if(states[option.value] == null) {
         switch (option.value) {
+          case "Date":
+          states[option.value] = this.getImagesByDate();
+          break;
           case "Sender":
             states[option.value] = this.getImagesBySender();
             break;
