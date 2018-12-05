@@ -1,9 +1,6 @@
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -22,7 +19,6 @@ class ChatImage extends StatefulWidget {
 }
 
 class ChatImageState extends State<ChatImage> {
-  Widget imageOptions() => Container();
 
   Widget imageDisplay() => Container(
       margin: const EdgeInsets.symmetric(vertical: 20.0),

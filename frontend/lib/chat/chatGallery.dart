@@ -127,7 +127,6 @@ class GalleryPartState extends State<GalleryPart> {
 
   void initState() {
     super.initState();
-
     currentState = states["Date"] = this.getImagesByDate();
   }
 
@@ -139,7 +138,7 @@ class GalleryPartState extends State<GalleryPart> {
         .document(widget.groupChatId)
         .collection('messages')
         .where("type", isEqualTo: "photo")
-        //.orderBy('timestamp', descending: true)
+        .orderBy('timestamp', descending: true)
         .limit(30)
         .getDocuments();
 
@@ -189,7 +188,7 @@ class GalleryPartState extends State<GalleryPart> {
         .getDocuments();
 
     result.documents.forEach((f) => multimap.add(
-        "",
+        " ",
         new ImageData(f.data['nickname'], f.data['payload'],
             f.data['timestamp'], f.data['label'], f.data["maxResolution"])));
 
@@ -204,8 +203,8 @@ class GalleryPartState extends State<GalleryPart> {
       if(states[option.value] == null) {
         switch (option.value) {
           case "Date":
-          states[option.value] = this.getImagesByDate();
-          break;
+            states[option.value] = this.getImagesByDate();
+            break;
           case "Sender":
             states[option.value] = this.getImagesBySender();
             break;
@@ -240,6 +239,7 @@ class GalleryPartState extends State<GalleryPart> {
   List<Widget> listMyWidgets(Multimap<String, ImageData> mapImageData) {
     List<Widget> list = new List();
     mapImageData.forEachKey((k, v) {
+      print(k);
       list.add(
         Center(
             child: Text(
