@@ -342,6 +342,19 @@ class ChatSettingsState extends State<ChatSettings> {
         centerTitle: true,
       ),
       body: bodyData(), //new ChatSettingsScreen(),
+      floatingActionButton: FloatingActionButton(
+          tooltip: 'Add',
+          child: Icon(
+              Icons.add),
+          backgroundColor: Colors.amber,
+          foregroundColor: Colors.black,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) {/*MATS here you go!*/}),
+            );
+          }
+      ),
     );
   }
 
