@@ -190,7 +190,7 @@ class ContactsScreen extends State<Contacts> {
          final_selected.add(iets.current);
        }
      }
-     if(final_selected != null) {
+     if(final_selected.length > 0) {
        List update = new List(users.length + final_selected.length);
        int i = 0;
        for (i; i < users.length; i++) {
@@ -213,9 +213,10 @@ class ContactsScreen extends State<Contacts> {
            .updateData({
          'users': update,
        });
+       Fluttertoast.showToast(msg: "Succesful added user(s)");
      }
      else{
-       Fluttertoast.showToast(msg: "No new users");
+       Fluttertoast.showToast(msg: "No new users to add");
      }
     this.setState(() {
       isLoading = false;
