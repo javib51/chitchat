@@ -7,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/chat/chatGallery.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class ChatSettings extends StatefulWidget {
   final String chatId;
@@ -22,7 +23,7 @@ class ChatSettings extends StatefulWidget {
       this.chatName, this.chatAvatar);
 
   @override
-  createState() => ChatSettingsState(currentUserId: currentUserId, chatId: chatId);
+  createState() => ChatSettingsState(currentUserId: currentUserId, chatId: chatId, chatType: chatType);
 }
 
 class ChatSettingsState extends State<ChatSettings> {
@@ -31,7 +32,8 @@ class ChatSettingsState extends State<ChatSettings> {
   ImageResolution _imageResolutionSet;
   final String currentUserId;
   final String chatId;
-  ChatSettingsState({Key key, @required this.currentUserId, this.chatId});
+  final String chatType;
+  ChatSettingsState({Key key, @required this.currentUserId, this.chatId, this.chatType});
 
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
@@ -352,10 +354,15 @@ class ChatSettingsState extends State<ChatSettings> {
           backgroundColor: Colors.amber,
           foregroundColor: Colors.black,
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId, chatId: chatId,)),
-            );
+            if(chatType == "G") {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) =>
+                    Contacts(currentUserId: currentUserId, chatId: chatId,)),
+              );
+            } else{
+              Fluttertoast.showToast(msg: "Cannot add members to private chat");
+            }
           }
       ),
     );

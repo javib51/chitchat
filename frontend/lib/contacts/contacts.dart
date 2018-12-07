@@ -181,25 +181,42 @@ class ContactsScreen extends State<Contacts> {
         .collection('chats')
         .document(chatId).get();
      List users = snapshot.data['users'];
-     List update = new List(users.length+selected.length);
-     int i = 0;
-     for(i; i<users.length;i++) {
-       update[i] = users[i];
+
+     Iterator iets = selected.iterator;
+     Set final_selected = new Set();
+     for(int i = 0; i<selected.length;i++){
+       iets.moveNext();
+       if(!users.toString().contains(iets.current)){
+         final_selected.add(iets.current);
+       }
      }
-     Iterator iterator = selected.iterator;
-     var id = await Firestore.instance.collection('chats').document(chatId);
-     for(i;i<users.length+selected.length;i++){
-       iterator.moveNext();
-       Map m = {'id':iterator.current,'join_date':DateTime.now().millisecondsSinceEpoch.toString()};
-       addChatToUser(iterator.current, id);
-       update[i] = m;
+     if(final_selected != null) {
+       List update = new List(users.length + final_selected.length);
+       int i = 0;
+       for (i; i < users.length; i++) {
+         update[i] = users[i];
+       }
+       Iterator iterator = final_selected.iterator;
+       var id = await Firestore.instance.collection('chats').document(chatId);
+       for (i; i < users.length + final_selected.length; i++) {
+         iterator.moveNext();
+         Map m = {'id': iterator.current, 'join_date': DateTime
+             .now()
+             .millisecondsSinceEpoch
+             .toString()};
+         addChatToUser(iterator.current, id);
+         update[i] = m;
+       }
+       await Firestore.instance
+           .collection('chats')
+           .document(chatId)
+           .updateData({
+         'users': update,
+       });
      }
-     await Firestore.instance
-         .collection('chats')
-         .document(chatId)
-         .updateData({
-       'users': update,
-     });
+     else{
+       Fluttertoast.showToast(msg: "No new users");
+     }
     this.setState(() {
       isLoading = false;
     });
