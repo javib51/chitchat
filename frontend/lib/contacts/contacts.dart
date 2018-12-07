@@ -107,20 +107,21 @@ class ContactsScreen extends State<Contacts> {
       var push_chat;
 
       //check existing chats
-      final CollectionReference result = await Firestore.instance
-          .collection('chats');
-      final QuerySnapshot order_1 = await result.where(
-          'users', isEqualTo: [selected.first, currentUserId]).getDocuments();
-      final QuerySnapshot order_2 = await result.where(
-          'users', isEqualTo: [currentUserId, selected.first]).getDocuments();
+      var user1 = await Firestore.instance.collection('users').document(currentUserId).get();
+      var user2 = await Firestore.instance.collection('users').document(selected.first).get();
+      List chats1 = user1.data['chats'];
+      List chats2 = user2.data['chats'];
+      if(chats1 != null && chats2 != null) {
+        for (int i = 0; i < chats1.length; i++) {
+          for (int j = 0; j < chats2.length; j++) {
+            if (chats1[i] == chats2[j]) {
+              push_chat = chats1[i];
+            }
+          }
+        }
+      }
 
-      if(order_1.documents.length > 0) {
-        push_chat = order_1.documents.first;
-      }
-      else if(order_2.documents.length > 0) {
-        push_chat = order_2.documents.first;
-      }
-      else {
+      if(push_chat==null) {
         var date = DateTime.now().millisecondsSinceEpoch.toString();
         var id = await Firestore.instance.collection('chats').add({
           'type': "P",
