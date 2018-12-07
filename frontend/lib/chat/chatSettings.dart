@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/common/imageResolution.dart';
+import 'package:chitchat/contacts/contacts.dart';
 import 'package:chitchat/overview/overview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -21,14 +22,16 @@ class ChatSettings extends StatefulWidget {
       this.chatName, this.chatAvatar);
 
   @override
-  createState() => ChatSettingsState();
+  createState() => ChatSettingsState(currentUserId: currentUserId, chatId: chatId);
 }
 
 class ChatSettingsState extends State<ChatSettings> {
   Size deviceSize;
   Map<String, String> pictureURLs = Map<String, String>();
   ImageResolution _imageResolutionSet;
-
+  final String currentUserId;
+  final String chatId;
+  ChatSettingsState({Key key, @required this.currentUserId, this.chatId});
 
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
@@ -351,7 +354,7 @@ class ChatSettingsState extends State<ChatSettings> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) {/*MATS here you go!*/}),
+              MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId, chatId: chatId,)),
             );
           }
       ),

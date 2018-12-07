@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -17,15 +18,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 class Contacts extends StatefulWidget {
   final String currentUserId;
   final String userNickname;
-  Contacts({Key key, @required this.currentUserId, this.userNickname}) : super(key: key);
+  final String chatId;
+
+  Contacts({Key key, @required this.currentUserId, this.userNickname, this.chatId}) : super(key: key);
 
   @override
-  State createState() => new ContactsScreen(currentUserId: currentUserId);
+  State createState() => new ContactsScreen(currentUserId: currentUserId, chatId: chatId);
 }
 
 class ContactsScreen extends State<Contacts> {
   final String currentUserId;
-  ContactsScreen({Key key, @required this.currentUserId});
+  final String chatId;
+  ContactsScreen({Key key, @required this.currentUserId, this.chatId});
 
   bool isLoading = false;
   Set selected = new Set();
@@ -85,10 +89,8 @@ class ContactsScreen extends State<Contacts> {
   }
 
   Future<Null> handleInitiation() async {
-    if(selected.length == 0) {
-      Fluttertoast.showToast(msg: "Please select contact(s)");
-    }
-    else if(selected.length > 1){
+
+    if(selected.length > 1){
       selected.add(currentUserId);
 
       Navigator.push(
@@ -168,6 +170,40 @@ class ContactsScreen extends State<Contacts> {
               )));
       }
 
+  }
+
+  Future<Null> handleAdding() async {
+    this.setState(() {
+      isLoading = true;
+    });
+     final DocumentSnapshot snapshot = await Firestore.instance
+        .collection('chats')
+        .document(chatId).get();
+     List users = snapshot.data['users'];
+     List update = new List(users.length+selected.length);
+     int i = 0;
+     for(i; i<users.length;i++) {
+       update[i] = users[i];
+     }
+     Iterator iterator = selected.iterator;
+     var id = await Firestore.instance.collection('chats').document(chatId);
+     for(i;i<users.length+selected.length;i++){
+       iterator.moveNext();
+       Map m = {'id':iterator.current,'join_date':DateTime.now().millisecondsSinceEpoch.toString()};
+       addChatToUser(iterator.current, id);
+       update[i] = m;
+     }
+     await Firestore.instance
+         .collection('chats')
+         .document(chatId)
+         .updateData({
+       'users': update,
+     });
+    this.setState(() {
+      isLoading = false;
+    });
+
+    Navigator.pop(context);
   }
 
 
@@ -271,7 +307,15 @@ class ContactsScreen extends State<Contacts> {
             backgroundColor: Colors.amber,
             foregroundColor: Colors.black,
         onPressed: () {
-          handleInitiation();
+          if(selected.length == 0) {
+            Fluttertoast.showToast(msg: "Please select contact(s)");
+          }
+          else if(chatId == null) {
+            handleInitiation();
+          }
+          else {
+            handleAdding();
+          }
         }
       ),
     );
