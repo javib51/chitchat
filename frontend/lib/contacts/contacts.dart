@@ -184,7 +184,7 @@ class ContactsScreen extends State<Contacts> {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                GroupInitScreen(selectedUsers: selected, userNickname: nickname, currentUserId: currentUserId,)),
+                GroupInitScreen(selectedUsers: selected, userNickname: nickname, currentUserId: currentUserId, prefs: prefs,)),
       );
     } else {
       this.setState(() {
@@ -263,6 +263,7 @@ class ContactsScreen extends State<Contacts> {
                 userNickname: widget.userNickname,
                 joinDate: user['join_date'],
                 chatName: "Private chat",
+                prefs: prefs,
               )));
     }
   }
@@ -448,7 +449,7 @@ class ContactsScreen extends State<Contacts> {
             handleInitiationnew();
           }
           else {
-            handleAdding();
+            handleAddingnew();
           }
         }
       ),
