@@ -38,11 +38,11 @@ class ChatSettingsState extends State<ChatSettings> {
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
         width: double.infinity,
-        color: themeColor,
+        color: Colors.amberAccent,
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Container(
-            color: themeColor,
+            color: Colors.amberAccent,
             child: FittedBox(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -50,15 +50,16 @@ class ChatSettingsState extends State<ChatSettings> {
                   Container(
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(50.0),
-                        border: Border.all(width: 2.0, color: Colors.white)),
+                        border: Border.all(width: 0.0, color: Colors.black)),
                     child: CircleAvatar(
                       radius: 40.0,
                       backgroundImage: NetworkImage(widget.chatAvatar),
+                      backgroundColor: Colors.grey,
                     ),
                   ),
                   Text(
                     widget.chatName,
-                    style: TextStyle(color: Colors.white, fontSize: 20.0),
+                    style: TextStyle(color: Colors.black, fontSize: 20.0),
                   ),
                 ],
               ),
@@ -257,6 +258,7 @@ class ChatSettingsState extends State<ChatSettings> {
         children: <Widget>[
           CircleAvatar(
             backgroundImage: NetworkImage(user["photoUrl"]),
+            backgroundColor: Colors.grey,
           ),
           Expanded(
               child: Padding(
