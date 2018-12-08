@@ -267,12 +267,7 @@ class ContactsScreen extends State<Contacts> {
         ),
         centerTitle: true,
         actions: <Widget>[
-          IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {
-
-              }
-          ),
+         
         ],
       ),
       // body is the majority of the screen.
