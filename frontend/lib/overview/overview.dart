@@ -392,7 +392,8 @@ class MainScreenState extends State<MainScreen> {
               accountName: new Text(nickname),
               accountEmail: new Text(""),
               currentAccountPicture: new CircleAvatar(
-                  backgroundImage: new NetworkImage(photoUrl)
+                  backgroundImage: new NetworkImage(photoUrl),
+                  backgroundColor: Colors.grey,
               ),
             ),
             new ListTile(
