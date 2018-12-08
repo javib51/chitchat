@@ -408,8 +408,8 @@ class ChatSettingsState extends State<ChatSettings> {
         centerTitle: true,
         actions: menuButton
       ),
-      body: bodyData(), //new ChatSettingsScreen(),
 
+      body: bodyData(), //new ChatSettingsScreen(),
     );
   }
 
@@ -440,6 +440,7 @@ class ChatSettingsState extends State<ChatSettings> {
       Fluttertoast.showToast(msg: "Cannot add members to private chat");
     }
   }
+
 
   void leaveChat() async {
     Map<String, DocumentSnapshot> listUsers = await widget.chatUsers;
