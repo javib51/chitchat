@@ -25,7 +25,6 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:multi_image_picker/asset.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:http/http.dart' as http;
@@ -33,6 +32,8 @@ import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:chitchat/common/translation.dart';
 
 import 'package:translator/translator.dart';
+
+import 'package:chitchat/chat/text_element.dart';
 
 
 
@@ -564,7 +565,7 @@ class ChatScreenState extends State<ChatScreen> {
                     : Container(width: 35.0),
                 document['type'] == "text"
                     ? this._buildMessageText(
-                        document, this.isLastMessageRight(index))
+                        document, this.isLastMessageLeft(index))
                     : document['type'] == "photo"
                         ? this._buildImageContainer(
                             document, isLastMessageLeft(index), ChatSide.left)
@@ -605,66 +606,19 @@ class ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<String> _getMessageTranslation(String message, TranslationLanguage translationLanguage) async {
-    return await this._translator.translate(message, to: getCountryISOCode(translationLanguage));
-  }
-
   Widget _buildMessageText(DocumentSnapshot document, bool isLast) {
     String text = document["payload"];
     String url = document["url"];
 
     TranslationLanguage translationLanguage = getTranslationLanguageFromString(this.prefs.getString("translation_language"));
+    print(this.prefs.getString("translation_mode"));
     bool isTranslationAutomatic = this.prefs.getString("translation_mode") == TranslationMode.automatic.toString();
+    print("Translation automatic? ${isTranslationAutomatic}");
 
     if (url != null) {        //If there is a URL, it will take care of properly render the information on the UI.
-      return LinkPreview(
-          text, document["matchStart"], document["matchEnd"], isLast, translationLanguage, isTranslationAutomatic);
-    } else if (isTranslationAutomatic) {      //If the translation is automatic, then a future builder needs to be returned to update the UI accordingly.
-      return FutureBuilder(
-        future: this._getMessageTranslation(text, translationLanguage),
-        builder: (context, snapshot) {
-          return Container(
-            child: Column(
-                children: <Widget>[
-                  Text(
-                    text,
-                    style: TextStyle(color: primaryColor),
-                  ),
-                  isTranslationAutomatic ?
-                  Column(
-                    children: <Widget>[
-                      Divider(),
-                      Text(snapshot.hasData
-                          ? "MESSAGE TRANSLATED TO ${getTranslationLanguageUsableString(
-                          translationLanguage)}\n\n${snapshot.data}"
-                          : "TRANSLATING MESSAGE TO ${getTranslationLanguageUsableString(
-                          translationLanguage)}",
-                          style: TextStyle(fontStyle: FontStyle.italic),
-                          textAlign: TextAlign.left),
-                    ],
-                  ) : Container(), //No automatic translation
-                ]
-            ),
-            padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-            width: 200.0,
-            decoration: BoxDecoration(
-                color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
-            margin: EdgeInsets.only(bottom: isLast ? 20.0 : 10.0, right: 10.0),
-          );
-        });
-    } else {            //If there is no real-time translation, then there is no need to use a future builder, and the normal text is shown.
-      Container(
-        child: Text(
-          text,
-          style: TextStyle(color: primaryColor),
-        ),
-        padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-        width: 200.0,
-        decoration: BoxDecoration(
-            color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
-        margin: EdgeInsets.only(
-            bottom: isLast ? 20.0 : 10.0, right: 10.0),
-      );
+      return LinkPreview(text, document["matchStart"], document["matchEnd"], isLast, translationLanguage, isTranslationAutomatic);
+    } else {
+      return TextChatElement(text, isLast, translationLanguage, isTranslationAutomatic);
     }
   }
 

@@ -151,6 +151,8 @@ class WelcomeScreenState extends State<WelcomeScreen> {
       }).then((data) async {
         prefs.setString('nickname', nickController.text.trim());
         prefs.setString('photoUrl', photoUrl);
+        prefs.setString('translation_mode', TranslationMode.onDemand.toString());
+        prefs.setString('translation_language', TranslationLanguage.english.toString());
         });
       }
 
