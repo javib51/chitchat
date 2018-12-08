@@ -1,7 +1,10 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:chitchat/login/login.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(new MyApp());
+Future<void> main() async {
+
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  runApp(MyApp(prefs: prefs,));
+}

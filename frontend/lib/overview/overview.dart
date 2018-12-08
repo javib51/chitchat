@@ -2,36 +2,104 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/contacts/contacts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/chat/chat.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/login/login.dart';
+import 'package:chitchat/userSearch/search.dart';
 import 'package:chitchat/settings/settings.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 
 class MainScreen extends StatefulWidget {
   final String currentUserId;
+  final SharedPreferences prefs;
 
-  MainScreen({Key key, @required this.currentUserId}) : super(key: key);
+  MainScreen({Key key, @required this.currentUserId, @required this.prefs}) : super(key: key);
 
   @override
-  State createState() => new MainScreenState(currentUserId: currentUserId);
+  State createState() => new MainScreenState(currentUserId: currentUserId, prefs: this.prefs);
 }
 
 class MainScreenState extends State<MainScreen> {
-  MainScreenState({Key key, @required this.currentUserId});
+
+  MainScreenState({Key key, @required this.currentUserId, @required this.prefs});
 
   final String currentUserId;
+  final SharedPreferences prefs;
 
   bool isLoading = false;
-  List<Choice> choices = const <Choice>[
-    const Choice(title: 'Settings', icon: Icons.settings),
-    const Choice(title: 'Log out', icon: Icons.exit_to_app),
-  ];
+
+  Map<String,Map<String,String>> values = new Map();
+
+  String nickname = '';
+  String photoUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    readLocal();
+  }
+
+  void readLocal() {
+
+    nickname = prefs.getString('nickname') ?? '';
+    photoUrl = prefs.getString('photoUrl') ?? '';
+
+    String notificationToken = prefs.getString('notificationToken') ?? '';
+    if(notificationToken != '') {
+      updateToken(notificationToken);
+    }
+    // Force refresh input
+    setState(() {});
+  }
+
+  void updateToken(String notificationToken) {
+    Firestore.instance.collection('users').document(currentUserId).updateData({"notificationToken": notificationToken});
+  }
+
+  Future<List<DocumentSnapshot>> getChats() async {
+    List<DocumentSnapshot> chats = new List();
+    DocumentSnapshot user = await Firestore.instance.collection('users').document(currentUserId).get();
+
+    for(var chat in user['chats']) {
+      chats.add(await chat.get());
+    }
+    return chats;
+  }
+
+  Future<Map<String, String>> getChatInfo(DocumentSnapshot chat) async {
+    QuerySnapshot users = await Firestore.instance.collection('chats')
+        .document(chat.documentID).collection('users').getDocuments();
+
+    Map<String, String> map = new Map();
+    if(chat['type'] == 'G') {
+      map['photoUrl'] = chat['photoUrl'];
+      map['name'] = chat['name'];
+      map['type'] = chat['type'];
+    } else {
+      String userId = (users.documents[0]['id'] == currentUserId)? users.documents[1]['id'] : users.documents[0]['id'];
+      DocumentSnapshot user = await Firestore.instance.collection('users').document(userId).get();
+      map['photoUrl'] = user['photoUrl'];
+      map['name'] = user['nickname'];
+      map['type'] = chat['type'];
+    }
+    map['joinDate'] = await getJoinDate(users.documents, currentUserId);
+    return map;
+
+  }
+
+  Future<String>  getJoinDate(List<DocumentSnapshot> users, String userId) async {
+    int index = users.indexWhere((item) => item['id'] == userId);
+    return users[index]['join_date'];
+  }
+
 
   Future<bool> onBackPress() {
     openDialog();
@@ -44,7 +112,7 @@ class MainScreenState extends State<MainScreen> {
         builder: (BuildContext context) {
           return SimpleDialog(
             contentPadding:
-                EdgeInsets.only(left: 0.0, right: 0.0, top: 0.0, bottom: 0.0),
+            EdgeInsets.only(left: 0.0, right: 0.0, top: 0.0, bottom: 0.0),
             children: <Widget>[
               Container(
                 color: themeColor,
@@ -128,89 +196,92 @@ class MainScreenState extends State<MainScreen> {
     }
   }
 
-  Widget buildItem(BuildContext context, DocumentSnapshot document) {
-    if (document['id'] == currentUserId) {
-      return Container();
-    } else {
-      return Container(
-        child: FlatButton(
-          child: Row(
-            children: <Widget>[
-              Material(
-                child: CachedNetworkImage(
-                  placeholder: Container(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.0,
-                      valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                    ),
-                    width: 50.0,
-                    height: 50.0,
-                    padding: EdgeInsets.all(15.0),
+  Widget buildItemFuture(BuildContext context, DocumentSnapshot document) {
+    return FutureBuilder(
+        future: getChatInfo(document),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData && snapshot.data != null) {
+            return buildItem(context, document, snapshot.data);
+          } else {
+            return Container(
+              child: Center(
+                child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+              ),
+              color: Colors.white.withOpacity(0.8),
+            );
+          }
+        }
+    );
+  }
+
+  Widget buildItem(BuildContext context, DocumentSnapshot document, Map<String, String> info) {
+    return Container(
+      child: FlatButton(
+        child: Row(
+          children: <Widget>[
+            Material(
+              child: CachedNetworkImage(
+                placeholder: Container(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.0,
+                    valueColor: AlwaysStoppedAnimation<Color>(themeColor),
                   ),
-                  imageUrl: document['photoUrl'],
                   width: 50.0,
                   height: 50.0,
-                  fit: BoxFit.cover,
+                  padding: EdgeInsets.all(15.0),
                 ),
-                borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                clipBehavior: Clip.hardEdge,
+                imageUrl: info['photoUrl'],
+                width: 50.0,
+                height: 50.0,
+                fit: BoxFit.cover,
               ),
-              new Flexible(
-                child: Container(
-                  child: new Column(
-                    children: <Widget>[
-                      new Container(
-                        child: Text(
-                          'Nickname: ${document['nickname']}',
-                          style: TextStyle(color: primaryColor),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
+              borderRadius: BorderRadius.all(Radius.circular(25.0)),
+              clipBehavior: Clip.hardEdge,
+            ),
+            new Flexible(
+              child: Container(
+                child: new Column(
+                  children: <Widget>[
+                    new Container(
+                      child: Text(
+                        info['name'],
+                        style: TextStyle(color: primaryColor),
                       ),
-                      new Container(
-                        child: Text(
-                          'About me: ${document['aboutMe'] ?? 'Not available'}',
-                          style: TextStyle(color: primaryColor),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 0.0),
-                      )
-                    ],
-                  ),
-                  margin: EdgeInsets.only(left: 20.0),
+                      alignment: Alignment.centerLeft,
+                      margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
+                    ),
+                  ],
                 ),
+                margin: EdgeInsets.only(left: 20.0),
               ),
-            ],
-          ),
-          onPressed: () {
-            Navigator.push(
-                context,
-                new MaterialPageRoute(
-                    builder: (context) => new Chat(
-                          peerId: document.documentID,
-                          peerAvatar: document['photoUrl'],
-                        )));
-          },
-          color: greyColor2,
-          padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+            ),
+          ],
         ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
-      );
-    }
+        onPressed: () {
+          print(info);
+          Navigator.push(
+              context,
+              new MaterialPageRoute(
+                  builder: (context) => new Chat(
+                    currentUserId: currentUserId,
+                    chatId: document.documentID,
+                    chatAvatar: info['photoUrl'],
+                    userNickname: nickname,
+                    chatType: info['type'],
+                    joinDate: info['joinDate'],
+                    chatName: info['name'],
+                  )));
+        },
+        color: greyColor2,
+        padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      ),
+      margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
+    );
   }
 
   final GoogleSignIn googleSignIn = new GoogleSignIn();
-
-  void onItemMenuPress(Choice choice) {
-    if (choice.title == 'Log out') {
-      handleSignOut();
-    } else {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Settings()));
-    }
-  }
 
   Future<Null> handleSignOut() async {
     this.setState(() {
@@ -218,16 +289,22 @@ class MainScreenState extends State<MainScreen> {
     });
 
     await FirebaseAuth.instance.signOut();
-    await googleSignIn.disconnect();
-    await googleSignIn.signOut();
+
+    bool isLoggedIn = await googleSignIn.isSignedIn();
+    if (isLoggedIn) {
+      await googleSignIn.disconnect();
+      await googleSignIn.signOut();
+    }
+
+    await this.prefs.clear();
 
     this.setState(() {
       isLoading = false;
     });
 
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => MyApp()),
-        (Route<dynamic> route) => false);
+        MaterialPageRoute(builder: (context) => MyApp(prefs: this.prefs,)),
+            (Route<dynamic> route) => false);
   }
 
   @override
@@ -235,57 +312,90 @@ class MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'MAIN',
+          'ChitChat',
           style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         actions: <Widget>[
-          PopupMenuButton<Choice>(
-            onSelected: onItemMenuPress,
-            itemBuilder: (BuildContext context) {
-              return choices.map((Choice choice) {
-                return PopupMenuItem<Choice>(
-                    value: choice,
-                    child: Row(
-                      children: <Widget>[
-                        Icon(
-                          choice.icon,
-                          color: primaryColor,
-                        ),
-                        Container(
-                          width: 10.0,
-                        ),
-                        Text(
-                          choice.title,
-                          style: TextStyle(color: primaryColor),
-                        ),
-                      ],
-                    ));
-              }).toList();
-            },
+          IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          UserSearchScreen(currentUserId: this.currentUserId,)),
+                );
+              }
           ),
         ],
+      ),
+      drawer: new Drawer(
+        child: ListView(
+          children: <Widget>[
+            new UserAccountsDrawerHeader(
+              accountName: new Text(nickname),
+              accountEmail: new Text(""),
+              currentAccountPicture: new CircleAvatar(
+                  backgroundImage: new NetworkImage(photoUrl)
+              ),
+            ),
+            new ListTile(
+                title: new Text('New Chat'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId, userNickname: nickname,)),
+                  );
+                }
+            ),
+            new Divider(
+              color: Colors.black,
+              height: 5.0,
+            ),
+            new ListTile(
+              title: new Text('Settings'),
+              onTap: (){
+                Navigator.of(context).pop();
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => Settings()));
+              },
+            ),
+            new Divider(
+              color: Colors.black,
+              height: 5.0,
+            ),
+            new ListTile(
+              title: new Text('Log out'),
+              onTap: (){
+                handleSignOut();
+              },
+            ),
+          ],
+        ),
       ),
       body: WillPopScope(
         child: Stack(
           children: <Widget>[
             // List
             Container(
-              child: StreamBuilder(
-                stream: Firestore.instance.collection('users').snapshots(),
+              child: FutureBuilder(
+                future: getChats(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                      child: Text(
+                        "Create a ChitChat by pressing the button!",
+                        style: TextStyle(
+                            fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
                       ),
                     );
                   } else {
                     return ListView.builder(
                       padding: EdgeInsets.all(10.0),
                       itemBuilder: (context, index) =>
-                          buildItem(context, snapshot.data.documents[index]),
-                      itemCount: snapshot.data.documents.length,
+                          buildItemFuture(context, snapshot.data[index]),
+                      itemCount: snapshot.data.length,
                     );
                   }
                 },
@@ -296,18 +406,31 @@ class MainScreenState extends State<MainScreen> {
             Positioned(
               child: isLoading
                   ? Container(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(themeColor)),
-                      ),
-                      color: Colors.white.withOpacity(0.8),
-                    )
+                child: Center(
+                  child: CircularProgressIndicator(
+                      valueColor:
+                      AlwaysStoppedAnimation<Color>(themeColor)),
+                ),
+                color: Colors.white.withOpacity(0.8),
+              )
                   : Container(),
             )
           ],
         ),
         onWillPop: onBackPress,
+      ),
+      floatingActionButton: FloatingActionButton(
+          tooltip: 'Add',
+          child: Icon(
+              Icons.add),
+          backgroundColor: Colors.amber,
+          foregroundColor: Colors.black,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId, chatId: null)),
+            );
+          }
       ),
     );
   }

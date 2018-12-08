@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/common/translation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -33,20 +34,19 @@ class SettingsScreen extends StatefulWidget {
 
 class SettingsScreenState extends State<SettingsScreen> {
   TextEditingController controllerNickname;
-  TextEditingController controllerAboutMe;
 
   SharedPreferences prefs;
 
   String id = '';
   String nickname = '';
-  String aboutMe = '';
   String photoUrl = '';
-
+  String photosResolution = 'full';
   bool isLoading = false;
+  TranslationLanguage _transationLanguage;
+  TranslationMode _translationMode;
   File avatarImageFile;
 
   final FocusNode focusNodeNickname = new FocusNode();
-  final FocusNode focusNodeAboutMe = new FocusNode();
 
   @override
   void initState() {
@@ -58,11 +58,17 @@ class SettingsScreenState extends State<SettingsScreen> {
     prefs = await SharedPreferences.getInstance();
     id = prefs.getString('id') ?? '';
     nickname = prefs.getString('nickname') ?? '';
-    aboutMe = prefs.getString('aboutMe') ?? '';
+    photosResolution = (prefs.getString('photosResolution') == null ||
+            prefs.getString('photosResolution') == '')
+        ? 'full'
+        : prefs.getString('photosResolution');
     photoUrl = prefs.getString('photoUrl') ?? '';
+    this._transationLanguage = getTranslationLanguageFromString(
+        prefs.getString("translation_language"));
+    this._translationMode =
+        getTranslationModeFromString(prefs.getString("translation_mode"));
 
     controllerNickname = new TextEditingController(text: nickname);
-    controllerAboutMe = new TextEditingController(text: aboutMe);
 
     // Force refresh input
     setState(() {});
@@ -89,8 +95,8 @@ class SettingsScreenState extends State<SettingsScreen> {
     Firestore.instance
         .collection('users')
         .document(id)
-        .updateData({'nickname': nickname, 'aboutMe': aboutMe, 'photoUrl': photoUrl}).then((data) async {
-      await prefs.setString('photoUrl', photoUrl);
+        .updateData({'photoUrl': photoUrl}).then((data) async {
+      prefs.setString('photoUrl', photoUrl);
       setState(() {
         isLoading = false;
       });
@@ -105,21 +111,38 @@ class SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  void handleUpdateData() {
+  Future<void> handleUpdateData() async {
     focusNodeNickname.unfocus();
-    focusNodeAboutMe.unfocus();
 
     setState(() {
       isLoading = true;
     });
 
-    Firestore.instance
-        .collection('users')
-        .document(id)
-        .updateData({'nickname': nickname, 'aboutMe': aboutMe, 'photoUrl': photoUrl}).then((data) async {
-      await prefs.setString('nickname', nickname);
-      await prefs.setString('aboutMe', aboutMe);
-      await prefs.setString('photoUrl', photoUrl);
+    List<DocumentSnapshot> usersWithGivenNickname = (await Firestore.instance
+            .collection("users")
+            .where("nickname", isEqualTo: controllerNickname.text.trim())
+            .getDocuments())
+        .documents;
+
+    usersWithGivenNickname.removeWhere((user) => user.documentID == id);
+    if (usersWithGivenNickname.isNotEmpty) {
+      Fluttertoast.showToast(msg: "The nickname provided already exists");
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+
+    Firestore.instance.collection('users').document(id).updateData({
+      'nickname': nickname,
+      'photosResolution': photosResolution,
+      'translation_mode': this._translationMode.toString(),
+      'translation_language': this._transationLanguage.toString()
+    }).then((data) async {
+      prefs.setString('nickname', nickname);
+      prefs.setString('photosResolution', photosResolution);
+      prefs.setString('translation_mode', this._translationMode.toString());
+      prefs.setString('translation_language', this._transationLanguage.toString());
 
       setState(() {
         isLoading = false;
@@ -154,7 +177,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                                     placeholder: Container(
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2.0,
-                                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                themeColor),
                                       ),
                                       width: 90.0,
                                       height: 90.0,
@@ -165,7 +190,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                                     height: 90.0,
                                     fit: BoxFit.cover,
                                   ),
-                                  borderRadius: BorderRadius.all(Radius.circular(45.0)),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(45.0)),
                                   clipBehavior: Clip.hardEdge,
                                 )
                               : Icon(
@@ -180,7 +206,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                                 height: 90.0,
                                 fit: BoxFit.cover,
                               ),
-                              borderRadius: BorderRadius.all(Radius.circular(45.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(45.0)),
                               clipBehavior: Clip.hardEdge,
                             ),
                       IconButton(
@@ -208,13 +235,17 @@ class SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     child: Text(
                       'Nickname',
-                      style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, color: primaryColor),
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor),
                     ),
                     margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
                   ),
                   Container(
                     child: Theme(
-                      data: Theme.of(context).copyWith(primaryColor: primaryColor),
+                      data: Theme.of(context)
+                          .copyWith(primaryColor: primaryColor),
                       child: TextField(
                         decoration: InputDecoration(
                           hintText: 'Sweetie',
@@ -230,33 +261,92 @@ class SettingsScreenState extends State<SettingsScreen> {
                     ),
                     margin: EdgeInsets.only(left: 30.0, right: 30.0),
                   ),
-
-                  // About me
                   Container(
                     child: Text(
-                      'About me',
-                      style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, color: primaryColor),
+                      'Photos resolution',
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor),
                     ),
-                    margin: EdgeInsets.only(left: 10.0, top: 30.0, bottom: 5.0),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
                   ),
                   Container(
-                    child: Theme(
-                      data: Theme.of(context).copyWith(primaryColor: primaryColor),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Fun, like travel and play PES...',
-                          contentPadding: EdgeInsets.all(5.0),
-                          hintStyle: TextStyle(color: greyColor),
-                        ),
-                        controller: controllerAboutMe,
-                        onChanged: (value) {
-                          aboutMe = value;
-                        },
-                        focusNode: focusNodeAboutMe,
-                      ),
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: photosResolution,
+                      items:
+                          <String>['full', 'high', 'low'].map((String value) {
+                        return new DropdownMenuItem<String>(
+                          value: value,
+                          child: new Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (newResolution) {
+                        setState(() {
+                          photosResolution = newResolution;
+                        });
+                      },
                     ),
-                    margin: EdgeInsets.only(left: 30.0, right: 30.0),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
                   ),
+                  Container(
+                    child: Text(
+                      'Message translation',
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor),
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
+                  Container(
+                    child: DropdownButton<TranslationMode>(
+                      isExpanded: true,
+                      value: this._translationMode,
+                      items: TranslationMode.values.map((translationMode) {
+                        return DropdownMenuItem<TranslationMode>(
+                          value: translationMode,
+                          child: Text(getTranslationModeUsableString(translationMode)),
+                        );
+                      }).toList(),
+                      onChanged: (newSetting) {
+                        setState(() {
+                          this._translationMode = newSetting;
+                        });
+                      },
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
+                  Container(
+                    child: Text(
+                      'Translation language',
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor),
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
+                  Container(
+                    child: DropdownButton<TranslationLanguage>(
+                      isExpanded: true,
+                      value: this._transationLanguage,
+                      items: TranslationLanguage.values.map((translationLanguage) {
+                        String languageUsableString = getTranslationLanguageUsableString(translationLanguage);
+                        return DropdownMenuItem<TranslationLanguage>(
+                          value: translationLanguage,
+                          child: Text("${languageUsableString[0].toUpperCase()}${languageUsableString.substring(1)}"),    //Capitalize first letter
+                        );
+                      }).toList(),
+                      onChanged: (newSetting) {
+                        setState(() {
+                          this._transationLanguage = newSetting;
+                        });
+                      },
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  )
                 ],
                 crossAxisAlignment: CrossAxisAlignment.start,
               ),
@@ -287,7 +377,8 @@ class SettingsScreenState extends State<SettingsScreen> {
           child: isLoading
               ? Container(
                   child: Center(
-                    child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+                    child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
                   ),
                   color: Colors.white.withOpacity(0.8),
                 )

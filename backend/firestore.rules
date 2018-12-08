@@ -1,0 +1,35 @@
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Functions
+		function prefix() {
+    	return /databases/$(database)/documents;
+    }
+
+    function isSignedIn() {
+    	return request.auth != null;
+    }
+
+    function isUserInChat(chatId) {
+    	return exists(/$(prefix())/chats/$(chatId)/users/$(request.auth.uid));
+    }
+      
+      
+    // Matches
+    match /users/{user} {
+    	allow read, create, update: if isSignedIn();
+    }
+
+    match /chats/{chat} {
+    	allow delete: if isSignedIn() && isUserInChat(chat);
+      allow read, create, update: if isSignedIn();
+      
+      match /messages/{message} {
+      	allow read, write: if isSignedIn() && isUserInChat(chat);
+      }
+      
+      match /users/{users} {
+      	allow read, write: if isSignedIn();
+      }
+  	}
+	}
+}
