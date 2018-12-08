@@ -93,7 +93,7 @@ class ContactsScreen extends State<Contacts> {
     if(selected.length > 1){
       selected.add(currentUserId);
 
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (context) =>
