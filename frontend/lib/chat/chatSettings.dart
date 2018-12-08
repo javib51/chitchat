@@ -38,11 +38,11 @@ class ChatSettingsState extends State<ChatSettings> {
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
         width: double.infinity,
-        color: themeColor,
+        color: Colors.blueGrey,
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Container(
-            color: themeColor,
+            color: Colors.blueGrey,
             child: FittedBox(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
