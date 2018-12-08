@@ -30,6 +30,9 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:chitchat/common/translation.dart';
+
+import 'package:translator/translator.dart';
 
 
 
@@ -48,6 +51,7 @@ class Chat extends StatefulWidget {
   final String chatType;
   final String joinDate;
   final String chatName;
+  final SharedPreferences prefs;
 
   Chat(
       {Key key,
@@ -57,7 +61,8 @@ class Chat extends StatefulWidget {
       @required this.userNickname,
       @required this.chatType,
       @required this.joinDate,
-      @required this.chatName})
+      @required this.chatName,
+      @required this.prefs})
       : super(key: key);
 
   @override
@@ -67,7 +72,8 @@ class Chat extends StatefulWidget {
       chatAvatar: chatAvatar,
       userNickname: userNickname,
       chatType: chatType,
-      joinDate: joinDate);
+      joinDate: joinDate,
+      prefs: this.prefs);
 }
 
 class ChatState extends State<Chat> {
@@ -77,6 +83,7 @@ class ChatState extends State<Chat> {
   final String userNickname;
   final String chatType;
   final String joinDate;
+  final SharedPreferences prefs;
 
   Stream<QuerySnapshot> streamMessage;
 
@@ -87,7 +94,8 @@ class ChatState extends State<Chat> {
       @required this.chatAvatar,
       @required this.userNickname,
       @required this.chatType,
-      @required this.joinDate}) {
+      @required this.joinDate,
+      @required this.prefs}) {
     this.streamMessage = _getMessages();
   }
 
@@ -221,6 +229,8 @@ class ChatScreenState extends State<ChatScreen> {
   String chatAvatar;
   String userNickname;
   String chatType;
+
+  final GoogleTranslator _translator = GoogleTranslator();
 
   ChatScreenState(
       {Key key,
@@ -482,7 +492,7 @@ class ChatScreenState extends State<ChatScreen> {
           document['type'] == "text"
               // Text
               ? this._buildMessageText(
-                  index, document, this.isLastMessageRight(index))
+                  document, this.isLastMessageRight(index))
               : document['type'] == "photo"
                   // Image
                   ? this._buildImageContainer(
@@ -554,7 +564,7 @@ class ChatScreenState extends State<ChatScreen> {
                     : Container(width: 35.0),
                 document['type'] == "text"
                     ? this._buildMessageText(
-                        index, document, this.isLastMessageRight(index))
+                        document, this.isLastMessageRight(index))
                     : document['type'] == "photo"
                         ? this._buildImageContainer(
                             document, isLastMessageLeft(index), ChatSide.left)
@@ -595,15 +605,55 @@ class ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Widget _buildMessageText(int index, DocumentSnapshot document, bool isLast) {
+  Future<String> _getMessageTranslation(String message, TranslationLanguage translationLanguage) async {
+    return await this._translator.translate(message, to: getCountryISOCode(translationLanguage));
+  }
+
+  Widget _buildMessageText(DocumentSnapshot document, bool isLast) {
     String text = document["payload"];
     String url = document["url"];
 
-    if (url != null) {
+    TranslationLanguage translationLanguage = getTranslationLanguageFromString(this.prefs.getString("translation_language"));
+    bool isTranslationAutomatic = this.prefs.getString("translation_mode") == TranslationMode.automatic.toString();
+
+    if (url != null) {        //If there is a URL, it will take care of properly render the information on the UI.
       return LinkPreview(
-          text, document["matchStart"], document["matchEnd"], isLast);
-    } else {
-      return Container(
+          text, document["matchStart"], document["matchEnd"], isLast, translationLanguage, isTranslationAutomatic);
+    } else if (isTranslationAutomatic) {      //If the translation is automatic, then a future builder needs to be returned to update the UI accordingly.
+      return FutureBuilder(
+        future: this._getMessageTranslation(text, translationLanguage),
+        builder: (context, snapshot) {
+          return Container(
+            child: Column(
+                children: <Widget>[
+                  Text(
+                    text,
+                    style: TextStyle(color: primaryColor),
+                  ),
+                  isTranslationAutomatic ?
+                  Column(
+                    children: <Widget>[
+                      Divider(),
+                      Text(snapshot.hasData
+                          ? "MESSAGE TRANSLATED TO ${getTranslationLanguageUsableString(
+                          translationLanguage)}\n\n${snapshot.data}"
+                          : "TRANSLATING MESSAGE TO ${getTranslationLanguageUsableString(
+                          translationLanguage)}",
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                          textAlign: TextAlign.left),
+                    ],
+                  ) : Container(), //No automatic translation
+                ]
+            ),
+            padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+            width: 200.0,
+            decoration: BoxDecoration(
+                color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
+            margin: EdgeInsets.only(bottom: isLast ? 20.0 : 10.0, right: 10.0),
+          );
+        });
+    } else {            //If there is no real-time translation, then there is no need to use a future builder, and the normal text is shown.
+      Container(
         child: Text(
           text,
           style: TextStyle(color: primaryColor),
@@ -613,7 +663,7 @@ class ChatScreenState extends State<ChatScreen> {
         decoration: BoxDecoration(
             color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
         margin: EdgeInsets.only(
-            bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0),
+            bottom: isLast ? 20.0 : 10.0, right: 10.0),
       );
     }
   }
