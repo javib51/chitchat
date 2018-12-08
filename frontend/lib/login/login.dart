@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:chitchat/common/translation.dart';
 import 'package:chitchat/login/register.dart';
 import 'package:chitchat/login/welcome.dart';
 import 'package:chitchat/common/imageResolution.dart';
@@ -109,6 +110,8 @@ class LoginScreenState extends State<LoginScreen> {
         prefs.setString('nickname', currentUser.displayName);
         prefs.setString('photoUrl', currentUser.photoUrl);
         prefs.setString('photosResolution', ImageResolution.full.toString().split('.').last);
+        prefs.setString('translation_mode', TranslationMode.onDemand.toString());           //By default, on-demand translation is selected
+        prefs.setString('translation_language', TranslationLanguage.english.toString());           //By default, translation to english is selected
 
         Fluttertoast.showToast(msg: "Sign in success");
         this.setState(() {
@@ -131,6 +134,8 @@ class LoginScreenState extends State<LoginScreen> {
         prefs.setString('nickname', documents[0]['nickname']);
         prefs.setString('photoUrl', documents[0]['photoUrl']);
         prefs.setString('photosResolution', documents[0]['photosResolution']);
+        prefs.setString('translation_mode', documents[0]['translation_mode']);
+        prefs.setString('translation_language', documents[0]['translation_language']);
 
         Fluttertoast.showToast(msg: "Sign in success");
         this.setState(() {
