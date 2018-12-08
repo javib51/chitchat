@@ -99,7 +99,7 @@ class ContactsScreen extends State<Contacts> {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                GroupInitScreen(selectedUsers: selected, userNickname: nickname, currentUserId: currentUserId,)),
+                GroupInitScreen(selectedUsers: selected, userNickname: nickname, currentUserId: currentUserId, prefs: this.prefs,)),
       );
     } else {
       this.setState(() {
@@ -170,6 +170,7 @@ class ContactsScreen extends State<Contacts> {
                 userNickname: widget.userNickname,
                 joinDate: chat['users'][index]['join_date'],
                 chatName: "Private chat",
+                prefs: this.prefs
               )));
       }
 

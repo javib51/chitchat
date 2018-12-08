@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/common/imageResolution.dart';
+import 'package:chitchat/common/translation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/overview/overview.dart';
@@ -134,6 +135,8 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         'photoUrl': photoUrl,
         'id': currentUserId,
         'photosResolution': photosResolution,
+        'translation_mode': TranslationMode.onDemand.toString(),                //By default, on-demand translation is selected
+        'translation_language': TranslationLanguage.english.toString(),         //By default, translation to english is selected
       });
     } else {
       Firestore.instance
@@ -142,10 +145,14 @@ class WelcomeScreenState extends State<WelcomeScreen> {
           .updateData({
         'nickname': nickController.text.trim(),
         'photosResolution': photosResolution,
-        'photoUrl': photoUrl
+        'photoUrl': photoUrl,
+        'translation_mode': TranslationMode.onDemand.toString(),
+        'translation_language': TranslationLanguage.english.toString()
       }).then((data) async {
         prefs.setString('nickname', nickController.text.trim());
         prefs.setString('photoUrl', photoUrl);
+        prefs.setString('translation_mode', TranslationMode.onDemand.toString());
+        prefs.setString('translation_language', TranslationLanguage.english.toString());
         });
       }
 

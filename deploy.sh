@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Install dependencies
-apt update && apt install git curl lib32stdc++6 xz-utils android-sdk -y
+sudo apt update && sudo apt install git curl lib32stdc++6 xz-utils android-sdk -y
 curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh
-bash nodesource_setup.sh
-apt install -y nodejs
-npm install -g firebase-tools
+sudo bash nodesource_setup.sh
+sudo apt install -y nodejs
+sudo npm install -g firebase-tools
 
 #Download git repo
 #git clone https://gitlab.com/hector.ballegafernandez/chitchat.git

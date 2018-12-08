@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:chitchat/overview/overview.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/common/translation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +42,8 @@ class SettingsScreenState extends State<SettingsScreen> {
   String photoUrl = '';
   String photosResolution = 'full';
   bool isLoading = false;
+  TranslationLanguage _transationLanguage;
+  TranslationMode _translationMode;
   File avatarImageFile;
 
   final FocusNode focusNodeNickname = new FocusNode();
@@ -57,9 +59,14 @@ class SettingsScreenState extends State<SettingsScreen> {
     id = prefs.getString('id') ?? '';
     nickname = prefs.getString('nickname') ?? '';
     photosResolution = (prefs.getString('photosResolution') == null ||
-        prefs.getString('photosResolution') == '')? 'full' : prefs.getString(
-        'photosResolution');
+            prefs.getString('photosResolution') == '')
+        ? 'full'
+        : prefs.getString('photosResolution');
     photoUrl = prefs.getString('photoUrl') ?? '';
+    this._transationLanguage = getTranslationLanguageFromString(
+        prefs.getString("translation_language"));
+    this._translationMode =
+        getTranslationModeFromString(prefs.getString("translation_mode"));
 
     controllerNickname = new TextEditingController(text: nickname);
 
@@ -95,7 +102,6 @@ class SettingsScreenState extends State<SettingsScreen> {
       });
 
       Fluttertoast.showToast(msg: "Upload success");
-
     }).catchError((err) {
       setState(() {
         isLoading = false;
@@ -112,8 +118,11 @@ class SettingsScreenState extends State<SettingsScreen> {
       isLoading = true;
     });
 
-    List<DocumentSnapshot> usersWithGivenNickname = (await Firestore.instance.collection("users").where("nickname", isEqualTo: controllerNickname.text
-        .trim()).getDocuments()).documents;
+    List<DocumentSnapshot> usersWithGivenNickname = (await Firestore.instance
+            .collection("users")
+            .where("nickname", isEqualTo: controllerNickname.text.trim())
+            .getDocuments())
+        .documents;
 
     usersWithGivenNickname.removeWhere((user) => user.documentID == id);
     if (usersWithGivenNickname.isNotEmpty) {
@@ -124,12 +133,16 @@ class SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    Firestore.instance
-        .collection('users')
-        .document(id)
-        .updateData({'nickname': nickname, 'photosResolution': photosResolution}).then((data) async {
-          prefs.setString('nickname', nickname);
-          prefs.setString('photosResolution', photosResolution);
+    Firestore.instance.collection('users').document(id).updateData({
+      'nickname': nickname,
+      'photosResolution': photosResolution,
+      'translation_mode': this._translationMode.toString(),
+      'translation_language': this._transationLanguage.toString()
+    }).then((data) async {
+      prefs.setString('nickname', nickname);
+      prefs.setString('photosResolution', photosResolution);
+      prefs.setString('translation_mode', this._translationMode.toString());
+      prefs.setString('translation_language', this._transationLanguage.toString());
 
       setState(() {
         isLoading = false;
@@ -164,7 +177,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                                     placeholder: Container(
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2.0,
-                                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                themeColor),
                                       ),
                                       width: 90.0,
                                       height: 90.0,
@@ -175,7 +190,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                                     height: 90.0,
                                     fit: BoxFit.cover,
                                   ),
-                                  borderRadius: BorderRadius.all(Radius.circular(45.0)),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(45.0)),
                                   clipBehavior: Clip.hardEdge,
                                 )
                               : Icon(
@@ -190,7 +206,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                                 height: 90.0,
                                 fit: BoxFit.cover,
                               ),
-                              borderRadius: BorderRadius.all(Radius.circular(45.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(45.0)),
                               clipBehavior: Clip.hardEdge,
                             ),
                       IconButton(
@@ -218,13 +235,17 @@ class SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     child: Text(
                       'Nickname',
-                      style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, color: primaryColor),
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor),
                     ),
                     margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
                   ),
                   Container(
                     child: Theme(
-                      data: Theme.of(context).copyWith(primaryColor: primaryColor),
+                      data: Theme.of(context)
+                          .copyWith(primaryColor: primaryColor),
                       child: TextField(
                         decoration: InputDecoration(
                           hintText: 'Sweetie',
@@ -243,7 +264,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     child: Text(
                       'Photos resolution',
-                      style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, color: primaryColor),
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor),
                     ),
                     margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
                   ),
@@ -251,7 +275,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                     child: DropdownButton<String>(
                       isExpanded: true,
                       value: photosResolution,
-                      items: <String>['full', 'high', 'low'].map((String value) {
+                      items:
+                          <String>['full', 'high', 'low'].map((String value) {
                         return new DropdownMenuItem<String>(
                           value: value,
                           child: new Text(value),
@@ -260,6 +285,63 @@ class SettingsScreenState extends State<SettingsScreen> {
                       onChanged: (newResolution) {
                         setState(() {
                           photosResolution = newResolution;
+                        });
+                      },
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
+                  Container(
+                    child: Text(
+                      'Message translation',
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor),
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
+                  Container(
+                    child: DropdownButton<TranslationMode>(
+                      isExpanded: true,
+                      value: this._translationMode,
+                      items: TranslationMode.values.map((translationMode) {
+                        return DropdownMenuItem<TranslationMode>(
+                          value: translationMode,
+                          child: Text(getTranslationModeUsableString(translationMode)),
+                        );
+                      }).toList(),
+                      onChanged: (newSetting) {
+                        setState(() {
+                          this._translationMode = newSetting;
+                        });
+                      },
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
+                  Container(
+                    child: Text(
+                      'Translation language',
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor),
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
+                  Container(
+                    child: DropdownButton<TranslationLanguage>(
+                      isExpanded: true,
+                      value: this._transationLanguage,
+                      items: TranslationLanguage.values.map((translationLanguage) {
+                        String languageUsableString = getTranslationLanguageUsableString(translationLanguage);
+                        return DropdownMenuItem<TranslationLanguage>(
+                          value: translationLanguage,
+                          child: Text("${languageUsableString[0].toUpperCase()}${languageUsableString.substring(1)}"),    //Capitalize first letter
+                        );
+                      }).toList(),
+                      onChanged: (newSetting) {
+                        setState(() {
+                          this._transationLanguage = newSetting;
                         });
                       },
                     ),
@@ -295,7 +377,8 @@ class SettingsScreenState extends State<SettingsScreen> {
           child: isLoading
               ? Container(
                   child: Center(
-                    child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+                    child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
                   ),
                   color: Colors.white.withOpacity(0.8),
                 )

@@ -1,18 +1,18 @@
 import 'dart:async';
 
+import 'package:chitchat/common/translation.dart';
 import 'package:chitchat/login/register.dart';
 import 'package:chitchat/login/welcome.dart';
 import 'package:chitchat/common/imageResolution.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/overview/overview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
 
 
 class MyApp extends StatelessWidget {
@@ -58,67 +58,15 @@ class LoginScreenState extends State<LoginScreen> {
 
   LoginScreenState({@required this.prefs});
 
-  FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
 
   @override
   void initState() {
     super.initState();
-    initFlutterLocalNotifications();
-    initFirebaseMessaging();
-    initFireStore();
+
   }
 
-  void initFireStore() {
-    Firestore.instance.settings(timestampsInSnapshotsEnabled: true);
-  }
 
-  void initFlutterLocalNotifications() {
-    var initializationSettingsAndroid =
-    new AndroidInitializationSettings('@mipmap/ic_launcher');
-    var initializationSettingsIOS = new IOSInitializationSettings();
-    var initializationSettings = new InitializationSettings(
-        initializationSettingsAndroid, initializationSettingsIOS);
-    flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
-    flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-
-  Future _showNotificationWithDefaultSound(Map<String, dynamic> message) async {
-    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
-        'your channel id', 'your channel name', 'your channel description',
-        importance: Importance.Max, priority: Priority.High);
-    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
-    var platformChannelSpecifics = new NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      message['notification']['title'],
-      message['notification']['body'],
-      platformChannelSpecifics,
-      payload: 'Default_Sound',
-    );
-  }
-
-  void initFirebaseMessaging() {
-    _firebaseMessaging.setAutoInitEnabled(true);
-    _firebaseMessaging.configure(
-      onMessage: (Map<String, dynamic> message) {
-        print('on message $message');
-        _showNotificationWithDefaultSound(message);
-      },
-      onResume: (Map<String, dynamic> message) {
-        print('on resume $message');
-      },
-      onLaunch: (Map<String, dynamic> message) {
-        print('on launch $message');
-      },
-    );
-
-    _firebaseMessaging.getToken().then((token) {
-      print(token);
-      this.prefs.setString("notificationToken", token);
-    });
-  }
 
   Future<Null> handleSignIn(String logintype) async {
 
@@ -162,6 +110,8 @@ class LoginScreenState extends State<LoginScreen> {
         prefs.setString('nickname', currentUser.displayName);
         prefs.setString('photoUrl', currentUser.photoUrl);
         prefs.setString('photosResolution', ImageResolution.full.toString().split('.').last);
+        prefs.setString('translation_mode', TranslationMode.onDemand.toString());           //By default, on-demand translation is selected
+        prefs.setString('translation_language', TranslationLanguage.english.toString());           //By default, translation to english is selected
 
         Fluttertoast.showToast(msg: "Sign in success");
         this.setState(() {
@@ -184,6 +134,8 @@ class LoginScreenState extends State<LoginScreen> {
         prefs.setString('nickname', documents[0]['nickname']);
         prefs.setString('photoUrl', documents[0]['photoUrl']);
         prefs.setString('photosResolution', documents[0]['photosResolution']);
+        prefs.setString('translation_mode', documents[0]['translation_mode']);
+        prefs.setString('translation_language', documents[0]['translation_language']);
 
         Fluttertoast.showToast(msg: "Sign in success");
         this.setState(() {

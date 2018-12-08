@@ -9,28 +9,31 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GroupInitScreen extends StatefulWidget {
   final Set selectedUsers;
   final String userNickname;
   final String currentUserId;
+  final SharedPreferences prefs;
 
   GroupInitScreen(
-      {Key key, @required this.selectedUsers, this.userNickname, @required this.currentUserId})
+      {Key key, @required this.selectedUsers, this.userNickname, @required this.currentUserId, @required this.prefs})
       : super(key: key);
 
   @override
   State createState() =>
       new GroupInitScreenState(
-          selectedUsers: selectedUsers, currentUserId: currentUserId);
+          selectedUsers: selectedUsers, currentUserId: currentUserId, prefs: prefs);
 }
 
 class GroupInitScreenState extends State<GroupInitScreen> {
   final String currentUserId;
   final Set selectedUsers;
+  final SharedPreferences prefs;
 
   GroupInitScreenState(
-      {Key key, @required this.selectedUsers, @required this.currentUserId});
+      {Key key, @required this.selectedUsers, @required this.currentUserId, @required this.prefs});
 
   var nickController = TextEditingController();
   File avatarImageFile;
@@ -147,6 +150,7 @@ class GroupInitScreenState extends State<GroupInitScreen> {
                 chatType: "G",
                 joinDate: user['join_date'],
                 chatName: nickController.text.trim(),
+                prefs: this.prefs,
               )));
     }
     setState(() {

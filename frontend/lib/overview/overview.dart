@@ -11,9 +11,10 @@ import 'package:chitchat/const.dart';
 import 'package:chitchat/login/login.dart';
 import 'package:chitchat/userSearch/search.dart';
 import 'package:chitchat/settings/settings.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 
 
@@ -33,6 +34,8 @@ class MainScreenState extends State<MainScreen> {
 
   final String currentUserId;
   final SharedPreferences prefs;
+  FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
   bool isLoading = false;
 
@@ -45,23 +48,68 @@ class MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     readLocal();
+    initFlutterLocalNotifications();
+    initFirebaseMessaging();
+    initFireStore();
   }
 
   void readLocal() {
 
     nickname = prefs.getString('nickname') ?? '';
     photoUrl = prefs.getString('photoUrl') ?? '';
-
-    String notificationToken = prefs.getString('notificationToken') ?? '';
-    if(notificationToken != '') {
-      updateToken(notificationToken);
-    }
     // Force refresh input
     setState(() {});
   }
 
-  void updateToken(String notificationToken) {
-    Firestore.instance.collection('users').document(currentUserId).updateData({"notificationToken": notificationToken});
+  void initFireStore() {
+    Firestore.instance.settings(timestampsInSnapshotsEnabled: true);
+  }
+
+  void initFlutterLocalNotifications() {
+    var initializationSettingsAndroid =
+    new AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsIOS = new IOSInitializationSettings();
+    var initializationSettings = new InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future _showNotificationWithDefaultSound(Map<String, dynamic> message) async {
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+        'your channel id', 'your channel name', 'your channel description',
+        importance: Importance.Max, priority: Priority.High);
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      message['notification']['title'],
+      message['notification']['body'],
+      platformChannelSpecifics,
+      payload: 'Default_Sound',
+    );
+  }
+
+  void initFirebaseMessaging() {
+    _firebaseMessaging.setAutoInitEnabled(true);
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) {
+        print('on message $message');
+        _showNotificationWithDefaultSound(message);
+      },
+      onResume: (Map<String, dynamic> message) {
+        print('on resume $message');
+      },
+      onLaunch: (Map<String, dynamic> message) {
+        print('on launch $message');
+      },
+    );
+
+    _firebaseMessaging.getToken().then((token) {
+      Firestore.instance.collection('users').document(currentUserId).updateData(
+          {"notificationToken": token});
+    });
   }
 
   Future<List<DocumentSnapshot>> getChats() async {
@@ -188,18 +236,24 @@ class MainScreenState extends State<MainScreen> {
   }
 
   Widget buildItemFuture(BuildContext context, DocumentSnapshot document) {
-    return FutureBuilder(
+    print("buildItemFuture, snapshot: ${document.toString()}}");
+    return FutureBuilder<Map<String, String>>(
         future: getChatInfo(document),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData && snapshot.data != null) {
-            return buildItem(context, document, snapshot.data);
-          } else {
+          if (snapshot.connectionState != ConnectionState.done) {
             return Container(
               child: Center(
                 child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
               ),
               color: Colors.white.withOpacity(0.8),
             );
+          } else {
+            if (snapshot.hasData && snapshot.data != null) {
+              return buildItem(context, document, snapshot.data);
+            } else {
+              print("Error while fetching data. Data: ${snapshot.error}");
+              return Text("Error while fetching chat info. Error: ${snapshot.error}", );
+            }
           }
         }
     );
@@ -262,6 +316,7 @@ class MainScreenState extends State<MainScreen> {
                     chatType: info['type'],
                     joinDate: info['joinDate'],
                     chatName: info['name'],
+                    prefs: this.prefs,
                   )));
         },
         color: greyColor2,
@@ -371,42 +426,48 @@ class MainScreenState extends State<MainScreen> {
           children: <Widget>[
             // List
             Container(
-              child: FutureBuilder(
+              child: FutureBuilder<List<DocumentSnapshot>>(
                 future: getChats(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
-                      child: Text(
-                        "Create a ChitChat by pressing the button!",
-                        style: TextStyle(
-                            fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
-                      ),
+                      child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
                     );
                   } else {
-                    return ListView.builder(
-                      padding: EdgeInsets.all(10.0),
-                      itemBuilder: (context, index) =>
-                          buildItemFuture(context, snapshot.data[index]),
-                      itemCount: snapshot.data.length,
-                    );
+                    if (snapshot.data.isEmpty) {
+                      return Center(
+                        child: Text(
+                          "Create a ChitChat by pressing the button!",
+                          style: TextStyle(
+                              fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
+                        ),
+                      );
+                    } else {
+                      return ListView.builder(
+                        padding: EdgeInsets.all(10.0),
+                        itemBuilder: (context, index) =>
+                            buildItemFuture(context, snapshot.data[index]),
+                        itemCount: snapshot.data.length,
+                      );
+                    }
                   }
                 },
               ),
             ),
 
             // Loading
-            Positioned(
-              child: isLoading
-                  ? Container(
-                child: Center(
-                  child: CircularProgressIndicator(
-                      valueColor:
-                      AlwaysStoppedAnimation<Color>(themeColor)),
-                ),
-                color: Colors.white.withOpacity(0.8),
-              )
-                  : Container(),
-            )
+//            Positioned(
+//              child: isLoading
+//                  ? Container(
+//                child: Center(
+//                  child: CircularProgressIndicator(
+//                      valueColor:
+//                      AlwaysStoppedAnimation<Color>(themeColor)),
+//                ),
+//                color: Colors.white.withOpacity(0.8),
+//              )
+//                  : Container(),
+//            )
           ],
         ),
         onWillPop: onBackPress,

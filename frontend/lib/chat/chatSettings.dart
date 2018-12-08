@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/chat/chatGallery.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatSettings extends StatefulWidget {
   final String chatId;
@@ -459,18 +460,19 @@ class ChatSettingsState extends State<ChatSettings> {
 
     await deleteChatForUser(widget.currentUserId,
         Firestore.instance.collection('chats').document(widget.chatId));
-
+    /*
     Navigator.popUntil(
         context, ModalRoute.withName(Navigator.defaultRouteName));
-    /*
-    Navigator.push(
+    */
+    var prefs = await SharedPreferences.getInstance();
+        Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) =>
-                  MainScreen(currentUserId: widget.currentUserId),
+                  MainScreen(currentUserId: widget.currentUserId, prefs: prefs),
             )
           );
-          */
+  
   }
 
 /*List<QuerySnapshot> getParticipants() {
