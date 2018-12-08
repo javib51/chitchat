@@ -375,9 +375,11 @@ class MainScreenState extends State<MainScreen> {
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                      ),
+                      child: Text(
+          "Create a ChitChat by pressing the button!",
+          style: TextStyle(
+              fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
+        ),
                     );
                   } else {
                     return ListView.builder(
