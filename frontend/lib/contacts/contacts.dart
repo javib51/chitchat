@@ -97,7 +97,7 @@ class ContactsScreen extends State<Contacts> {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                GroupInitScreen(selectedUsers: selected, userNickname: nickname, currentUserId: currentUserId,)),
+                GroupInitScreen(selectedUsers: selected, userNickname: nickname, currentUserId: currentUserId, prefs: this.prefs,)),
       );
     } else {
       this.setState(() {

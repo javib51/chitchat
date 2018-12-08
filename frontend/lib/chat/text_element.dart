@@ -121,8 +121,6 @@ class _TextChatElementState extends State<TextChatElement> {
                     width: 200.0,
                     decoration: BoxDecoration(
                         color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
-                    margin: EdgeInsets.only(
-                        bottom: isLast ? 20.0 : 10.0, right: 10.0),
                   ),
                 ),
                 this._buildTranslationWidget(snapshot),
