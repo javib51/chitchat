@@ -37,7 +37,7 @@ class GroupInitScreenState extends State<GroupInitScreen> {
 
   var nickController = TextEditingController();
   File avatarImageFile;
-  String photoUrl = "https://www.simplyweight.co.uk/images/default/chat/mck-icon-group.png";
+  String photoUrl = "https://cdn2.iconfinder.com/data/icons/pittogrammi/142/88-512.png";
 
   bool isLoading = false;
 

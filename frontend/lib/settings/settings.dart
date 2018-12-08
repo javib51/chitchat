@@ -350,6 +350,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                 ],
                 crossAxisAlignment: CrossAxisAlignment.start,
               ),
+
               // Button
               Container(
                 child: FlatButton(

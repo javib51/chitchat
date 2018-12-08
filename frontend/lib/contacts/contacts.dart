@@ -19,8 +19,9 @@ class Contacts extends StatefulWidget {
   final String currentUserId;
   final String userNickname;
   final String chatId;
+  final Iterable users;
 
-  Contacts({Key key, @required this.currentUserId, this.userNickname, this.chatId}) : super(key: key);
+  Contacts({Key key, @required this.currentUserId, this.userNickname, this.chatId, this.users}) : super(key: key);
 
   @override
   State createState() => new ContactsScreen(currentUserId: currentUserId, chatId: chatId);
@@ -53,6 +54,7 @@ class ContactsScreen extends State<Contacts> {
     for (int i = 0; i<checkboxlist.length;i++){
       checkboxlist[i] = false;
     }
+
   }
 
 
@@ -232,12 +234,14 @@ class ContactsScreen extends State<Contacts> {
 
     if (document['id'] == currentUserId) {
       return Container();
+    } else if(widget.users != null && widget.users.contains(document['id'])) {
+      return Container();
     } else {
 
       return new ListTile(
           onTap:null,
           leading: new CircleAvatar(
-            backgroundColor: Colors.amber,
+            backgroundColor: Colors.grey,
               backgroundImage: new NetworkImage('${document['photoUrl']}')
           ),
           title: new Row(
@@ -268,7 +272,7 @@ class ContactsScreen extends State<Contacts> {
         ),
         centerTitle: true,
         actions: <Widget>[
-         
+
         ],
       ),
       // body is the majority of the screen.
