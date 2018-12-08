@@ -5,63 +5,36 @@ const admin = require('firebase-admin');
 
 
 exports.createHandler = functions.firestore
-    .document('chats/{chatId}')
+    .document('chats/{chatId}/users/{userId}')
     .onCreate((snap, context) => {
-        const chat = snap.data();
-        if (chat.type == "G") {
-            const title = chat.name;
-            const body = "Created group";
-            sendNotifications(chat.users, title, body);
-        }
-        return 0;
-    });
+        const chatRef = admin.firestore().collection('chats').doc(context.params.chatId);
+        chatRef.get().then(chat => {
 
-exports.updateHandler = functions.firestore
-    .document('chats/{chatId}')
-    .onUpdate((change, context) => {
-
-        const newChat = change.after.data();
-        const oldChat = change.before.data();
-
-        if (newChat.type == "G") {
-            let users = newChat.users.slice();
-            users = users.filter((user) => {
-                return !userIncluded(oldChat.users, user);
-            });
-
-            if (users.length > 0) {
-                console.log(users);
-                const title = newChat.name;
+            if (chat.data().type == "G") {
+                const title = chat.data().name;
                 const body = "Added to group";
-                sendNotifications(users, title, body);
+                sendNotifications(context.params.userId, title, body);
             }
-        }
+        });
         return 0;
     });
 
-function userIncluded(oldUsers, newUser) {
-    let included = false;
-    for (let oldUser in oldUsers) {
-        if (objectsAreSame(newUser, oldUser)) {
-            included = true;
-            break;
-        }
-    }
-    return included;
-}
+/*exports.updateHandler = functions.firestore
+    .document('chats/{chatId}/users/{userId}')
+    .onDelete((snap, context) => {
 
-function objectsAreSame(x, y) {
-    let objectsAreSame = true;
-    for (let propertyName in x) {
-        if (x[propertyName] !== y[propertyName]) {
-            objectsAreSame = false;
-            break;
-        }
-    }
-    return objectsAreSame;
-}
+        const chatRef = admin.firestore().collection('chats').doc(context.params.chatId);
+        chatRef.get().then(chat => {
+            if (chat.data().type == "G") {
+                const title = chat.data().name;
+                const body = "Removed from group";
+                    sendNotifications(context.params.userId, title, body);
+            }
+        });
+        return 0;
+    });*/
 
-function sendNotifications(users, title, body) {
+function sendNotifications(userId, title, body) {
     console.log("Send notifications");
 
     const payload = {
@@ -78,24 +51,22 @@ function sendNotifications(users, title, body) {
             body: body,
         },
     };
-    users.forEach(user => {
-        try {
-            const userRef = admin.firestore().collection('users').doc(user['id']);
-            userRef.get().then(user => {
-                console.log(user.data());
-                admin.messaging().sendToDevice(user.data().notificationToken, payload)
-                    .then((response) => {
-                        // Response is a message ID string.
-                        console.log('Successfully sent message:', response);
-                    })
-                    .catch((error) => {
-                        console.log('Error sending message:', error);
-                    });
-            });
-        } catch (error) {
-            console.error(error);
-        }
-    });
+    try {
+        const userRef = admin.firestore().collection('users').doc(userId);
+        userRef.get().then(user => {
+            console.log(user.data());
+            admin.messaging().sendToDevice(user.data().notificationToken, payload)
+                .then((response) => {
+                    // Response is a message ID string.
+                    console.log('Successfully sent message:', response);
+                })
+                .catch((error) => {
+                    console.log('Error sending message:', error);
+                });
+        });
+    } catch (error) {
+        console.error(error);
+    }
     console.log("Notifications sent");
 
     return 0;

@@ -15,4 +15,3 @@ admin.firestore().settings(settings);
 exports.generateThumbnail = generateThumbnail.handler;
 exports.messageNotifications = messageNotifications.handler;
 exports.chatNotificationsCreation = chatNotifications.createHandler;
-exports.chatNotificationsUpdate = chatNotifications.updateHandler;
