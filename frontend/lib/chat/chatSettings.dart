@@ -94,6 +94,15 @@ class ChatSettingsState extends State<ChatSettings> {
               ),
               Expanded(
                 child: Card(
+                    child: GestureDetector(
+                      onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ChatGallery(widget.chatId, widget.chatUsers)),
+                    );
+                    },
                     child: FutureBuilder(
                         future: getPreviewImages(widget.chatId),
                         builder:
@@ -203,6 +212,7 @@ class ChatSettingsState extends State<ChatSettings> {
                                 ));
                           }
                         })),
+                    ),
               ),
             ],
           ),
