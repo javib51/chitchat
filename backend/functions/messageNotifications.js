@@ -17,7 +17,7 @@ exports.handler = functions.firestore
                     console.log('No such document!');
                 } else {
 
-                    const title = (chat.type == "G") ? chat.name : userFrom.data().nickname;
+                    const title = (chat.data().type == "G") ? chat.name : userFrom.data().nickname;
                     const body = (snap.data().type == "text") ? snap.data().payload : "photo";
 
                     const payload = {
@@ -42,25 +42,29 @@ exports.handler = functions.firestore
 
 function sendNotifications(chat, payload, userFrom) {
     console.log("Send notifications");
-    chat.users.forEach(userMap => {
-        try {
-            if (userMap['id'] != userFrom.id) {
-                const userRef = admin.firestore().collection('users').doc(userMap['id']);
-                userRef.get().then(user => {
+    let usersRef = admin.firestore().collection('chats').doc(chat.id).collection('users');
+    usersRef.get().then( users => {
+        users.forEach(userMap => {
+            let user = userMap.data();
+            try {
+                if (user['id'] != userFrom.id) {
+                    const userRef = admin.firestore().collection('users').doc(user['id']);
+                    userRef.get().then(userData => {
 
-                    admin.messaging().sendToDevice(user.data().notificationToken, payload)
-                        .then((response) => {
-                            // Response is a message ID string.
-                            console.log('Successfully sent message:', response);
-                        })
-                        .catch((error) => {
-                            console.log('Error sending message:', error);
-                        });
-                });
+                        admin.messaging().sendToDevice(userData.data().notificationToken, payload)
+                            .then((response) => {
+                                // Response is a message ID string.
+                                console.log('Successfully sent message:', response);
+                            })
+                            .catch((error) => {
+                                console.log('Error sending message:', error);
+                            });
+                    });
+                }
+            } catch (error) {
+                console.error(error);
             }
-        } catch (error) {
-            console.error(error);
-        }
+        });
     });
     console.log("Notifications sent");
 
