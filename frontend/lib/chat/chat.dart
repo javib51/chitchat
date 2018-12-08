@@ -611,7 +611,7 @@ class ChatScreenState extends State<ChatScreen> {
         margin: EdgeInsets.only(
             bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0),
       );
-    
+
   }
 
   bool isLastMessageLeft(int index) {
