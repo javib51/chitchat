@@ -167,6 +167,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.4.2"
+  flutter_permissions_helper:
+    dependency: "direct main"
+    description:
+      name: flutter_permissions_helper
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.4"
   flutter_sound:
     dependency: "direct main"
     description:
