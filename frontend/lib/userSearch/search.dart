@@ -55,7 +55,7 @@ class UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   void readUserInput(String text) {
-    if(text.length >= 1) {
+    if(text.length >= 2) {
       print(text);
       performSearch(text);
       setState(() {
@@ -74,8 +74,9 @@ class UserSearchScreenState extends State<UserSearchScreen> {
         _isSearching = false;
         users = [];
         querySnapshot.documents.forEach((document) {
+          String nickname = document['nickname'].toString().toLowerCase();
           if (document.documentID != this.currentUserId &&
-              document['nickname'].contains(text)) {
+              nickname.contains(text.toLowerCase())) {
             users.add(document);
           }
         });
@@ -180,10 +181,7 @@ class UserSearchScreenState extends State<UserSearchScreen> {
             onPressed: () => Navigator.of(context).pop(),
           ),*/
           actions: <Widget>[
-            new IconButton(
-              icon: Icon(Icons.close),
-              onPressed: () => Navigator.of(context).pop()
-            ),
+            
           ]
       ),
       body: getUsers()
