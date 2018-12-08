@@ -175,6 +175,121 @@ class ContactsScreen extends State<Contacts> {
 
   }
 
+  Future<Null> handleInitiationnew() async {
+    if(selected.length > 1){
+      selected.add(currentUserId);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                GroupInitScreen(selectedUsers: selected, userNickname: nickname, currentUserId: currentUserId,)),
+      );
+    } else {
+      this.setState(() {
+        isLoading = true;
+      });
+
+      var push_chat;
+
+      //check existing chats
+      var user1 = await Firestore.instance.collection('users').document(currentUserId).get();
+      var user2 = await Firestore.instance.collection('users').document(selected.first).get();
+      List chats1 = user1.data['chats'];
+      List chats2 = user2.data['chats'];
+      if(chats1 != null && chats2 != null) {
+        for (int i = 0; i < chats1.length; i++) {
+          for (int j = 0; j < chats2.length; j++) {
+            if (chats1[i] == chats2[j]) {
+              push_chat = chats1[i];
+            }
+          }
+        }
+      }
+
+      if(push_chat == null) {
+        var date = DateTime
+            .now()
+            .millisecondsSinceEpoch
+            .toString();
+        var id = await Firestore.instance.collection('chats').add({
+          'type': "P",
+        });
+        await Firestore.instance
+            .collection('chats')
+            .document(id.documentID)
+            .updateData({
+          'id': id.documentID,
+        });
+        await Firestore.instance
+            .collection('chats')
+            .document(id.documentID)
+            .collection('users').document(currentUserId).setData({
+          'id': currentUserId,
+          'join_date': date,
+        });
+        await Firestore.instance
+            .collection('chats')
+            .document(id.documentID)
+            .collection('users').document(selected.first).setData({
+          'id': selected.first,
+          'join_date': date,
+        });
+
+        push_chat = id;
+        addChatToUser(currentUserId, push_chat);
+        addChatToUser(selected.first, push_chat);
+      }
+
+      DocumentSnapshot user = await Firestore.instance
+          .collection('chats')
+          .document(push_chat.documentID)
+          .collection('users').document(currentUserId).get();
+
+      this.setState(() {
+        isLoading = false;
+      });
+
+      Navigator.pushReplacement(
+          context,
+          new MaterialPageRoute(
+              builder: (context) =>
+              new Chat(
+                currentUserId: currentUserId,
+                chatId: push_chat.documentID,
+                chatAvatar: 'https://www.simplyweight.co.uk/images/default/chat/mck-icon-user.png',
+                chatType: "P",
+                userNickname: widget.userNickname,
+                joinDate: user['join_date'],
+                chatName: "Private chat",
+              )));
+    }
+  }
+
+  Future<Null> handleAddingnew() async {
+    this.setState(() {
+      isLoading = true;
+    });
+    var coll_users = await Firestore.instance
+        .collection('chats')
+        .document(chatId)
+        .collection('users');
+    Iterator iterator = selected.iterator;
+    for(int i = 0;i<selected.length;i++){
+      iterator.moveNext();
+      coll_users.document(iterator.current).setData({
+        'id':iterator.current,
+        'join_date':DateTime
+            .now()
+            .millisecondsSinceEpoch
+            .toString()
+      });
+    }
+    this.setState(() {
+      isLoading = false;
+    });
+  }
+
   Future<Null> handleAdding() async {
     this.setState(() {
       isLoading = true;
@@ -329,7 +444,7 @@ class ContactsScreen extends State<Contacts> {
             Fluttertoast.showToast(msg: "Please select contact(s)");
           }
           else if(chatId == null) {
-            handleInitiation();
+            handleInitiationnew();
           }
           else {
             handleAdding();

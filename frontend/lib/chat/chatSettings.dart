@@ -422,7 +422,7 @@ class ChatSettingsState extends State<ChatSettings> {
         : new List();
     chats.removeWhere((el) => el.documentID == chat.documentID);
 
-    Firestore.instance
+    await Firestore.instance
         .collection('users')
         .document(userId)
         .updateData({"chats": chats});
@@ -457,7 +457,7 @@ class ChatSettingsState extends State<ChatSettings> {
           .delete();
     }
 
-    deleteChatForUser(widget.currentUserId,
+    await deleteChatForUser(widget.currentUserId,
         Firestore.instance.collection('chats').document(widget.chatId));
 
     Navigator.popUntil(

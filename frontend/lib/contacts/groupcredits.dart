@@ -106,20 +106,34 @@ class GroupInitScreenState extends State<GroupInitScreen> {
         'type': "G",
         'name': nickController.text.trim(),
         'photoUrl': photoUrl,
-        'users': users
       });
+      
       await Firestore.instance
           .collection('chats')
           .document(chatRef.documentID)
           .updateData({
         'id': chatRef.documentID,
       });
+      var coll_users = await Firestore.instance
+          .collection('chats')
+          .document(chatRef.documentID)
+          .collection('users');
+      Iterator selected = selectedUsers.iterator;
+      for(int i = 0;i<selectedUsers.length;i++){
+        selected.moveNext();
+        coll_users.document(selected.current).setData({
+          'id':selected.current,
+          'join_date':date
+        });
+      }
 
       //add chat to users
       selectedUsers.forEach((userId) => addChatToUser(userId, chatRef));
 
-      DocumentSnapshot chat = await chatRef.get();
-      final int index = chat['users'].indexWhere((val) => val['id'] == currentUserId);
+      DocumentSnapshot user = await Firestore.instance
+          .collection('chats')
+          .document(chatRef.documentID)
+          .collection('users').document(currentUserId).get();
 
       Navigator.pushReplacement(
           context,
@@ -131,7 +145,7 @@ class GroupInitScreenState extends State<GroupInitScreen> {
                 chatAvatar: photoUrl,
                 userNickname: widget.userNickname,
                 chatType: "G",
-                joinDate: chat['users'][index]['join_date'],
+                joinDate: user['join_date'],
                 chatName: nickController.text.trim(),
               )));
     }
