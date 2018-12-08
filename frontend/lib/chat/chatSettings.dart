@@ -364,15 +364,7 @@ class ChatSettingsState extends State<ChatSettings> {
           backgroundColor: Colors.amber,
           foregroundColor: Colors.black,
           onPressed: () {
-            if(chatType == "G") {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) =>
-                    Contacts(currentUserId: currentUserId, chatId: chatId,)),
-              );
-            } else{
-              Fluttertoast.showToast(msg: "Cannot add members to private chat");
-            }
+            addUser();
           }
       ),
     );
@@ -391,6 +383,19 @@ class ChatSettingsState extends State<ChatSettings> {
         .collection('users')
         .document(userId)
         .updateData({"chats": chats});
+  }
+
+  void addUser() async {
+    var userList = await widget.chatUsers;
+    if(chatType == "G") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) =>
+            Contacts(currentUserId: currentUserId, chatId: chatId, users: userList.keys,)),
+      );
+    } else{
+      Fluttertoast.showToast(msg: "Cannot add members to private chat");
+    }
   }
 
   void leaveChat() async {
