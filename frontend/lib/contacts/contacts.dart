@@ -93,7 +93,7 @@ class ContactsScreen extends State<Contacts> {
     if(selected.length > 1){
       selected.add(currentUserId);
 
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (context) =>
@@ -267,12 +267,7 @@ class ContactsScreen extends State<Contacts> {
         ),
         centerTitle: true,
         actions: <Widget>[
-          IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {
-
-              }
-          ),
+         
         ],
       ),
       // body is the majority of the screen.

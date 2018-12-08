@@ -5,8 +5,9 @@ import 'dart:convert';
 
 import 'package:chitchat/chat/chatImage.dart';
 
+import 'package:flutter/services.dart';
 import 'package:canary_recorder/canary_recorder.dart';
-
+import 'package:flutter_permissions_helper/permissions_helper.dart';
 import 'package:chitchat/chat/link_preview.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -242,7 +243,7 @@ class ChatScreenState extends State<ChatScreen> {
 
   Map<String, String> pictureURLs = Map<String, String>();
 
-  bool _isRecording;
+  bool _isRecording = false;
   String _outputFile = '';
 
   //Load Image from Galerry
@@ -657,6 +658,8 @@ class ChatScreenState extends State<ChatScreen> {
       _isRecording = true;
     });
     recordColor = Colors.red;
+    await PermissionsHelper.requestPermission(Permission.RecordAudio);
+    await PermissionsHelper.requestPermission(Permission.WriteExternalStorage);
     var path = await CanaryRecorder.initializeRecorder('recordertester.wav');
     await CanaryRecorder.startRecording();
 
@@ -964,7 +967,6 @@ class ChatScreenState extends State<ChatScreen> {
       child: PageView(children: [
         new Container(child: galleryEmojis()),
         new Container(color: Colors.blue, child: buildSticker()),
-        //galleryEmojis()
       ]),
       decoration: new BoxDecoration(
           border:
@@ -1023,48 +1025,6 @@ class ChatScreenState extends State<ChatScreen> {
                     valueColor: AlwaysStoppedAnimation<Color>(themeColor)));
           }
         });
-  }
-
-  Widget buildEmojis() {
-    return Container(
-      child: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              InkWell(
-                onTap: () {},
-                child: Text(
-                  "🐣" + "😺",
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30.0),
-                ),
-              ),
-              InkWell(
-                onTap: () {},
-                child: Text(
-                  "🐣" + "😺",
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30.0),
-                ),
-              ),
-              InkWell(
-                onTap: () {},
-                child: Text(
-                  "🐣" + "😺",
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30.0),
-                ),
-              ),
-            ],
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          ),
-        ],
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      ),
-      decoration: new BoxDecoration(
-          border:
-              new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
-          color: Colors.white),
-      padding: EdgeInsets.all(0.0),
-      height: 180.0,
-    );
   }
 
   Future<void> loadAssets() async {

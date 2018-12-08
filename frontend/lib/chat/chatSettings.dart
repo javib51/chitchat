@@ -17,13 +17,12 @@ class ChatSettings extends StatefulWidget {
   final String chatName;
   final String chatAvatar;
 
-
-
   ChatSettings(this.chatUsers, this.chatId, this.chatType, this.currentUserId,
       this.chatName, this.chatAvatar);
 
   @override
-  createState() => ChatSettingsState(currentUserId: currentUserId, chatId: chatId, chatType: chatType);
+  createState() => ChatSettingsState(
+      currentUserId: currentUserId, chatId: chatId, chatType: chatType);
 }
 
 class ChatSettingsState extends State<ChatSettings> {
@@ -33,7 +32,8 @@ class ChatSettingsState extends State<ChatSettings> {
   final String currentUserId;
   final String chatId;
   final String chatType;
-  ChatSettingsState({Key key, @required this.currentUserId, this.chatId, this.chatType});
+  ChatSettingsState(
+      {Key key, @required this.currentUserId, this.chatId, this.chatType});
 
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
@@ -94,58 +94,84 @@ class ChatSettingsState extends State<ChatSettings> {
               ),
               Expanded(
                 child: Card(
-                    child: FutureBuilder(
-                        future: getPreviewImages(widget.chatId),
-                        builder:
-                            (BuildContext context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData && snapshot.data != null) {
-                            return ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: snapshot.data.documents.length,
-                              itemBuilder: (context, i) => Padding(
+                  child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  ChatGallery(widget.chatId, widget.chatUsers)),
+                        );
+                      },
+                      child: FutureBuilder(
+                          future: getPreviewImages(widget.chatId),
+                          builder:
+                              (BuildContext context, AsyncSnapshot snapshot) {
+                            if (snapshot.hasData && snapshot.data != null) {
+                              return ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: snapshot.data.documents.length,
+                                itemBuilder: (context, i) => Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: () {
-                                      String imageName = snapshot.data.documents[i]["payload"];
+                                      String imageName =
+                                          snapshot.data.documents[i]["payload"];
 
                                       if (this.pictureURLs[imageName] == null) {
                                         String completeImageName = imageName;
-                                        String imageResolutionMaxStringPicture = snapshot.data.documents[i]['maxResolution'];
-                                        print("Image seen for the first time, no URL fetched.");
+                                        String imageResolutionMaxStringPicture =
+                                            snapshot.data.documents[i]
+                                                ['maxResolution'];
+                                        print(
+                                            "Image seen for the first time, no URL fetched.");
 
-                                        if (imageResolutionMaxStringPicture == null) {
+                                        if (imageResolutionMaxStringPicture ==
+                                            null) {
                                           //Retro-compatibility
                                           print(
                                               "Downloaded an old image message that was not properly formatted.");
-                                        } else if (completeImageName.startsWith("http")) {
-                                          print("Downloaded an image using the old way of sending data.");
+                                        } else if (completeImageName
+                                            .startsWith("http")) {
+                                          print(
+                                              "Downloaded an image using the old way of sending data.");
                                         } else {
-                                          ImageResolution pictureImageResolutionMax =
-                                          getEnumFromString(imageResolutionMaxStringPicture);
-                                          ImageResolution localMaxResolution = this._imageResolutionSet;
-                                          String prefixToPrepend =
-                                          getPrefix(localMaxResolution, pictureImageResolutionMax);
-                                          completeImageName = "$prefixToPrepend$completeImageName";
+                                          ImageResolution
+                                              pictureImageResolutionMax =
+                                              getEnumFromString(
+                                                  imageResolutionMaxStringPicture);
+                                          ImageResolution localMaxResolution =
+                                              this._imageResolutionSet;
+                                          String prefixToPrepend = getPrefix(
+                                              localMaxResolution,
+                                              pictureImageResolutionMax);
+                                          completeImageName =
+                                              "$prefixToPrepend$completeImageName";
                                         }
 
                                         print("Image name: $imageName");
 
                                         Future.delayed(Duration(seconds: 1),
-                                                () {
-                                              //One second of delay because scaled-down image is not immediately ready to be downloaded.
-                                              print("Timer expired.");
-                                              FirebaseStorage.instance
-                                                  .ref()
-                                                  .child(completeImageName)
-                                                  .getDownloadURL()
-                                                  .then((downloadURL) {
-                                                print("URL fetched. URL: $downloadURL");
-                                                this.setState(() => this.pictureURLs[imageName] = downloadURL);
-                                              });
-                                            });
+                                            () {
+                                          //One second of delay because scaled-down image is not immediately ready to be downloaded.
+                                          print("Timer expired.");
+                                          FirebaseStorage.instance
+                                              .ref()
+                                              .child(completeImageName)
+                                              .getDownloadURL()
+                                              .then((downloadURL) {
+                                            print(
+                                                "URL fetched. URL: $downloadURL");
+                                            this.setState(() =>
+                                                this.pictureURLs[imageName] =
+                                                    downloadURL);
+                                          });
+                                        });
 
                                         return Container(
                                           child: CircularProgressIndicator(
-                                            valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    themeColor),
                                           ),
                                           height: 30.0,
                                           padding: EdgeInsets.all(5.0),
@@ -162,7 +188,9 @@ class ChatSettingsState extends State<ChatSettings> {
                                         return CachedNetworkImage(
                                           placeholder: Container(
                                             child: CircularProgressIndicator(
-                                              valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      themeColor),
                                             ),
                                             height: 30.0,
                                             padding: EdgeInsets.all(5.0),
@@ -190,19 +218,20 @@ class ChatSettingsState extends State<ChatSettings> {
                                         );
                                       }
                                     }()),
-                            );
-                          } else {
-                            return Container(
-                                alignment: Alignment(0.0, 0.0),
-                                width: 50,
-                                height: 50,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 1.0,
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(themeColor),
-                                ));
-                          }
-                        })),
+                              );
+                            } else {
+                              return Container(
+                                  alignment: Alignment(0.0, 0.0),
+                                  width: 50,
+                                  height: 50,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.0,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        themeColor),
+                                  ));
+                            }
+                          })),
+                ),
               ),
             ],
           ),
@@ -307,7 +336,7 @@ class ChatSettingsState extends State<ChatSettings> {
       );
 
   Widget leaveChatCard() => Container(
-        height: deviceSize.height / 18,
+        height: deviceSize.height / 20,
         width: deviceSize.width / 2,
         //padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 1.0),
         child: FlatButton(
@@ -349,22 +378,23 @@ class ChatSettingsState extends State<ChatSettings> {
       body: bodyData(), //new ChatSettingsScreen(),
       floatingActionButton: FloatingActionButton(
           tooltip: 'Add',
-          child: Icon(
-              Icons.add),
+          child: Icon(Icons.add),
           backgroundColor: Colors.amber,
           foregroundColor: Colors.black,
           onPressed: () {
-            if(chatType == "G") {
+            if (chatType == "G") {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) =>
-                    Contacts(currentUserId: currentUserId, chatId: chatId,)),
+                MaterialPageRoute(
+                    builder: (context) => Contacts(
+                          currentUserId: currentUserId,
+                          chatId: chatId,
+                        )),
               );
-            } else{
+            } else {
               Fluttertoast.showToast(msg: "Cannot add members to private chat");
             }
-          }
-      ),
+          }),
     );
   }
 
