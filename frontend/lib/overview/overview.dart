@@ -122,28 +122,29 @@ class MainScreenState extends State<MainScreen> {
     return chats;
   }
 
-  Future<String>  getJoinDate(DocumentSnapshot chat, String userId) async {
-    DocumentSnapshot user = await Firestore.instance.collection('chats')
-        .document(chat.documentID).collection('users').document(userId)
-        .get();
-    return user['join_date'];
+  Future<String>  getJoinDate(List<DocumentSnapshot> users, String userId) async {
+    int index = users.indexWhere((item) => item['id'] == userId);
+    return users[index]['join_date'];
   }
 
   Future<Map<String, String>> getChatInfo(DocumentSnapshot chat) async {
+    QuerySnapshot users = await Firestore.instance.collection('chats')
+        .document(chat.documentID).collection('users').getDocuments();
+
     Map<String, String> map = new Map();
     if(chat['type'] == 'G') {
       map['photoUrl'] = chat['photoUrl'];
       map['name'] = chat['name'];
       map['type'] = chat['type'];
     } else {
-      String userId = (chat['users'][0]['id'] == currentUserId)? chat['users'][1]['id'] : chat['users'][0]['id'];
+      String userId = (users.documents[0]['id'] == currentUserId)? users.documents[1]['id'] : users.documents[0]['id'];
       DocumentSnapshot user = await Firestore.instance.collection('users').document(userId).get();
       map['photoUrl'] = user['photoUrl'];
       map['name'] = user['nickname'];
       map['type'] = chat['type'];
     }
 
-    map['joinDate'] = await getJoinDate(chat, currentUserId);
+    map['joinDate'] = await getJoinDate(users.documents, currentUserId);
     return map;
   }
 
@@ -243,7 +244,7 @@ class MainScreenState extends State<MainScreen> {
   }
 
   Widget buildItemFuture(BuildContext context, DocumentSnapshot document) {
-    print("buildItemFuture, snapshot: ${document.toString()}}");
+    print("buildItemFuture, snapshot: {${document.toString()}}");
     return FutureBuilder<Map<String, String>>(
         future: getChatInfo(document),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
