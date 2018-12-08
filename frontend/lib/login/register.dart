@@ -72,7 +72,7 @@ class RegisterScreenState extends State<RegisterScreen> {
 
     await prefs.clear();
     prefs.setString('id', firebaseUser.uid);
-    prefs.setString('photoUrl', "https://www.simplyweight.co.uk/images/default/chat/mck-icon-user.png");
+    prefs.setString('photoUrl', "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/OOjs_UI_icon_userAvatar.svg/1024px-OOjs_UI_icon_userAvatar.svg.png");
 
     Fluttertoast.showToast(msg: "Register succes");
     Navigator.push(

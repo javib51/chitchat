@@ -240,7 +240,7 @@ class ContactsScreen extends State<Contacts> {
       return new ListTile(
           onTap:null,
           leading: new CircleAvatar(
-            backgroundColor: Colors.amber,
+            backgroundColor: Colors.grey,
               backgroundImage: new NetworkImage('${document['photoUrl']}')
           ),
           title: new Row(

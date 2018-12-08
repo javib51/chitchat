@@ -227,6 +227,7 @@ class MainScreenState extends State<MainScreen> {
                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                color: Colors.grey,
                 clipBehavior: Clip.hardEdge,
               ),
               new Flexible(
