@@ -41,7 +41,7 @@ exports.updateHandler = functions.firestore
 
 function userIncluded(oldUsers, newUser) {
     let included = false;
-    for(let oldUser in oldUsers) {
+    for (let oldUser in oldUsers) {
         if (objectsAreSame(newUser, oldUser)) {
             included = true;
             break;
@@ -79,17 +79,22 @@ function sendNotifications(users, title, body) {
         },
     };
     users.forEach(user => {
-        const userRef = admin.firestore().collection('users').doc(user['id']);
-        userRef.get().then(user => {
-            admin.messaging().sendToDevice(user.data().notificationToken, payload)
-                .then((response) => {
-                    // Response is a message ID string.
-                    console.log('Successfully sent message:', response);
-                })
-                .catch((error) => {
-                    console.log('Error sending message:', error);
-                });
-        });
+        try {
+            const userRef = admin.firestore().collection('users').doc(user['id']);
+            userRef.get().then(user => {
+                console.log(user.data());
+                admin.messaging().sendToDevice(user.data().notificationToken, payload)
+                    .then((response) => {
+                        // Response is a message ID string.
+                        console.log('Successfully sent message:', response);
+                    })
+                    .catch((error) => {
+                        console.log('Error sending message:', error);
+                    });
+            });
+        } catch (error) {
+            console.error(error);
+        }
     });
     console.log("Notifications sent");
 
