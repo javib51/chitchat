@@ -432,7 +432,7 @@ class ChatScreenState extends State<ChatScreen> {
           } else {
             print(
                 "Image already fetched previously. Downloading the image from cloud storage.");
-          
+
             return GestureDetector(
               onTap: (){
                 Navigator.push(
@@ -613,11 +613,9 @@ class ChatScreenState extends State<ChatScreen> {
     bool isTranslationAutomatic = this.prefs.getString("translation_mode") == TranslationMode.automatic.toString();
     print("Translation automatic? ${isTranslationAutomatic}");
 
-    if (url != null) {        //If there is a URL, it will take care of properly render the information on the UI.
-      return LinkPreview(text, document["matchStart"], document["matchEnd"], isLast, translationLanguage, isTranslationAutomatic);
-    } else {
+
       return TextChatElement(text, isLast, translationLanguage, isTranslationAutomatic);
-    }
+
   }
 
   bool isLastMessageLeft(int index) {
