@@ -287,9 +287,11 @@ class ContactsScreen extends State<Contacts> {
             .toString()
       });
     }
+    Fluttertoast.showToast(msg: "Succesful added user(s)");
     this.setState(() {
       isLoading = false;
     });
+    Navigator.pop(context);
   }
 
   Future<Null> handleAdding() async {
