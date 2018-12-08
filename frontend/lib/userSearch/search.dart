@@ -142,6 +142,10 @@ class UserSearchScreenState extends State<UserSearchScreen> {
           ],
         ),
         onPressed: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId,otheruser: user['id'],)),
+          );
           /*Navigator.push(
               context,
               new MaterialPageRoute(
@@ -181,7 +185,7 @@ class UserSearchScreenState extends State<UserSearchScreen> {
             onPressed: () => Navigator.of(context).pop(),
           ),*/
           actions: <Widget>[
-            
+
           ]
       ),
       body: getUsers()

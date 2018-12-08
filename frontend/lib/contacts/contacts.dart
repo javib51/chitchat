@@ -20,8 +20,9 @@ class Contacts extends StatefulWidget {
   final String userNickname;
   final String chatId;
   final Iterable users;
+  final String otheruser;
 
-  Contacts({Key key, @required this.currentUserId, this.userNickname, this.chatId, this.users}) : super(key: key);
+  Contacts({Key key, @required this.currentUserId, this.userNickname, this.chatId, this.users, this.otheruser}) : super(key: key);
 
   @override
   State createState() => new ContactsScreen(currentUserId: currentUserId, chatId: chatId);
@@ -47,6 +48,10 @@ class ContactsScreen extends State<Contacts> {
     super.initState();
     createCheckbox();
     readLocal();
+    if(widget.otheruser != null) {
+      selected.add(widget.otheruser);
+      handleInitiation();
+    }
   }
 
   void createCheckbox() async {
