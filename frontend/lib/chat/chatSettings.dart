@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chitchat/chat/chat.dart';
 import 'package:chitchat/common/imageResolution.dart';
 import 'package:chitchat/contacts/contacts.dart';
 import 'package:chitchat/overview/overview.dart';
@@ -34,6 +35,22 @@ class ChatSettingsState extends State<ChatSettings> {
   final String chatType;
   ChatSettingsState(
       {Key key, @required this.currentUserId, this.chatId, this.chatType});
+
+
+  List<Choice> choices = const <Choice>[
+    const Choice(title: "Add Users", icon: Icons.add),
+    const Choice(title: "Leave Chat", icon: Icons.delete),
+  ];
+
+  void _onItemMenuPress(Choice choice) {
+    if (choice.title == "Add Users") {
+      addUser();
+    } else if(choice.title == "Leave Chat"){
+      leaveChat();
+    }
+    else{
+    }
+  }
 
   Widget profileHeader() => Container(
         height: deviceSize.height / 4,
@@ -337,23 +354,7 @@ class ChatSettingsState extends State<ChatSettings> {
         ),
       );
 
-  Widget leaveChatCard() => Container(
-        height: deviceSize.height / 20,
-        width: deviceSize.width / 2,
-        //padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 1.0),
-        child: FlatButton(
-          onPressed: () => leaveChat(),
-          child: Text(
-            'Leave chat',
-            style: TextStyle(fontSize: 16.0, color: Colors.white),
-          ),
-          color: Colors.red,
-          highlightColor: Colors.white30,
-          splashColor: Colors.transparent,
-          textColor: Colors.white,
-          padding: EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
-        ),
-      );
+
 
   Widget bodyData() => Container(
         child: Column(
@@ -361,7 +362,6 @@ class ChatSettingsState extends State<ChatSettings> {
             profileHeader(),
             imagesCard(),
             usersCard(),
-            widget.chatType == "G" ? leaveChatCard() : Container(),
           ],
         ),
       );
@@ -369,6 +369,36 @@ class ChatSettingsState extends State<ChatSettings> {
   @override
   Widget build(BuildContext context) {
     deviceSize = MediaQuery.of(context).size;
+
+    var menuButton;
+    if(chatType == "G") {
+      menuButton =  <Widget>[PopupMenuButton<Choice>(
+        onSelected: _onItemMenuPress,
+        itemBuilder: (BuildContext context) {
+          return choices.map((Choice choice) {
+            return PopupMenuItem<Choice>(
+                value: choice,
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      choice.icon,
+                      color: primaryColor,
+                    ),
+                    Container(
+                      width: 10.0,
+                    ),
+                    Text(
+                      choice.title,
+                      style: TextStyle(color: primaryColor),
+                    ),
+                  ],
+                ));
+          }).toList();
+        },
+      )
+    ];
+    }
+
     return new Scaffold(
       appBar: new AppBar(
         title: new Text(
@@ -376,18 +406,9 @@ class ChatSettingsState extends State<ChatSettings> {
           style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: menuButton
       ),
       body: bodyData(), //new ChatSettingsScreen(),
-      floatingActionButton: FloatingActionButton(
-          tooltip: 'Add',
-          child: Icon(Icons.add),
-          backgroundColor: Colors.amber,
-          foregroundColor: Colors.black,
-          onPressed: () {
-
-            addUser();
-          }
-      ),
 
     );
   }
