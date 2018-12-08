@@ -124,7 +124,6 @@ class ChatState extends State<Chat> {
 
     List<dynamic> usersList = chat['users'];
     Map<String, DocumentSnapshot> usersMap = new Map();
-
     for (var user in usersList) {
       var userData = await Firestore.instance
           .collection('users')
@@ -132,7 +131,6 @@ class ChatState extends State<Chat> {
           .get();
       usersMap.putIfAbsent(userData["id"], () => userData);
     }
-
     return usersMap;
   }
 
