@@ -311,6 +311,7 @@ class MainScreenState extends State<MainScreen> {
                     chatType: info['type'],
                     joinDate: info['joinDate'],
                     chatName: info['name'],
+                    prefs: this.prefs,
                   )));
         },
         color: greyColor2,
