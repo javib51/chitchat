@@ -25,15 +25,11 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:multi_image_picker/asset.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
-import 'package:chitchat/common/translation.dart';
-
-import 'package:translator/translator.dart';
-
-import 'package:chitchat/chat/text_element.dart';
 
 
 
@@ -52,18 +48,16 @@ class Chat extends StatefulWidget {
   final String chatType;
   final String joinDate;
   final String chatName;
-  final SharedPreferences prefs;
 
   Chat(
       {Key key,
-      @required this.currentUserId,
-      @required this.chatId,
-      @required this.chatAvatar,
-      @required this.userNickname,
-      @required this.chatType,
-      @required this.joinDate,
-      @required this.chatName,
-      @required this.prefs})
+        @required this.currentUserId,
+        @required this.chatId,
+        @required this.chatAvatar,
+        @required this.userNickname,
+        @required this.chatType,
+        @required this.joinDate,
+        @required this.chatName})
       : super(key: key);
 
   @override
@@ -73,8 +67,7 @@ class Chat extends StatefulWidget {
       chatAvatar: chatAvatar,
       userNickname: userNickname,
       chatType: chatType,
-      joinDate: joinDate,
-      prefs: this.prefs);
+      joinDate: joinDate);
 }
 
 class ChatState extends State<Chat> {
@@ -84,19 +77,17 @@ class ChatState extends State<Chat> {
   final String userNickname;
   final String chatType;
   final String joinDate;
-  final SharedPreferences prefs;
 
   Stream<QuerySnapshot> streamMessage;
 
   ChatState(
       {Key key,
-      @required this.currentUserId,
-      @required this.chatId,
-      @required this.chatAvatar,
-      @required this.userNickname,
-      @required this.chatType,
-      @required this.joinDate,
-      @required this.prefs}) {
+        @required this.currentUserId,
+        @required this.chatId,
+        @required this.chatAvatar,
+        @required this.userNickname,
+        @required this.chatType,
+        @required this.joinDate}) {
     this.streamMessage = _getMessages();
   }
 
@@ -126,20 +117,22 @@ class ChatState extends State<Chat> {
   }
 
   Future<Map<String, DocumentSnapshot>> _getUsers() async {
-    QuerySnapshot users = await Firestore.instance
+    DocumentSnapshot chat = await Firestore.instance
         .collection('chats')
         .document(this.chatId)
-        .collection('users')
-        .getDocuments();
+        .get();
 
+    List<dynamic> usersList = chat['users'];
     Map<String, DocumentSnapshot> usersMap = new Map();
-    for (var user in users.documents) {
+
+    for (var user in usersList) {
       var userData = await Firestore.instance
           .collection('users')
           .document(user['id'])
           .get();
-      usersMap.putIfAbsent(user['id'], () => userData);
+      usersMap.putIfAbsent(userData["id"], () => userData);
     }
+
     return usersMap;
   }
 
@@ -203,13 +196,13 @@ class ChatScreen extends StatefulWidget {
 
   ChatScreen(
       {Key key,
-      @required this.currentUserId,
-      @required this.chatId,
-      @required this.chatAvatar,
-      @required this.userNickname,
-      @required this.chatType,
-      this.streamMessage,
-      this.chatUsers})
+        @required this.currentUserId,
+        @required this.chatId,
+        @required this.chatAvatar,
+        @required this.userNickname,
+        @required this.chatType,
+        this.streamMessage,
+        this.chatUsers})
       : super(key: key);
 
   @override
@@ -229,15 +222,13 @@ class ChatScreenState extends State<ChatScreen> {
   String userNickname;
   String chatType;
 
-  final GoogleTranslator _translator = GoogleTranslator();
-
   ChatScreenState(
       {Key key,
-      @required this.currentUserId,
-      @required this.chatId,
-      @required this.chatAvatar,
-      @required this.userNickname,
-      @required this.chatType});
+        @required this.currentUserId,
+        @required this.chatId,
+        @required this.chatAvatar,
+        @required this.userNickname,
+        @required this.chatType});
 
   var listMessage;
   String groupChatId;
@@ -259,7 +250,7 @@ class ChatScreenState extends State<ChatScreen> {
   List<Asset> images = List<Asset>();
 
   final TextEditingController textEditingController =
-      new TextEditingController();
+  new TextEditingController();
   ImageResolution _imageResolutionSet;
 
   final ScrollController listScrollController = new ScrollController();
@@ -319,7 +310,7 @@ class ChatScreenState extends State<ChatScreen> {
   Future<String> _getLabel(File file) async {
     var options = ["Food", "Technology", "Screenshot"];
     final List<Label> labels =
-        await _detector.detectInImage(FirebaseVisionImage.fromFile(file));
+    await _detector.detectInImage(FirebaseVisionImage.fromFile(file));
     String label = labels.first.label;
     if (!options.contains(label)) label = "Others";
     return label;
@@ -335,7 +326,7 @@ class ChatScreenState extends State<ChatScreen> {
 
       Map<String, dynamic> messagePayload = {
         'userFrom':
-            Firestore.instance.collection('users').document(currentUserId),
+        Firestore.instance.collection('users').document(currentUserId),
         'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
         'payload': payload,
         'type': type,
@@ -392,28 +383,28 @@ class ChatScreenState extends State<ChatScreen> {
               print("Downloaded an image using the old way of sending data.");
             } else {
               ImageResolution pictureImageResolutionMax =
-                  getEnumFromString(imageResolutionMaxStringPicture);
+              getEnumFromString(imageResolutionMaxStringPicture);
               ImageResolution localMaxResolution = this._imageResolutionSet;
               String prefixToPrepend =
-                  getPrefix(localMaxResolution, pictureImageResolutionMax);
+              getPrefix(localMaxResolution, pictureImageResolutionMax);
               completeImageName = "$prefixToPrepend$completeImageName";
             }
 
             print("Image name: $imageName");
 
             Future.delayed(Duration(seconds: side == ChatSide.left ? 1 : 0),
-                () {
-              //One second of delay because scaled-down image is not immediately ready to be downloaded.
-              print("Timer expired.");
-              FirebaseStorage.instance
-                  .ref()
-                  .child(completeImageName)
-                  .getDownloadURL()
-                  .then((downloadURL) {
-                print("URL fetched. URL: $downloadURL");
-                this.setState(() => this.pictureURLs[imageName] = downloadURL);
-              });
-            });
+                    () {
+                  //One second of delay because scaled-down image is not immediately ready to be downloaded.
+                  print("Timer expired.");
+                  FirebaseStorage.instance
+                      .ref()
+                      .child(completeImageName)
+                      .getDownloadURL()
+                      .then((downloadURL) {
+                    print("URL fetched. URL: $downloadURL");
+                    this.setState(() => this.pictureURLs[imageName] = downloadURL);
+                  });
+                });
 
             return Container(
               child: CircularProgressIndicator(
@@ -436,43 +427,43 @@ class ChatScreenState extends State<ChatScreen> {
             return GestureDetector(
               onTap: (){
                 Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => ChatImage(this.pictureURLs[imageName]))
-                      );
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ChatImage(this.pictureURLs[imageName]))
+                );
               },
               child: CachedNetworkImage(
-              placeholder: Container(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                placeholder: Container(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                  ),
+                  width: 200.0,
+                  height: 200.0,
+                  padding: EdgeInsets.all(70.0),
+                  decoration: BoxDecoration(
+                    color: greyColor2,
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(8.0),
+                    ),
+                  ),
                 ),
-                width: 200.0,
-                height: 200.0,
-                padding: EdgeInsets.all(70.0),
-                decoration: BoxDecoration(
-                  color: greyColor2,
+                errorWidget: Material(
+                  child: Image.asset(
+                    'images/img_not_available.jpeg',
+                    width: 200.0,
+                    height: 200.0,
+                    fit: BoxFit.cover,
+                  ),
                   borderRadius: BorderRadius.all(
                     Radius.circular(8.0),
                   ),
+                  clipBehavior: Clip.hardEdge,
                 ),
+                imageUrl: this.pictureURLs[imageName],
+                width: 200.0,
+                height: 200.0,
+                fit: BoxFit.cover,
               ),
-              errorWidget: Material(
-                child: Image.asset(
-                  'images/img_not_available.jpeg',
-                  width: 200.0,
-                  height: 200.0,
-                  fit: BoxFit.cover,
-                ),
-                borderRadius: BorderRadius.all(
-                  Radius.circular(8.0),
-                ),
-                clipBehavior: Clip.hardEdge,
-              ),
-              imageUrl: this.pictureURLs[imageName],
-              width: 200.0,
-              height: 200.0,
-              fit: BoxFit.cover,
-            ),
             );
           }
         }(),
@@ -489,25 +480,25 @@ class ChatScreenState extends State<ChatScreen> {
       return Row(
         children: <Widget>[
           document['type'] == "text"
-              // Text
+          // Text
               ? this._buildMessageText(
-                  document, this.isLastMessageRight(index))
+              index, document, this.isLastMessageRight(index))
               : document['type'] == "photo"
-                  // Image
-                  ? this._buildImageContainer(
-                      document, isLastMessageRight(index), ChatSide.right)
-                  // Sticker
-                  : Container(
-                      child: new Image.asset(
-                        'images/${document['payload']}.gif',
-                        width: 100.0,
-                        height: 100.0,
-                        fit: BoxFit.cover,
-                      ),
-                      margin: EdgeInsets.only(
-                          bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                          right: 10.0),
-                    ),
+          // Image
+              ? this._buildImageContainer(
+              document, isLastMessageRight(index), ChatSide.right)
+          // Sticker
+              : Container(
+            child: new Image.asset(
+              'images/${document['payload']}.gif',
+              width: 100.0,
+              height: 100.0,
+              fit: BoxFit.cover,
+            ),
+            margin: EdgeInsets.only(
+                bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                right: 10.0),
+          ),
         ],
         mainAxisAlignment: MainAxisAlignment.end,
       );
@@ -520,81 +511,81 @@ class ChatScreenState extends State<ChatScreen> {
               children: <Widget>[
                 isLastMessageLeft(index)
                     ? FutureBuilder(
-                        future: widget.chatUsers,
-                        builder:
-                            (BuildContext context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData && snapshot.data != null) {
-                            return Material(
-                              child: CachedNetworkImage(
-                                placeholder: Container(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 1.0,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        themeColor),
-                                  ),
-                                  width: 35.0,
-                                  height: 35.0,
-                                  padding: EdgeInsets.all(10.0),
-                                ),
-                                imageUrl: snapshot
-                                        .data[document['userFrom'].documentID]
-                                    ["photoUrl"],
-                                width: 35.0,
-                                height: 35.0,
-                                fit: BoxFit.cover,
-                              ),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(18.0),
-                              ),
-                              clipBehavior: Clip.hardEdge,
-                            );
-                          } else {
-                            return Container(
-                              width: 35.0,
-                              height: 35.0,
+                    future: widget.chatUsers,
+                    builder:
+                        (BuildContext context, AsyncSnapshot snapshot) {
+                      if (snapshot.hasData && snapshot.data != null) {
+                        return Material(
+                          child: CachedNetworkImage(
+                            placeholder: Container(
                               child: CircularProgressIndicator(
                                 strokeWidth: 1.0,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(themeColor),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    themeColor),
                               ),
-                            );
-                          }
-                        })
+                              width: 35.0,
+                              height: 35.0,
+                              padding: EdgeInsets.all(10.0),
+                            ),
+                            imageUrl: snapshot
+                                .data[document['userFrom'].documentID]
+                            ["photoUrl"],
+                            width: 35.0,
+                            height: 35.0,
+                            fit: BoxFit.cover,
+                          ),
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(18.0),
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                        );
+                      } else {
+                        return Container(
+                          width: 35.0,
+                          height: 35.0,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.0,
+                            valueColor:
+                            AlwaysStoppedAnimation<Color>(themeColor),
+                          ),
+                        );
+                      }
+                    })
                     : Container(width: 35.0),
                 document['type'] == "text"
                     ? this._buildMessageText(
-                        document, this.isLastMessageLeft(index))
+                    index, document, this.isLastMessageRight(index))
                     : document['type'] == "photo"
-                        ? this._buildImageContainer(
-                            document, isLastMessageLeft(index), ChatSide.left)
-                        : Container(
-                            child: new Image.asset(
-                              'images/${document['payload']}.gif',
-                              width: 100.0,
-                              height: 100.0,
-                              fit: BoxFit.cover,
-                            ),
-                            margin: EdgeInsets.only(
-                                bottom: isLastMessageLeft(index) ? 20.0 : 10.0,
-                                right: 10.0),
-                          ),
+                    ? this._buildImageContainer(
+                    document, isLastMessageLeft(index), ChatSide.left)
+                    : Container(
+                  child: new Image.asset(
+                    'images/${document['payload']}.gif',
+                    width: 100.0,
+                    height: 100.0,
+                    fit: BoxFit.cover,
+                  ),
+                  margin: EdgeInsets.only(
+                      bottom: isLastMessageLeft(index) ? 20.0 : 10.0,
+                      right: 10.0),
+                ),
               ],
             ),
 
             // Time
             isLastMessageLeft(index)
                 ? Container(
-                    child: Text(
-                      DateFormat('dd MMM kk:mm').format(
-                          DateTime.fromMillisecondsSinceEpoch(
-                              int.parse(document['timestamp']))),
-                      style: TextStyle(
-                          color: greyColor,
-                          fontSize: 12.0,
-                          fontStyle: FontStyle.italic),
-                    ),
-                    margin: EdgeInsets.only(left: 50.0, top: 5.0, bottom: 5.0),
-                  )
+              child: Text(
+                DateFormat('dd MMM kk:mm').format(
+                    DateTime.fromMillisecondsSinceEpoch(
+                        int.parse(document['timestamp']))),
+                style: TextStyle(
+                    color: greyColor,
+                    fontSize: 12.0,
+                    fontStyle: FontStyle.italic),
+              ),
+              margin: EdgeInsets.only(left: 50.0, top: 5.0, bottom: 5.0),
+            )
                 : Container()
           ],
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,25 +595,30 @@ class ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Widget _buildMessageText(DocumentSnapshot document, bool isLast) {
+  Widget _buildMessageText(int index, DocumentSnapshot document, bool isLast) {
     String text = document["payload"];
     String url = document["url"];
 
-    TranslationLanguage translationLanguage = getTranslationLanguageFromString(this.prefs.getString("translation_language"));
-    print(this.prefs.getString("translation_mode"));
-    bool isTranslationAutomatic = this.prefs.getString("translation_mode") == TranslationMode.automatic.toString();
-    print("Translation automatic? ${isTranslationAutomatic}");
-
-
-      return TextChatElement(text, isLast, translationLanguage, isTranslationAutomatic);
-
+      return Container(
+        child: Text(
+          text,
+          style: TextStyle(color: primaryColor),
+        ),
+        padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+        width: 200.0,
+        decoration: BoxDecoration(
+            color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
+        margin: EdgeInsets.only(
+            bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0),
+      );
+    
   }
 
   bool isLastMessageLeft(int index) {
     if ((index > 0 &&
-            listMessage != null &&
-            listMessage[index - 1]['userFrom'].documentID !=
-                listMessage[index]['userFrom'].documentID) ||
+        listMessage != null &&
+        listMessage[index - 1]['userFrom'].documentID !=
+            listMessage[index]['userFrom'].documentID) ||
         index == 0) {
       return true;
     } else {
@@ -632,8 +628,8 @@ class ChatScreenState extends State<ChatScreen> {
 
   bool isLastMessageRight(int index) {
     if ((index > 0 &&
-            listMessage != null &&
-            listMessage[index - 1]['userFrom'].documentID != currentUserId) ||
+        listMessage != null &&
+        listMessage[index - 1]['userFrom'].documentID != currentUserId) ||
         index == 0) {
       return true;
     } else {
@@ -653,7 +649,7 @@ class ChatScreenState extends State<ChatScreen> {
     return Future.value(false);
   }
 
-    void startRecorder() async{
+  void startRecorder() async{
     this.setState(() {
       _isRecording = true;
     });
@@ -666,7 +662,7 @@ class ChatScreenState extends State<ChatScreen> {
     setState(() { _outputFile = path; });
   }
 
-    void stopRecorder() async{
+  void stopRecorder() async{
     this.setState(() {
       isLoading = true;
       _isRecording = false;
@@ -827,7 +823,7 @@ class ChatScreenState extends State<ChatScreen> {
       ),
       decoration: new BoxDecoration(
           border:
-              new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
+          new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
           color: Colors.white),
       padding: EdgeInsets.all(5.0),
       height: 180.0,
@@ -838,12 +834,12 @@ class ChatScreenState extends State<ChatScreen> {
     return Positioned(
       child: isLoading
           ? Container(
-              child: Center(
-                child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
-              ),
-              color: Colors.white.withOpacity(0.8),
-            )
+        child: Center(
+          child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+        ),
+        color: Colors.white.withOpacity(0.8),
+      )
           : Container(),
     );
   }
@@ -927,7 +923,7 @@ class ChatScreenState extends State<ChatScreen> {
       height: 50.0,
       decoration: new BoxDecoration(
           border:
-              new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
+          new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
           color: Colors.white),
     );
   }
@@ -936,29 +932,29 @@ class ChatScreenState extends State<ChatScreen> {
     return Flexible(
       child: groupChatId == ''
           ? Center(
-              child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(themeColor)))
+          child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(themeColor)))
           : StreamBuilder(
-              stream: widget.streamMessage,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(
-                      child: CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(themeColor)));
-                } else {
-                  listMessage = snapshot.data.documents;
-                  return ListView.builder(
-                    padding: EdgeInsets.all(10.0),
-                    itemBuilder: (context, index) =>
-                        buildItem(index, snapshot.data.documents[index]),
-                    itemCount: snapshot.data.documents.length,
-                    reverse: true,
-                    controller: listScrollController,
-                  );
-                }
-              },
-            ),
+        stream: widget.streamMessage,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(
+                child: CircularProgressIndicator(
+                    valueColor:
+                    AlwaysStoppedAnimation<Color>(themeColor)));
+          } else {
+            listMessage = snapshot.data.documents;
+            return ListView.builder(
+              padding: EdgeInsets.all(10.0),
+              itemBuilder: (context, index) =>
+                  buildItem(index, snapshot.data.documents[index]),
+              itemCount: snapshot.data.documents.length,
+              reverse: true,
+              controller: listScrollController,
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -970,7 +966,7 @@ class ChatScreenState extends State<ChatScreen> {
       ]),
       decoration: new BoxDecoration(
           border:
-              new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
+          new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
           color: Colors.white),
       padding: EdgeInsets.all(5.0),
       height: 180.0,
