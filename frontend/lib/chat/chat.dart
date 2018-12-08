@@ -117,24 +117,23 @@ class ChatState extends State<Chat> {
   }
 
   Future<Map<String, DocumentSnapshot>> _getUsers() async {
-    DocumentSnapshot chat = await Firestore.instance
+    QuerySnapshot users = await Firestore.instance
         .collection('chats')
         .document(this.chatId)
-        .get();
+        .collection('users')
+        .getDocuments();
 
-    List<dynamic> usersList = chat['users'];
     Map<String, DocumentSnapshot> usersMap = new Map();
-
-    for (var user in usersList) {
+    for (var user in users.documents) {
       var userData = await Firestore.instance
           .collection('users')
           .document(user['id'])
           .get();
-      usersMap.putIfAbsent(userData["id"], () => userData);
+      usersMap.putIfAbsent(user['id'], () => userData);
     }
-
     return usersMap;
   }
+
 
   @override
   Widget build(BuildContext context) {
