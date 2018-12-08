@@ -11,7 +11,6 @@ import 'package:chitchat/const.dart';
 import 'package:chitchat/login/login.dart';
 import 'package:chitchat/userSearch/search.dart';
 import 'package:chitchat/settings/settings.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -237,18 +236,24 @@ class MainScreenState extends State<MainScreen> {
   }
 
   Widget buildItemFuture(BuildContext context, DocumentSnapshot document) {
-    return FutureBuilder(
+    print("buildItemFuture, snapshot: ${document.toString()}}");
+    return FutureBuilder<Map<String, String>>(
         future: getChatInfo(document),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData && snapshot.data != null) {
-            return buildItem(context, document, snapshot.data);
-          } else {
+          if (snapshot.connectionState != ConnectionState.done) {
             return Container(
               child: Center(
                 child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
               ),
               color: Colors.white.withOpacity(0.8),
             );
+          } else {
+            if (snapshot.hasData && snapshot.data != null) {
+              return buildItem(context, document, snapshot.data);
+            } else {
+              print("Error while fetching data. Data: ${snapshot.error}");
+              return Text("Error while fetching chat info. Error: ${snapshot.error}", );
+            }
           }
         }
     );
@@ -421,42 +426,48 @@ class MainScreenState extends State<MainScreen> {
           children: <Widget>[
             // List
             Container(
-              child: FutureBuilder(
+              child: FutureBuilder<List<DocumentSnapshot>>(
                 future: getChats(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
-                      child: Text(
-                        "Create a ChitChat by pressing the button!",
-                        style: TextStyle(
-                            fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
-                      ),
+                      child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
                     );
                   } else {
-                    return ListView.builder(
-                      padding: EdgeInsets.all(10.0),
-                      itemBuilder: (context, index) =>
-                          buildItemFuture(context, snapshot.data[index]),
-                      itemCount: snapshot.data.length,
-                    );
+                    if (snapshot.data.isEmpty) {
+                      return Center(
+                        child: Text(
+                          "Create a ChitChat by pressing the button!",
+                          style: TextStyle(
+                              fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
+                        ),
+                      );
+                    } else {
+                      return ListView.builder(
+                        padding: EdgeInsets.all(10.0),
+                        itemBuilder: (context, index) =>
+                            buildItemFuture(context, snapshot.data[index]),
+                        itemCount: snapshot.data.length,
+                      );
+                    }
                   }
                 },
               ),
             ),
 
             // Loading
-            Positioned(
-              child: isLoading
-                  ? Container(
-                child: Center(
-                  child: CircularProgressIndicator(
-                      valueColor:
-                      AlwaysStoppedAnimation<Color>(themeColor)),
-                ),
-                color: Colors.white.withOpacity(0.8),
-              )
-                  : Container(),
-            )
+//            Positioned(
+//              child: isLoading
+//                  ? Container(
+//                child: Center(
+//                  child: CircularProgressIndicator(
+//                      valueColor:
+//                      AlwaysStoppedAnimation<Color>(themeColor)),
+//                ),
+//                color: Colors.white.withOpacity(0.8),
+//              )
+//                  : Container(),
+//            )
           ],
         ),
         onWillPop: onBackPress,
