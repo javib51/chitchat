@@ -63,7 +63,7 @@ class MainScreenState extends State<MainScreen> {
   void updateToken(String notificationToken) {
     Firestore.instance.collection('users').document(currentUserId).updateData({"notificationToken": notificationToken});
   }
-  
+
   Future<List<DocumentSnapshot>> getChats() async {
     List<DocumentSnapshot> chats = new List();
     DocumentSnapshot user = await Firestore.instance.collection('users').document(currentUserId).get();
@@ -103,7 +103,7 @@ class MainScreenState extends State<MainScreen> {
         builder: (BuildContext context) {
           return SimpleDialog(
             contentPadding:
-                EdgeInsets.only(left: 0.0, right: 0.0, top: 0.0, bottom: 0.0),
+            EdgeInsets.only(left: 0.0, right: 0.0, top: 0.0, bottom: 0.0),
             children: <Widget>[
               Container(
                 color: themeColor,
@@ -206,71 +206,71 @@ class MainScreenState extends State<MainScreen> {
   }
 
   Widget buildItem(BuildContext context, DocumentSnapshot document, Map<String, String> info) {
-      return Container(
-        child: FlatButton(
-          child: Row(
-            children: <Widget>[
-              Material(
-                child: CachedNetworkImage(
-                  placeholder: Container(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.0,
-                      valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                    ),
-                    width: 50.0,
-                    height: 50.0,
-                    padding: EdgeInsets.all(15.0),
+    return Container(
+      child: FlatButton(
+        child: Row(
+          children: <Widget>[
+            Material(
+              child: CachedNetworkImage(
+                placeholder: Container(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.0,
+                    valueColor: AlwaysStoppedAnimation<Color>(themeColor),
                   ),
-                  imageUrl: info['photoUrl'],
                   width: 50.0,
                   height: 50.0,
-                  fit: BoxFit.cover,
+                  padding: EdgeInsets.all(15.0),
                 ),
-                borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                color: Colors.grey,
-                clipBehavior: Clip.hardEdge,
+                imageUrl: info['photoUrl'],
+                width: 50.0,
+                height: 50.0,
+                fit: BoxFit.cover,
               ),
-              new Flexible(
-                child: Container(
-                  child: new Column(
-                    children: <Widget>[
-                      new Container(
-                        child: Text(
-                          info['name'],
-                          style: TextStyle(color: primaryColor),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
+              borderRadius: BorderRadius.all(Radius.circular(25.0)),
+              color: Colors.grey,
+              clipBehavior: Clip.hardEdge,
+            ),
+            new Flexible(
+              child: Container(
+                child: new Column(
+                  children: <Widget>[
+                    new Container(
+                      child: Text(
+                        info['name'],
+                        style: TextStyle(color: primaryColor),
                       ),
-                    ],
-                  ),
-                  margin: EdgeInsets.only(left: 20.0),
+                      alignment: Alignment.centerLeft,
+                      margin: new EdgeInsets.fromLTRB(10.0, 0.0, 0.0, 5.0),
+                    ),
+                  ],
                 ),
+                margin: EdgeInsets.only(left: 20.0),
               ),
-            ],
-          ),
-          onPressed: () {
-            print(info);
-            Navigator.push(
-                context,
-                new MaterialPageRoute(
-                    builder: (context) => new Chat(
-                          currentUserId: currentUserId,
-                          chatId: document.documentID,
-                          chatAvatar: info['photoUrl'],
-                          userNickname: nickname,
-                          chatType: info['type'],
-                          joinDate: info['joinDate'],
-                          chatName: info['name'],
-                        )));
-          },
-          color: greyColor2,
-          padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+            ),
+          ],
         ),
-        margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
-      );
+        onPressed: () {
+          print(info);
+          Navigator.push(
+              context,
+              new MaterialPageRoute(
+                  builder: (context) => new Chat(
+                    currentUserId: currentUserId,
+                    chatId: document.documentID,
+                    chatAvatar: info['photoUrl'],
+                    userNickname: nickname,
+                    chatType: info['type'],
+                    joinDate: info['joinDate'],
+                    chatName: info['name'],
+                  )));
+        },
+        color: greyColor2,
+        padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      ),
+      margin: EdgeInsets.only(bottom: 10.0, left: 5.0, right: 5.0),
+    );
   }
 
   final GoogleSignIn googleSignIn = new GoogleSignIn();
@@ -296,7 +296,7 @@ class MainScreenState extends State<MainScreen> {
 
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => MyApp(prefs: this.prefs,)),
-        (Route<dynamic> route) => false);
+            (Route<dynamic> route) => false);
   }
 
   @override
@@ -310,15 +310,15 @@ class MainScreenState extends State<MainScreen> {
         centerTitle: true,
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        UserSearchScreen(currentUserId: this.currentUserId,)),
-              );
-            }
+              icon: Icon(Icons.search),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          UserSearchScreen(currentUserId: this.currentUserId,)),
+                );
+              }
           ),
         ],
       ),
@@ -329,17 +329,17 @@ class MainScreenState extends State<MainScreen> {
               accountName: new Text(nickname),
               accountEmail: new Text(""),
               currentAccountPicture: new CircleAvatar(
-                backgroundImage: new NetworkImage(photoUrl)
+                  backgroundImage: new NetworkImage(photoUrl)
               ),
             ),
             new ListTile(
-              title: new Text('New Chat'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId, userNickname: nickname,)),
-                );
-              }
+                title: new Text('New Chat'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId, userNickname: nickname,)),
+                  );
+                }
             ),
             new Divider(
               color: Colors.black,
@@ -350,7 +350,7 @@ class MainScreenState extends State<MainScreen> {
               onTap: (){
                 Navigator.of(context).pop();
                 Navigator.push(
-                context, MaterialPageRoute(builder: (context) => Settings()));
+                    context, MaterialPageRoute(builder: (context) => Settings()));
               },
             ),
             new Divider(
@@ -377,10 +377,10 @@ class MainScreenState extends State<MainScreen> {
                   if (!snapshot.hasData) {
                     return Center(
                       child: Text(
-          "Create a ChitChat by pressing the button!",
-          style: TextStyle(
-              fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
-        ),
+                        "Create a ChitChat by pressing the button!",
+                        style: TextStyle(
+                            fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
+                      ),
                     );
                   } else {
                     return ListView.builder(
@@ -398,13 +398,13 @@ class MainScreenState extends State<MainScreen> {
             Positioned(
               child: isLoading
                   ? Container(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(themeColor)),
-                      ),
-                      color: Colors.white.withOpacity(0.8),
-                    )
+                child: Center(
+                  child: CircularProgressIndicator(
+                      valueColor:
+                      AlwaysStoppedAnimation<Color>(themeColor)),
+                ),
+                color: Colors.white.withOpacity(0.8),
+              )
                   : Container(),
             )
           ],
@@ -412,17 +412,17 @@ class MainScreenState extends State<MainScreen> {
         onWillPop: onBackPress,
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'Add',
-        child: Icon(
-            Icons.add),
-            backgroundColor: Colors.amber,
-            foregroundColor: Colors.black,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId, chatId: null)),
-          );
-        }
+          tooltip: 'Add',
+          child: Icon(
+              Icons.add),
+          backgroundColor: Colors.amber,
+          foregroundColor: Colors.black,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Contacts(currentUserId: currentUserId, chatId: null)),
+            );
+          }
       ),
     );
   }
