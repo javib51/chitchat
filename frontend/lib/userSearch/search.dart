@@ -55,7 +55,7 @@ class UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   void readUserInput(String text) {
-    if(text.length >= 5) {
+    if(text.length >= 1) {
       print(text);
       performSearch(text);
       setState(() {
