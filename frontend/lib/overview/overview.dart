@@ -123,6 +123,13 @@ class MainScreenState extends State<MainScreen> {
     return chats;
   }
 
+  Future<String>  getJoinDate(DocumentSnapshot chat, String userId) async {
+    DocumentSnapshot user = await Firestore.instance.collection('chats')
+        .document(chat.documentID).collection('users').document(userId)
+        .get();
+    return user['join_date'];
+  }
+
   Future<Map<String, String>> getChatInfo(DocumentSnapshot chat) async {
     Map<String, String> map = new Map();
     if(chat['type'] == 'G') {
@@ -136,8 +143,8 @@ class MainScreenState extends State<MainScreen> {
       map['name'] = user['nickname'];
       map['type'] = chat['type'];
     }
-    final int index = chat['users'].indexWhere((val) => val['id'] == currentUserId);
-    map['joinDate'] = chat['users'][index]['join_date'];
+
+    map['joinDate'] = await getJoinDate(chat, currentUserId);
     return map;
   }
 
