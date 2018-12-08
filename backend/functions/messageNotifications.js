@@ -42,20 +42,24 @@ exports.handler = functions.firestore
 
 function sendNotifications(chat, payload, userFrom) {
     console.log("Send notifications");
+    chat.users.forEach(userMap => {
+        try {
+            if (userMap['id'] != userFrom.id) {
+                const userRef = admin.firestore().collection('users').doc(userMap['id']);
+                userRef.get().then(user => {
 
-    chat.users.forEach(user => {
-        if (user['id'] != userFrom.id) {
-            const userRef = admin.firestore().collection('users').doc(user['id']);
-            userRef.get().then(user => {
-                admin.messaging().sendToDevice(user.data().notificationToken, payload)
-                    .then((response) => {
-                        // Response is a message ID string.
-                        console.log('Successfully sent message:', response);
-                    })
-                    .catch((error) => {
-                        console.log('Error sending message:', error);
-                    });
-            });
+                    admin.messaging().sendToDevice(user.data().notificationToken, payload)
+                        .then((response) => {
+                            // Response is a message ID string.
+                            console.log('Successfully sent message:', response);
+                        })
+                        .catch((error) => {
+                            console.log('Error sending message:', error);
+                        });
+                });
+            }
+        } catch (error) {
+            console.error(error);
         }
     });
     console.log("Notifications sent");
