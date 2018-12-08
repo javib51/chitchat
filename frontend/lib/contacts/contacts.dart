@@ -91,92 +91,6 @@ class ContactsScreen extends State<Contacts> {
   }
 
   Future<Null> handleInitiation() async {
-
-    if(selected.length > 1){
-      selected.add(currentUserId);
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-                GroupInitScreen(selectedUsers: selected, userNickname: nickname, currentUserId: currentUserId, prefs: this.prefs,)),
-      );
-    } else {
-      this.setState(() {
-        isLoading = true;
-      });
-
-      var push_chat;
-
-      //check existing chats
-      var user1 = await Firestore.instance.collection('users').document(currentUserId).get();
-      var user2 = await Firestore.instance.collection('users').document(selected.first).get();
-      List chats1 = user1.data['chats'];
-      List chats2 = user2.data['chats'];
-      if(chats1 != null && chats2 != null) {
-        for (int i = 0; i < chats1.length; i++) {
-          for (int j = 0; j < chats2.length; j++) {
-            if (chats1[i] == chats2[j]) {
-              push_chat = chats1[i];
-            }
-          }
-        }
-      }
-
-      if(push_chat==null) {
-        var date = DateTime.now().millisecondsSinceEpoch.toString();
-        var id = await Firestore.instance.collection('chats').add({
-          'type': "P",
-          'users': (
-              [
-                {
-                  "id": currentUserId,
-                  "join_date": date,
-                },
-                {
-                  "id": selected.first,
-                  "join_date": date,
-                }
-              ]
-          )
-        });
-        await Firestore.instance
-            .collection('chats')
-            .document(id.documentID)
-            .updateData({
-          'id': id.documentID,
-        });
-        push_chat = id;
-        addChatToUser(currentUserId, push_chat);
-        addChatToUser(selected.first, push_chat);
-      }
-
-      DocumentSnapshot chat = await push_chat.get();
-      final int index = chat['users'].indexWhere((val) => val['id'] == currentUserId);
-
-      this.setState(() {
-        isLoading = false;
-      });
-
-      Navigator.pushReplacement(
-          context,
-          new MaterialPageRoute(
-              builder: (context) =>
-              new Chat(
-                currentUserId: currentUserId,
-                chatId: push_chat.documentID,
-                chatAvatar: 'https://www.simplyweight.co.uk/images/default/chat/mck-icon-user.png',
-                chatType: "P",
-                userNickname: widget.userNickname,
-                joinDate: chat['users'][index]['join_date'],
-                chatName: "Private chat",
-                prefs: this.prefs
-              )));
-      }
-
-  }
-
-  Future<Null> handleInitiationnew() async {
     if(selected.length > 1){
       selected.add(currentUserId);
 
@@ -268,7 +182,7 @@ class ContactsScreen extends State<Contacts> {
     }
   }
 
-  Future<Null> handleAddingnew() async {
+  Future<Null> handleAdding() async {
     this.setState(() {
       isLoading = true;
     });
@@ -293,59 +207,6 @@ class ContactsScreen extends State<Contacts> {
     });
     Navigator.pop(context);
   }
-
-  Future<Null> handleAdding() async {
-    this.setState(() {
-      isLoading = true;
-    });
-     final DocumentSnapshot snapshot = await Firestore.instance
-        .collection('chats')
-        .document(chatId).get();
-     List users = snapshot.data['users'];
-
-     Iterator iets = selected.iterator;
-     Set final_selected = new Set();
-     for(int i = 0; i<selected.length;i++){
-       iets.moveNext();
-       if(!users.toString().contains(iets.current)){
-         final_selected.add(iets.current);
-       }
-     }
-     if(final_selected.length > 0) {
-       List update = new List(users.length + final_selected.length);
-       int i = 0;
-       for (i; i < users.length; i++) {
-         update[i] = users[i];
-       }
-       Iterator iterator = final_selected.iterator;
-       var id = await Firestore.instance.collection('chats').document(chatId);
-       for (i; i < users.length + final_selected.length; i++) {
-         iterator.moveNext();
-         Map m = {'id': iterator.current, 'join_date': DateTime
-             .now()
-             .millisecondsSinceEpoch
-             .toString()};
-         addChatToUser(iterator.current, id);
-         update[i] = m;
-       }
-       await Firestore.instance
-           .collection('chats')
-           .document(chatId)
-           .updateData({
-         'users': update,
-       });
-       Fluttertoast.showToast(msg: "Succesful added user(s)");
-     }
-     else{
-       Fluttertoast.showToast(msg: "No new users to add");
-     }
-    this.setState(() {
-      isLoading = false;
-    });
-
-    Navigator.pop(context);
-  }
-
 
 
   Widget buildItem(BuildContext context, DocumentSnapshot document, index) {
@@ -448,10 +309,10 @@ class ContactsScreen extends State<Contacts> {
             Fluttertoast.showToast(msg: "Please select contact(s)");
           }
           else if(chatId == null) {
-            handleInitiationnew();
+            handleInitiation();
           }
           else {
-            handleAddingnew();
+            handleAdding();
           }
         }
       ),
