@@ -394,9 +394,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                       isExpanded: true,
                       value: theme,
                       items:
-                      <String>['light', 'dark'].map((String value) {
+                      <String>['Light', 'Dark'].map((String value) {
                         return new DropdownMenuItem<String>(
-                          value: value,
+                          value: value.toLowerCase(),
                           child: new Text(value),
                         );
                       }).toList(),
