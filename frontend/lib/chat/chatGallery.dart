@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:quiver/collection.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatGallery extends StatelessWidget {
   final String groupChatId;
@@ -116,6 +117,7 @@ class GalleryPartState extends State<GalleryPart> {
 
   Map<String, String> pictureURLs = Map<String, String>();
   ImageResolution _imageResolutionSet;
+  SharedPreferences prefs;
 
 
   var currentState;
@@ -128,6 +130,14 @@ class GalleryPartState extends State<GalleryPart> {
   void initState() {
     super.initState();
     currentState = states["Date"] = this.getImagesByDate();
+    readLocal();
+  }
+
+
+  readLocal() async {
+    prefs = await SharedPreferences.getInstance();
+    this._imageResolutionSet = getEnumFromString(prefs.get("photosResolution"));
+    setState(() {});
   }
 
   Future<Multimap<String, ImageData>> getImagesBySender() async {
@@ -332,7 +342,7 @@ class GalleryPartState extends State<GalleryPart> {
                   clipBehavior: Clip.hardEdge,
                 ),
                 imageUrl: this.pictureURLs[imageName],
-                fit: BoxFit.fill,
+                fit: BoxFit.cover,
               ),
               );
             }

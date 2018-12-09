@@ -36,12 +36,19 @@ class ChatSettingsState extends State<ChatSettings> {
   final String chatType;
   ChatSettingsState(
       {Key key, @required this.currentUserId, this.chatId, this.chatType});
+  SharedPreferences prefs;
 
 
   List<Choice> choices = const <Choice>[
     const Choice(title: "Add Users", icon: Icons.add),
     const Choice(title: "Leave Chat", icon: Icons.delete),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    readLocal();
+  }
 
   void _onItemMenuPress(Choice choice) {
     if (choice.title == "Add Users") {
@@ -51,6 +58,13 @@ class ChatSettingsState extends State<ChatSettings> {
     }
     else{
     }
+  }
+
+
+  readLocal() async {
+    prefs = await SharedPreferences.getInstance();
+    this._imageResolutionSet = getEnumFromString(prefs.get("photosResolution"));
+    setState(() {});
   }
 
   Widget profileHeader() => Container(
@@ -127,6 +141,11 @@ class ChatSettingsState extends State<ChatSettings> {
                           builder:
                               (BuildContext context, AsyncSnapshot snapshot) {
                             if (snapshot.hasData && snapshot.data != null) {
+                              if(snapshot.data.documents.length == 0)
+                                return Container(
+                                  alignment: Alignment(0.0, 0.0),
+                                  height: 50,
+                                  child: Text("No images yet"));
                               return ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: snapshot.data.documents.length,
@@ -172,7 +191,7 @@ class ChatSettingsState extends State<ChatSettings> {
                                         Future.delayed(Duration(seconds: 1),
                                             () {
                                           //One second of delay because scaled-down image is not immediately ready to be downloaded.
-                                          print("Timer expired.");
+                                          print("Timer expired." + completeImageName);
                                           FirebaseStorage.instance
                                               .ref()
                                               .child(completeImageName)
