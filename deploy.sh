@@ -9,7 +9,6 @@
 #Download git repo
 #git clone https://gitlab.com/hector.ballegafernandez/chitchat.git
 #cd chitchat
-#git checkout develop
 #Deploy firebase configuration and functions
 cd backend/functions
 npm install .
