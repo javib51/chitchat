@@ -319,7 +319,6 @@ class ChatSettingsState extends State<ChatSettings> {
                       snapshot.data.values.toList()[index],
                       snapshot.data.values.length),
                   itemCount: snapshot.data.length,
-                  reverse: true,
                 );
               } else {
                 return Container(
