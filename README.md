@@ -8,9 +8,13 @@ The app fulfills all the required basic functionalities, as well as implements s
 Such extra functionalities are:
 - _Voice-to-text Input_: using the [Google Speech-to-Text API](https://cloud.google.com/speech-to-text/), a user can record a voice message, which is then converted to text and sent as text message;
 - _Link Preview_: using the web REST service [LinkPreview](https://www.linkpreview.net/), whenever a URL is detected in a text message (only the first one), metadata information is retrieved from the web service and shown in the UI to all the users receiving the message;
+
 - _Emoticons Library_: users can send both static and dynamic emoticons (as also shown in the screenshots below) as content of a message;
+
 - _Text Processing_: using the [Google Cloud Translation API](https://cloud.google.com/translate/), messages are translated from whatever language they are written into a language set by the user. Translation can happen __on-demand__, by long pressing on a message, or __automatically__ so that the translated content is shown directly next to the message in the original language. The settings regarding the destination language as well as the translation mode (on-demand or automatic) can be changed from the settings screen.
+
 - _Themes Support_: users can choose between a light theme (chosen by default) and a dark theme.
+
 
 ## Repository structure
 
@@ -37,4 +41,9 @@ The last step is as simple as running the deployment script.
 
 ## Screenshots:
 
-<img src="https://raw.githubusercontent.com/duytq94/flutter-chat-demo/master/screenshots/FlutterChatDemo.gif" height="50%" width="50%">
+![alt text1][screenshots/Screenshot_20181209-212529.png]
+![alt text1][screenshots/Screenshot_20181209-212610.png]
+![alt text1][screenshots/Screenshot_20181209-212615.png]
+![alt text1][screenshots/Screenshot_20181209-214923.png]
+![alt text1][screenshots/Screenshot_20181209-212414.png]
+![alt text1][screenshots/Screenshot_20181209-212446.png]
