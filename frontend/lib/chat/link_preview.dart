@@ -9,6 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+//import 'dart:io';
+
 
 import 'package:translator/translator.dart';
 
@@ -27,11 +29,18 @@ class LinkPreview extends StatefulWidget {
 }
 
 class _LinkPreviewState extends State<LinkPreview> {
+
+//  void configureHTTPClient() {
+//    this.httpClient = HttpClient();
+//    this.httpClient.connectionTimeout = const Duration(seconds: 5);
+//  }
+
   final int start;
   final int end;
   final String text;
   final bool isLast;
-  final metadataLink = "https://linkpreview.p.mashape.com/?q=";                 //TODO: API not working anymore
+  final metadataLink = "http://api.linkpreview.net/?key=5c03f213e43186a507b2fbb6d682839d872bbf57343b0&q=";
+//  HttpClient httpClient;
   final TranslationLanguage translationLanguage;
   final _translator = GoogleTranslator();
   final bool isTranslationAutomatic;
@@ -46,6 +55,7 @@ class _LinkPreviewState extends State<LinkPreview> {
   @override
   void initState() {
     this._messageMetadataFuture = this._getMessageMetadata();
+//    this.configureHTTPClient();
   }
 
   Future<Map<String, dynamic>> _getMessageMetadata() async {
@@ -76,23 +86,10 @@ class _LinkPreviewState extends State<LinkPreview> {
     String link = text.substring(this.start, this.end);
     print("Matched URL: $link");
 
-    Response response;
+    print("Final query: ${metadataLink + link}");
+    String response = await http.read(metadataLink + link).timeout(const Duration(seconds: 3));
 
-    http.get(metadataLink + link, headers: {"X-Mashape-Key": "uoOOb99Awcmshq4SJKnkNzIubMZEp1ZCoICjsnIHa3pT7SQEKm", "Accept": "application/json"}).then((response) {
-      response = response;
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        print(response.reasonPhrase);
-        throw Exception('Failed to load link');
-      }
-    });
-
-    await Future.delayed(Duration(seconds: 3), () {
-      if (response == null) {
-        throw Exception('Failed to load link');
-      }
-    });
+    return json.decode(response);
   }
 
   Widget _buildTranslationWidget(dynamic snapshot) {
