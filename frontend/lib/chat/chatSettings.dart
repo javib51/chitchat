@@ -111,6 +111,7 @@ class ChatSettingsState extends State<ChatSettings> {
                 padding: const EdgeInsets.all(8.0),
                 child: InkWell(
                   onTap: () {
+                    if (this.pictureURLs.isEmpty) { return; }
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -129,6 +130,8 @@ class ChatSettingsState extends State<ChatSettings> {
                 child: Card(
                   child: GestureDetector(
                       onTap: () {
+                        if (this.pictureURLs.isEmpty) { return; }
+                        
                         Navigator.push(
                           context,
                           MaterialPageRoute(
