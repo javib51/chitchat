@@ -18,7 +18,7 @@ String getTranslationModeUsableString(TranslationMode translationMode) {
 
 
 enum TranslationLanguage {
-  english, italian, spanish, german, finnish, french, portuguese
+  english, italian, spanish, german, finnish, french, portuguese, romanian, dutch, japanese, russian
 }
 
 TranslationLanguage getTranslationLanguageFromString(String stringValue) {
@@ -29,6 +29,10 @@ TranslationLanguage getTranslationLanguageFromString(String stringValue) {
   else if (stringValue == TranslationLanguage.finnish.toString()) return TranslationLanguage.finnish;
   else if (stringValue == TranslationLanguage.french.toString()) return TranslationLanguage.french;
   else if (stringValue == TranslationLanguage.portuguese.toString()) return TranslationLanguage.portuguese;
+  else if (stringValue == TranslationLanguage.romanian.toString()) return TranslationLanguage.romanian;
+  else if (stringValue == TranslationLanguage.dutch.toString()) return TranslationLanguage.dutch;
+  else if (stringValue == TranslationLanguage.japanese.toString()) return TranslationLanguage.japanese;
+  else if (stringValue == TranslationLanguage.russian.toString()) return TranslationLanguage.russian;
   else return null;
 }
 
@@ -41,6 +45,10 @@ String getCountryISOCode(TranslationLanguage language) {
     case TranslationLanguage.spanish: return "es"; break;
     case TranslationLanguage.italian: return "it"; break;
     case TranslationLanguage.english: return "en"; break;
+    case TranslationLanguage.romanian: return "ro"; break;
+    case TranslationLanguage.dutch: return "nl"; break;
+    case TranslationLanguage.japanese: return "ja"; break;
+    case TranslationLanguage.russian: return "ru"; break;
     default: return null;
   }
 }
@@ -58,6 +66,10 @@ String getTranslationLanguageUsableString(TranslationLanguage language) {
     case TranslationLanguage.spanish: flag = "🇪🇸"; break;
     case TranslationLanguage.italian: flag = "🇮🇹"; break;
     case TranslationLanguage.english: flag = "🇺🇸🇬🇧"; break;
+    case TranslationLanguage.romanian: flag = "🇷🇴"; break;
+    case TranslationLanguage.dutch: flag = "🇳🇱"; break;
+    case TranslationLanguage.japanese: flag = "🇯🇵"; break;
+    case TranslationLanguage.russian: flag = "🇷🇺"; break;
     default: return null;
   }
 
