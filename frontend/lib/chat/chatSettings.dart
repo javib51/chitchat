@@ -465,6 +465,14 @@ class ChatSettingsState extends State<ChatSettings> {
         .collection('chats')
         .document(widget.chatId)
         .updateData({'users': listUsers.keys.toList()});
+
+    await Firestore.instance
+        .collection('chats')
+        .document(widget.chatId)
+        .collection('users')
+        .document(widget.currentUserId)
+        .delete();
+
     //Check if chat is empty and delete it
     if (listUsers.isEmpty) {
       await Firestore.instance

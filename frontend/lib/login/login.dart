@@ -22,6 +22,12 @@ class MyApp extends StatelessWidget {
 
   MyApp({@required this.prefs});
 
+  Future<bool> isUserAuthenticated() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    FirebaseUser user = await auth.currentUser();
+    return (user != null)? true : false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return new DynamicTheme(
@@ -31,15 +37,30 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.amber,
         brightness: brightness,
       ),
-      themedWidgetBuilder: (context, theme) {
-        return MaterialApp(
-          title: 'ChitChat',
-          theme: theme,
-          home: this.prefs.get("id") == null ? LoginScreen(prefs: this.prefs,) : MainScreen(currentUserId: this.prefs.get("id"), prefs: this.prefs,),
-          debugShowCheckedModeBanner: false,
-        );
-      }
+      themedWidgetBuilder: (context, theme)
+    {
+    return MaterialApp(
+    title: 'ChitChat',
+    theme: theme,
+    home: FutureBuilder(
+    future: isUserAuthenticated(
+    ),
+    builder: (BuildContext context, AsyncSnapshot snapshot
+    )
+    {
+    if (snapshot.hasData && snapshot.data != null) {
+    return (!snapshot.data)
+    ? LoginScreen(prefs: this.prefs, )
+        : MainScreen(
+    currentUserId: this.prefs. get ("id"), prefs: this.prefs, );
+    } else {
+    return Container();
+    }
+    }
+    ),
+    debugShowCheckedModeBanner: false,
     );
+    });
 
   }
 }
