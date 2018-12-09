@@ -151,6 +151,8 @@ class MainScreenState extends State<MainScreen> {
   }
 
 
+
+
   Future<bool> onBackPress() {
     openDialog();
     return Future.value(false);
@@ -263,6 +265,7 @@ class MainScreenState extends State<MainScreen> {
         }
     );
   }
+
 
   Widget buildItem(BuildContext context, DocumentSnapshot document, Map<String, String> info) {
     return Container(
@@ -429,38 +432,29 @@ class MainScreenState extends State<MainScreen> {
           children: <Widget>[
             // List
             Container(
-              child: FutureBuilder<List<DocumentSnapshot>>(
+              child: FutureBuilder(
                 future: getChats(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    print("A");
-                    if (!snapshot.hasData || snapshot.data.isEmpty) {
-                      print("B");
-                      return Center(
-                        child: Text(
-                          "Create a ChitChat by pressing the button!",
-                          style: TextStyle(
-                              fontSize: 15.0,
-                              fontWeight: FontWeight.normal,
-                              color: greyColor),
-                        ),
-                      );
-                    } else {
-                      print("C");
-                      return ListView.builder(
-                        padding: EdgeInsets.all(10.0),
-                        itemBuilder: (context, index) =>
-                            buildItemFuture(context, snapshot.data[index]),
-                        itemCount: snapshot.data.length,
-                      );
-                    }
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: Text(
+                        "Create a ChitChat by pressing the button!",
+                        style: TextStyle(
+                            fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
+                      ),
+                    );
                   } else {
-                    print("D");
-                    return Container();        //Snapshot does not have data yet, i.e. it's still downloading chats.
+                    return ListView.builder(
+                      padding: EdgeInsets.all(10.0),
+                      itemBuilder: (context, index) =>
+                          buildItemFuture(context, snapshot.data[index]),
+                      itemCount: snapshot.data.length,
+                    );
                   }
                 },
               ),
             ),
+
 
             // Loading
             Positioned(
