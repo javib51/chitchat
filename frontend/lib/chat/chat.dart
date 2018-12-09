@@ -33,6 +33,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 
+import 'package:random_string/random_string.dart';
+
 
 
 enum ChatSide {
@@ -475,6 +477,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget buildItem(int index, DocumentSnapshot document) {
+    print("buildItem called with index ${index} and document.data ${document.data}");
     if (document['userFrom'].documentID == currentUserId) {
       // Right (my message)
       return Row(
@@ -596,6 +599,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessageText(int index, DocumentSnapshot document, bool isLast) {
+    print("_buildMessageText with index $index, snapshot data ${document.data}, isLast: $isLast");
     String text = document["payload"];
     String url = document["url"];
 
@@ -605,7 +609,9 @@ class ChatScreenState extends State<ChatScreen> {
     if (url != null) {        //If there is a URL, it will take care of properly render the information on the UI.
       return LinkPreview(text, document["matchStart"], document["matchEnd"], isLast, translationLanguage, isTranslationAutomatic);
     } else {
-      return TextChatElement(text, isLast, translationLanguage, isTranslationAutomatic);
+      var element = TextChatElement(text, isLast, translationLanguage, isTranslationAutomatic);
+      print("returning TextChatElement with fields ${element.text} - ${element.isLast} - ${element.isTranslationAutomatic} - ${element.translationLanguage}");
+      return element;
     }
   }
 
@@ -939,7 +945,9 @@ class ChatScreenState extends State<ChatScreen> {
                     AlwaysStoppedAnimation<Color>(themeColor)));
           } else {
             listMessage = snapshot.data.documents;
+            print("listMessages = ${snapshot.data}");
             return ListView.builder(
+              key: Key(randomString(10)),
               padding: EdgeInsets.all(10.0),
               itemBuilder: (context, index) =>
                   buildItem(index, snapshot.data.documents[index]),
