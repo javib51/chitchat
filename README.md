@@ -41,9 +41,9 @@ The last step is as simple as running the deployment script.
 
 ## Screenshots:
 
-![alt text1][screenshots/Screenshot_20181209-212529.png]
-![alt text1][screenshots/Screenshot_20181209-212610.png]
-![alt text1][screenshots/Screenshot_20181209-212615.png]
-![alt text1][screenshots/Screenshot_20181209-214923.png]
-![alt text1][screenshots/Screenshot_20181209-212414.png]
-![alt text1][screenshots/Screenshot_20181209-212446.png]
+<img src="screenshots/Screenshot_20181209-212529.png" height=500>
+<img src="screenshots/Screenshot_20181209-212610.png" height=500>
+<img src="screenshots/Screenshot_20181209-212615.png" height=500>
+<img src="screenshots/Screenshot_20181209-214923.png" height=500>
+<img src="screenshots/Screenshot_20181209-212414.png" height=500>
+<img src="screenshots/Screenshot_20181209-212446.png" height=500>
