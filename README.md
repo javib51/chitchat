@@ -17,7 +17,7 @@ Such extra functionalities are:
 The repository contains the following files/folders:
 
 - _README.md_: this file;
-- _deploy/sh_: the deployment bash script needed to deploy cloud functions on GCP and build and run the flutter application on an Android target device;
+- _deploy.sh_: the deployment bash script needed to deploy cloud functions on GCP and build and run the flutter application on an Android target device;
 - _backend_: contains firebase-specific configuration files needed to correctly deploy the cloud functions.Then, the subfolder _functions_ contains the NodeJS functions to be deployed;
 - _frontend_: contains Flutter-specific files representing the mobile application. For more info about how Flutter projects are structured, please visit the [official website](https://flutter.io/).
 
