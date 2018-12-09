@@ -557,7 +557,7 @@ class ChatScreenState extends State<ChatScreen> {
                     : Container(width: 35.0),
                 document['type'] == "text"
                     ? this._buildMessageText(
-                    index, document, this.isLastMessageRight(index))
+                    index, document, this.isLastMessageLeft(index))
                     : document['type'] == "photo"
                     ? this._buildImageContainer(
                     document, isLastMessageLeft(index), ChatSide.left)
