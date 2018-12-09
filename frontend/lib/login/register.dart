@@ -1,3 +1,4 @@
+import 'package:chitchat/common/translation.dart';
 import 'package:chitchat/const.dart';
 import 'package:chitchat/login/welcome.dart';
 import 'package:flutter/material.dart';
@@ -73,6 +74,8 @@ class RegisterScreenState extends State<RegisterScreen> {
     await prefs.clear();
     prefs.setString('id', firebaseUser.uid);
     prefs.setString('photoUrl', "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/OOjs_UI_icon_userAvatar.svg/1024px-OOjs_UI_icon_userAvatar.svg.png");
+    prefs.setString('translation_mode', TranslationMode.onDemand.toString());
+    prefs.setString('translation_language', TranslationLanguage.english.toString());
 
     Fluttertoast.showToast(msg: "Register succes");
     Navigator.push(
