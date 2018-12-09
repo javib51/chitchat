@@ -193,13 +193,13 @@ class ContactsScreen extends State<Contacts> {
     this.setState(() {
       isLoading = true;
     });
-    var id = await Firestore.instance.collection('chats').document(chatId);
+    var id = Firestore.instance.collection('chats').document(chatId);
     var coll_users = id.collection('users');
     Iterator iterator = selected.iterator;
     for(int i = 0;i<selected.length;i++){
       iterator.moveNext();
-      addChatToUser(iterator.current, id);
-      coll_users.document(iterator.current).setData({
+      await addChatToUser(iterator.current, id);
+      await coll_users.document(iterator.current).setData({
         'id':iterator.current,
         'join_date':DateTime
             .now()
