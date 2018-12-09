@@ -414,6 +414,8 @@ class MainScreenState extends State<MainScreen> {
             new ListTile(
               title: new Text('Log out'),
               onTap: (){
+                Firestore.instance.collection('users').document(currentUserId).updateData(
+                    {"notificationToken": "no-token"});
                 handleSignOut();
               },
             ),

@@ -193,14 +193,13 @@ class ContactsScreen extends State<Contacts> {
     this.setState(() {
       isLoading = true;
     });
-    var coll_users = await Firestore.instance
-        .collection('chats')
-        .document(chatId)
-        .collection('users');
+    var id = Firestore.instance.collection('chats').document(chatId);
+    var coll_users = id.collection('users');
     Iterator iterator = selected.iterator;
     for(int i = 0;i<selected.length;i++){
       iterator.moveNext();
-      coll_users.document(iterator.current).setData({
+      await addChatToUser(iterator.current, id);
+      await coll_users.document(iterator.current).setData({
         'id':iterator.current,
         'join_date':DateTime
             .now()
@@ -208,6 +207,7 @@ class ContactsScreen extends State<Contacts> {
             .toString()
       });
     }
+
     Fluttertoast.showToast(msg: "Succesful added user(s)");
     this.setState(() {
       isLoading = false;
