@@ -432,8 +432,10 @@ class MainScreenState extends State<MainScreen> {
               child: FutureBuilder<List<DocumentSnapshot>>(
                 future: getChats(),
                 builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    if (snapshot.data.isEmpty) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    print("A");
+                    if (!snapshot.hasData || snapshot.data.isEmpty) {
+                      print("B");
                       return Center(
                         child: Text(
                           "Create a ChitChat by pressing the button!",
@@ -444,6 +446,7 @@ class MainScreenState extends State<MainScreen> {
                         ),
                       );
                     } else {
+                      print("C");
                       return ListView.builder(
                         padding: EdgeInsets.all(10.0),
                         itemBuilder: (context, index) =>
@@ -452,6 +455,7 @@ class MainScreenState extends State<MainScreen> {
                       );
                     }
                   } else {
+                    print("D");
                     return Container();        //Snapshot does not have data yet, i.e. it's still downloading chats.
                   }
                 },
