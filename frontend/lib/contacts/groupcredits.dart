@@ -150,7 +150,6 @@ class GroupInitScreenState extends State<GroupInitScreen> {
                 chatType: "G",
                 joinDate: user['join_date'],
                 chatName: nickController.text.trim(),
-                prefs: this.prefs,
               )));
     }
     setState(() {

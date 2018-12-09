@@ -33,6 +33,7 @@ dependencies:
   image_picker_saver: ^0.1.0
   url_launcher:
   translator: ^0.1.0+5
+  random_string: ^0.0.2
 
 
 dependency_overrides:

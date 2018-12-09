@@ -134,8 +134,8 @@ class LoginScreenState extends State<LoginScreen> {
         prefs.setString('nickname', documents[0]['nickname']);
         prefs.setString('photoUrl', documents[0]['photoUrl']);
         prefs.setString('photosResolution', documents[0]['photosResolution']);
-        prefs.setString('translation_mode', documents[0]['translation_mode']);
-        prefs.setString('translation_language', documents[0]['translation_language']);
+        prefs.setString('translation_mode', documents[0]['translation_mode'] ?? TranslationMode.onDemand);
+        prefs.setString('translation_language', documents[0]['translation_language'] ?? TranslationLanguage.english);
 
         Fluttertoast.showToast(msg: "Sign in success");
         this.setState(() {

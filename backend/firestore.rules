@@ -12,23 +12,23 @@ service cloud.firestore {
     function isUserInChat(chatId) {
     	return exists(/$(prefix())/chats/$(chatId)/users/$(request.auth.uid));
     }
-
-
+      
+      
     // Matches
     match /users/{user} {
-    	allow read: if isSignedIn();
-      allow write: if isSignedIn() && request.auth.uid == resource.id;
+    	allow read, create, update: if isSignedIn();
     }
 
     match /chats/{chat} {
-    	allow read, write: if isSignedIn() && isUserInChat(chat);
-
+    	allow delete: if isSignedIn() && isUserInChat(chat);
+      allow read, create, update: if isSignedIn();
+      
       match /messages/{message} {
       	allow read, write: if isSignedIn() && isUserInChat(chat);
       }
-
+      
       match /users/{users} {
-      	allow read, write: if isSignedIn() && isUserInChat(chat);
+      	allow read, write: if isSignedIn();
       }
   	}
 	}
