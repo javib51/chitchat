@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/common/translation.dart';
+import 'package:chitchat/overview/overview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -149,6 +150,9 @@ class SettingsScreenState extends State<SettingsScreen> {
       });
 
       Fluttertoast.showToast(msg: "Update success");
+      Navigator.push(
+          context,
+          new MaterialPageRoute(builder: (context) => MainScreen(currentUserId: this.prefs.get("id"), prefs: this.prefs,)));
     }).catchError((err) {
       setState(() {
         isLoading = false;

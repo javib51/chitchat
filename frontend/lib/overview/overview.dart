@@ -51,7 +51,6 @@ class MainScreenState extends State<MainScreen> {
     readLocal();
     initFlutterLocalNotifications();
     initFirebaseMessaging();
-    initFireStore();
   }
 
   void readLocal() {
@@ -61,10 +60,6 @@ class MainScreenState extends State<MainScreen> {
 
     // Force refresh input
     setState(() {});
-  }
-
-  void initFireStore() {
-    Firestore.instance.settings(timestampsInSnapshotsEnabled: true);
   }
 
   void initFlutterLocalNotifications() {
