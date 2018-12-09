@@ -173,7 +173,7 @@ class _LinkPreviewState extends State<LinkPreview> {
                   ]
                 )),
                 snapshot.hasData && snapshot.data["description"] != null ?
-                  Text(snapshot.data["description"], style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.left)
+                  Text(snapshot.data["description"], style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor), textAlign: TextAlign.left)
                 : Container(),
                 Divider(),
                 Container(
