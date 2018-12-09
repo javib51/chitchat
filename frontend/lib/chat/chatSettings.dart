@@ -326,7 +326,7 @@ class ChatSettingsState extends State<ChatSettings> {
   }
 
   Widget userList() => Container(
-        height: deviceSize.height / 2.5,
+        height: deviceSize.height / 2,
         padding: const EdgeInsets.all(0.0),
         child: FutureBuilder(
             future: widget.chatUsers,
@@ -375,7 +375,7 @@ class ChatSettingsState extends State<ChatSettings> {
 
 
   Widget bodyData() => Container(
-        child: Column(
+        child: ListView(
           children: <Widget>[
             profileHeader(),
             imagesCard(),
