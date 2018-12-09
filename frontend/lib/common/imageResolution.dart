@@ -18,6 +18,12 @@ String getPrefix(ImageResolution localSettingMaxResolution, ImageResolution pict
   }
 }
 
+String getUsableString(ImageResolution resolution) {
+  String substr = resolution.toString().split(".").last;
+
+  return "${substr[0].toUpperCase()}${substr.substring(1)}";
+}
+
 //ImageResolution getRightResolutionToDownload(ImageResolution localSettingMaxResolution, ImageResolution pictureMaxResolution) {
 //  int comparisonResult = _compare(localSettingMaxResolution, pictureMaxResolution);
 //

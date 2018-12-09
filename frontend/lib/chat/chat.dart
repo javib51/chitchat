@@ -4,6 +4,8 @@ import 'dart:io';
 import 'dart:convert';
 
 import 'package:chitchat/chat/chatImage.dart';
+import 'package:chitchat/chat/text_element.dart';
+import 'package:chitchat/common/translation.dart';
 
 import 'package:flutter/services.dart';
 import 'package:canary_recorder/canary_recorder.dart';
@@ -117,23 +119,22 @@ class ChatState extends State<Chat> {
   }
 
   Future<Map<String, DocumentSnapshot>> _getUsers() async {
-    QuerySnapshot users = await Firestore.instance
+    DocumentSnapshot chat = await Firestore.instance
         .collection('chats')
         .document(this.chatId)
-        .collection('users')
-        .getDocuments();
+        .get();
 
+    List<dynamic> usersList = chat['users'];
     Map<String, DocumentSnapshot> usersMap = new Map();
-    for (var user in users.documents) {
+    for (var user in usersList) {
       var userData = await Firestore.instance
           .collection('users')
           .document(user['id'])
           .get();
-      usersMap.putIfAbsent(user['id'], () => userData);
+      usersMap.putIfAbsent(userData["id"], () => userData);
     }
     return usersMap;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -598,19 +599,14 @@ class ChatScreenState extends State<ChatScreen> {
     String text = document["payload"];
     String url = document["url"];
 
-      return Container(
-        child: Text(
-          text,
-          style: TextStyle(color: primaryColor),
-        ),
-        padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-        width: 200.0,
-        decoration: BoxDecoration(
-            color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
-        margin: EdgeInsets.only(
-            bottom: isLastMessageRight(index) ? 20.0 : 10.0, right: 10.0),
-      );
+    TranslationLanguage translationLanguage = getTranslationLanguageFromString(this.prefs.getString("translation_language"));
+    bool isTranslationAutomatic = this.prefs.getString("translation_mode") == TranslationMode.automatic.toString();
 
+    if (url != null) {        //If there is a URL, it will take care of properly render the information on the UI.
+      return LinkPreview(text, document["matchStart"], document["matchEnd"], isLast, translationLanguage, isTranslationAutomatic);
+    } else {
+      return TextChatElement(text, isLast, translationLanguage, isTranslationAutomatic);
+    }
   }
 
   bool isLastMessageLeft(int index) {

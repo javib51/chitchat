@@ -379,24 +379,30 @@ class MainScreenState extends State<MainScreen> {
           children: <Widget>[
             // List
             Container(
-              child: FutureBuilder(
+              child: FutureBuilder<List<DocumentSnapshot>>(
                 future: getChats(),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return Center(
-                      child: Text(
-                        "Create a ChitChat by pressing the button!",
-                        style: TextStyle(
-                            fontSize: 15.0, fontWeight: FontWeight.normal, color: greyColor),
-                      ),
-                    );
+                  if (snapshot.hasData) {
+                    if (snapshot.data.isEmpty) {
+                      return Center(
+                        child: Text(
+                          "Create a ChitChat by pressing the button!",
+                          style: TextStyle(
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.normal,
+                              color: greyColor),
+                        ),
+                      );
+                    } else {
+                      return ListView.builder(
+                        padding: EdgeInsets.all(10.0),
+                        itemBuilder: (context, index) =>
+                            buildItemFuture(context, snapshot.data[index]),
+                        itemCount: snapshot.data.length,
+                      );
+                    }
                   } else {
-                    return ListView.builder(
-                      padding: EdgeInsets.all(10.0),
-                      itemBuilder: (context, index) =>
-                          buildItemFuture(context, snapshot.data[index]),
-                      itemCount: snapshot.data.length,
-                    );
+                    return Container();        //Snapshot does not have data yet, i.e. it's still downloading chats.
                   }
                 },
               ),
