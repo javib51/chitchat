@@ -4,12 +4,14 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chitchat/common/translation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:chitchat/const.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dynamic_theme/theme_switcher_widgets.dart';
 
 class Settings extends StatelessWidget {
   @override
@@ -41,6 +43,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   String nickname = '';
   String photoUrl = '';
   String photosResolution = 'full';
+  String theme = 'light';
   bool isLoading = false;
   TranslationLanguage _transationLanguage;
   TranslationMode _translationMode;
@@ -62,6 +65,12 @@ class SettingsScreenState extends State<SettingsScreen> {
             prefs.getString('photosResolution') == '')
         ? 'full'
         : prefs.getString('photosResolution');
+
+    theme = (prefs.getString('theme') == null ||
+            prefs.getString('theme') == '')
+        ? 'light'
+        : prefs.getString('theme');
+
     photoUrl = prefs.getString('photoUrl') ?? '';
     this._transationLanguage = getTranslationLanguageFromString(
         prefs.getString("translation_language"));
@@ -133,14 +142,19 @@ class SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
+    changeTheme(theme);
+
+
     Firestore.instance.collection('users').document(id).updateData({
       'nickname': nickname,
       'photosResolution': photosResolution,
+      'theme': theme,
       'translation_mode': this._translationMode.toString(),
       'translation_language': this._transationLanguage.toString()
     }).then((data) async {
       prefs.setString('nickname', nickname);
       prefs.setString('photosResolution', photosResolution);
+      prefs.setString('theme', theme);
       prefs.setString('translation_mode', this._translationMode.toString());
       prefs.setString('translation_language', this._transationLanguage.toString());
 
@@ -156,6 +170,20 @@ class SettingsScreenState extends State<SettingsScreen> {
 
       Fluttertoast.showToast(msg: err.toString());
     });
+  }
+
+  void changeTheme(String theme){
+    if(theme.compareTo('light') == 0) {
+      DynamicTheme.of(context).setThemeData(new ThemeData(
+
+      ));
+      DynamicTheme.of(context).setBrightness(Brightness.light);
+    }else{
+      DynamicTheme.of(context).setThemeData(new ThemeData(
+
+      ));
+      DynamicTheme.of(context).setBrightness(Brightness.dark);
+    }
   }
 
   @override
@@ -238,15 +266,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(
                           fontStyle: FontStyle.italic,
                           fontWeight: FontWeight.bold,
-                          color: primaryColor),
+                          color: Theme.of(context).primaryColor),
                     ),
                     margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
                   ),
                   Container(
-                    child: Theme(
-                      data: Theme.of(context)
-                          .copyWith(primaryColor: primaryColor),
-                      child: TextField(
+                    child: TextField(
                         decoration: InputDecoration(
                           hintText: 'Sweetie',
                           contentPadding: new EdgeInsets.all(5.0),
@@ -258,16 +283,16 @@ class SettingsScreenState extends State<SettingsScreen> {
                         },
                         focusNode: focusNodeNickname,
                       ),
-                    ),
                     margin: EdgeInsets.only(left: 30.0, right: 30.0),
                   ),
                   Container(
                     child: Text(
                       'Photos resolution',
                       style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor),
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
                     margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
                   ),
@@ -294,9 +319,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                     child: Text(
                       'Message translation',
                       style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor),
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
                     margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
                   ),
@@ -322,9 +348,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                     child: Text(
                       'Translation language',
                       style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor),
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
                     margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
                   ),
@@ -346,7 +373,37 @@ class SettingsScreenState extends State<SettingsScreen> {
                       },
                     ),
                     margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
-                  )
+                  ),
+                  Container(
+                    child: Text(
+                      'Theme',
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
+                  Container(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: theme,
+                      items:
+                      <String>['light', 'dark'].map((String value) {
+                        return new DropdownMenuItem<String>(
+                          value: value,
+                          child: new Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (newTheme) {
+                        setState(() {
+                          theme = newTheme;
+                        });
+                      },
+                    ),
+                    margin: EdgeInsets.only(left: 10.0, bottom: 5.0, top: 10.0),
+                  ),
                 ],
                 crossAxisAlignment: CrossAxisAlignment.start,
               ),
@@ -359,10 +416,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                     'UPDATE',
                     style: TextStyle(fontSize: 16.0),
                   ),
-                  color: primaryColor,
-                  highlightColor: new Color(0xff8d93a0),
+                  color: Theme.of(context).primaryColorDark,
+                  highlightColor: Theme.of(context).highlightColor,
                   splashColor: Colors.transparent,
-                  textColor: Colors.white,
+                  textColor: Theme.of(context).primaryColorLight,
                   padding: EdgeInsets.fromLTRB(30.0, 10.0, 30.0, 10.0),
                 ),
                 margin: EdgeInsets.only(top: 50.0, bottom: 50.0),

@@ -204,14 +204,13 @@ class MainScreenState extends State<MainScreen> {
                     Container(
                       child: Icon(
                         Icons.cancel,
-                        color: primaryColor,
                       ),
                       margin: EdgeInsets.only(right: 10.0),
                     ),
                     Text(
                       'CANCEL',
                       style: TextStyle(
-                          color: primaryColor, fontWeight: FontWeight.bold),
+                          fontWeight: FontWeight.bold),
                     )
                   ],
                 ),
@@ -225,14 +224,13 @@ class MainScreenState extends State<MainScreen> {
                     Container(
                       child: Icon(
                         Icons.check_circle,
-                        color: primaryColor,
                       ),
                       margin: EdgeInsets.only(right: 10.0),
                     ),
                     Text(
                       'YES',
                       style: TextStyle(
-                          color: primaryColor, fontWeight: FontWeight.bold),
+                         fontWeight: FontWeight.bold),
                     )
                   ],
                 ),

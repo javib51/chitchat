@@ -158,14 +158,12 @@ class ChatState extends State<Chat> {
                       children: <Widget>[
                         Icon(
                           choice.icon,
-                          color: primaryColor,
                         ),
                         Container(
                           width: 10.0,
                         ),
                         Text(
                           choice.title,
-                          style: TextStyle(color: primaryColor),
                         ),
                       ],
                     ));
@@ -241,8 +239,6 @@ class ChatScreenState extends State<ChatScreen> {
   bool isShowSticker;
   bool isShowEmoji;
 
-  var recordColor;
-
   Map<String, String> pictureURLs = Map<String, String>();
 
   bool _isRecording = false;
@@ -262,7 +258,6 @@ class ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     focusNode.addListener(onFocusChange);
-    recordColor = new Color(0xff203152);
     groupChatId = '';
     _isRecording = false;
     isLoading = false;
@@ -654,7 +649,6 @@ class ChatScreenState extends State<ChatScreen> {
     this.setState(() {
       _isRecording = true;
     });
-    recordColor = Colors.red;
     await PermissionsHelper.requestPermission(Permission.RecordAudio);
     await PermissionsHelper.requestPermission(Permission.WriteExternalStorage);
     var path = await CanaryRecorder.initializeRecorder('recordertester.wav');
@@ -669,7 +663,6 @@ class ChatScreenState extends State<ChatScreen> {
       _isRecording = false;
     });
 
-    recordColor = new Color(0xff203152);
     await CanaryRecorder.stopRecording();
     File testFile = new File(_outputFile);
     List<int> bytes = testFile.readAsBytesSync();
@@ -856,10 +849,8 @@ class ChatScreenState extends State<ChatScreen> {
               child: new IconButton(
                 icon: new Icon(Icons.image),
                 onPressed: loadAssets,
-                color: primaryColor,
               ),
             ),
-            color: Colors.white,
           ),
           Material(
             child: new Container(
@@ -867,10 +858,8 @@ class ChatScreenState extends State<ChatScreen> {
               child: new IconButton(
                 icon: new Icon(Icons.face),
                 onPressed: getSticker,
-                color: primaryColor,
               ),
             ),
-            color: Colors.white,
           ),
           Material(
             child: new Container(
@@ -885,16 +874,15 @@ class ChatScreenState extends State<ChatScreen> {
                   this.stopRecorder();
 
                 },
-                color: recordColor,
+                color: this._isRecording?Colors.red:(Theme.of(context).brightness == Brightness.dark?Colors.white:Colors.black),
               ),
             ),
-            color: Colors.white,
           ),
           // Edit text
           Flexible(
             child: Container(
               child: TextField(
-                style: TextStyle(color: primaryColor, fontSize: 15.0),
+                style: TextStyle(color: Theme.of(context).brightness == Brightness.dark?Colors.white:Colors.black, fontSize: 15.0),
                 controller: textEditingController,
                 decoration: InputDecoration.collapsed(
                   hintText: 'Type your message...',
@@ -913,10 +901,8 @@ class ChatScreenState extends State<ChatScreen> {
                 icon: new Icon(Icons.send),
                 onPressed: () =>
                     onSendMessage(textEditingController.text, "text", null),
-                color: primaryColor,
               ),
             ),
-            color: Colors.white,
           ),
         ],
       ),
@@ -925,7 +911,7 @@ class ChatScreenState extends State<ChatScreen> {
       decoration: new BoxDecoration(
           border:
           new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
-          color: Colors.white),
+      ),
     );
   }
 
@@ -1002,7 +988,7 @@ class ChatScreenState extends State<ChatScreen> {
                           textEditingController.text + emoji["value"];
                     },
                     child: Container(
-                      color: Colors.green,
+                      color: Colors.greenAccent,
                       margin: new EdgeInsets.all(1.0),
                       child: new Center(
                         child: new Text(

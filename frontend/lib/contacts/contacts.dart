@@ -236,7 +236,6 @@ class ContactsScreen extends State<Contacts> {
 
                 child: new Text(
                   '${document['nickname']}',
-                  style: TextStyle(color: primaryColor),
                 ),
               ),
               new Checkbox(value: checkboxlist[index],activeColor: Colors.amber, onChanged: (bool value){onChanged(value, index,document['id']);})

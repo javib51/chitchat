@@ -12,6 +12,7 @@ import 'package:chitchat/overview/overview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dynamic_theme/dynamic_theme.dart';
 
 
 
@@ -23,14 +24,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ChitChat',
-      theme: new ThemeData(
+    return new DynamicTheme(
+      defaultBrightness: Brightness.light,
+      data: (brightness) => new ThemeData(
         primaryColor: Colors.amber,
+        primarySwatch: Colors.amber,
+        brightness: brightness,
       ),
-      home: this.prefs.get("id") == null ? LoginScreen(prefs: this.prefs,) : MainScreen(currentUserId: this.prefs.get("id"), prefs: this.prefs,),
-      debugShowCheckedModeBanner: false,
+      themedWidgetBuilder: (context, theme) {
+        return MaterialApp(
+          title: 'ChitChat',
+          theme: theme,
+          home: this.prefs.get("id") == null ? LoginScreen(prefs: this.prefs,) : MainScreen(currentUserId: this.prefs.get("id"), prefs: this.prefs,),
+          debugShowCheckedModeBanner: false,
+        );
+      }
     );
+
   }
 }
 

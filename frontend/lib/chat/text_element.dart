@@ -18,14 +18,15 @@ class TextChatElement extends StatefulWidget {
   final TranslationLanguage translationLanguage;
   final bool isTranslationAutomatic;
 
-  TextChatElement(this.text, this.isLast, this.translationLanguage, this.isTranslationAutomatic);
+  TextChatElement(this.text, this.isLast, this.translationLanguage,
+      this.isTranslationAutomatic);
 
   @override
-  _TextChatElementState createState() => _TextChatElementState(text, isLast, translationLanguage, isTranslationAutomatic);
+  _TextChatElementState createState() => _TextChatElementState(
+      text, isLast, translationLanguage, isTranslationAutomatic);
 }
 
 class _TextChatElementState extends State<TextChatElement> {
-
   final String text;
   final bool isLast;
   final TranslationLanguage translationLanguage;
@@ -37,7 +38,8 @@ class _TextChatElementState extends State<TextChatElement> {
   bool _isTranslating = false;
   String _translatedMessage;
 
-  _TextChatElementState(this.text, this.isLast, this.translationLanguage, this.isTranslationAutomatic);
+  _TextChatElementState(this.text, this.isLast, this.translationLanguage,
+      this.isTranslationAutomatic);
 
   @override
   void initState() {
@@ -45,7 +47,9 @@ class _TextChatElementState extends State<TextChatElement> {
   }
 
   Future<String> _getMessageTranslation() async {
-    return await this._translator.translate(this.text, to: getCountryISOCode(this.translationLanguage));
+    return await this
+        ._translator
+        .translate(this.text, to: getCountryISOCode(this.translationLanguage));
   }
 
   Widget _buildTranslationWidget(AsyncSnapshot<String> snapshot) {
@@ -56,17 +60,18 @@ class _TextChatElementState extends State<TextChatElement> {
       return Column(
         children: <Widget>[
           Divider(),
-          Text(snapshot.hasData
-              ? "MESSAGE TRANSLATED TO ${getTranslationLanguageUsableString(
-              this.translationLanguage)}\n\n ${snapshot.data}"
-              : "TRANSLATING MESSAGE TO ${getTranslationLanguageUsableString(
-              this.translationLanguage)}",
-              style: TextStyle(fontStyle: FontStyle.italic),
-              textAlign: TextAlign.left),
+          Text(
+            snapshot.hasData
+                ? "MESSAGE TRANSLATED TO ${getTranslationLanguageUsableString(this.translationLanguage)}\n\n ${snapshot.data}"
+                : "TRANSLATING MESSAGE TO ${getTranslationLanguageUsableString(this.translationLanguage)}",
+            style: TextStyle(fontStyle: FontStyle.italic, color: primaryColor),
+            textAlign: TextAlign.left,
+          ),
         ],
       );
     } else {
-      if (!this._isTranslating && this._translatedMessage == null) {      //Idle state for on-demand translation
+      if (!this._isTranslating && this._translatedMessage == null) {
+        //Idle state for on-demand translation
         print("B");
         return Container();
       } else {
@@ -74,7 +79,12 @@ class _TextChatElementState extends State<TextChatElement> {
         return Column(
           children: <Widget>[
             Divider(),
-            Text(!this._isTranslating ? "MESSAGE TRANSLATED TO ${getTranslationLanguageUsableString(this.translationLanguage)}\n\n ${this._translatedMessage}" : "TRANSLATING MESSAGE TO ${getTranslationLanguageUsableString(this.translationLanguage)}", style: TextStyle(fontStyle: FontStyle.italic), textAlign: TextAlign.left),
+            Text(
+                !this._isTranslating
+                    ? "MESSAGE TRANSLATED TO ${getTranslationLanguageUsableString(this.translationLanguage)}\n\n ${this._translatedMessage}"
+                    : "TRANSLATING MESSAGE TO ${getTranslationLanguageUsableString(this.translationLanguage)}",
+                style: TextStyle(fontStyle: FontStyle.italic, color: primaryColor),
+                textAlign: TextAlign.left),
           ],
         );
       }
@@ -82,7 +92,8 @@ class _TextChatElementState extends State<TextChatElement> {
   }
 
   @override
-  Widget build(BuildContext context) {      //Called once for every message to show
+  Widget build(BuildContext context) {
+    //Called once for every message to show
 
     return FutureBuilder(
         future: this._messageTranslationFuture,
@@ -102,7 +113,8 @@ class _TextChatElementState extends State<TextChatElement> {
                   onLongPress: () async {
                     print("LongPressed!");
                     if (this.isTranslationAutomatic) return;
-                    this.setState(() { this._isTranslating = true;
+                    this.setState(() {
+                      this._isTranslating = true;
                     });
 
                     this._getMessageTranslation().then((translatedString) {
@@ -120,7 +132,8 @@ class _TextChatElementState extends State<TextChatElement> {
                     padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
                     width: 200.0,
                     decoration: BoxDecoration(
-                        color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
+                        color: greyColor2,
+                        borderRadius: BorderRadius.circular(8.0)),
                   ),
                 ),
                 this._buildTranslationWidget(snapshot),
@@ -128,10 +141,11 @@ class _TextChatElementState extends State<TextChatElement> {
             ),
             padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
             width: 200.0,
-            decoration: BoxDecoration(color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
-            margin: EdgeInsets.only(bottom: this.isLast ? 20.0 : 10.0, right: 10.0),
+            decoration: BoxDecoration(
+                color: greyColor2, borderRadius: BorderRadius.circular(8.0)),
+            margin:
+                EdgeInsets.only(bottom: this.isLast ? 20.0 : 10.0, right: 10.0),
           );
-        }
-    );
+        });
   }
 }

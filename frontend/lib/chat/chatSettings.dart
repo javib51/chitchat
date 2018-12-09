@@ -400,14 +400,12 @@ class ChatSettingsState extends State<ChatSettings> {
                   children: <Widget>[
                     Icon(
                       choice.icon,
-                      color: primaryColor,
                     ),
                     Container(
                       width: 10.0,
                     ),
                     Text(
                       choice.title,
-                      style: TextStyle(color: primaryColor),
                     ),
                   ],
                 ));

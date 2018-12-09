@@ -34,7 +34,7 @@ dependencies:
   url_launcher:
   translator: ^0.1.0+5
   random_string: ^0.0.2
-
+  dynamic_theme: ^1.0.0
 
 dependency_overrides:
   http: ^0.12.0
