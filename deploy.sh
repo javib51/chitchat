@@ -28,4 +28,4 @@ cd frontend
 flutter doctor -v
 #Deploy flutter application
 flutter packages get
-flutter run
+flutter run --release
