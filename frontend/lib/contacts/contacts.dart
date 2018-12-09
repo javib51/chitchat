@@ -121,7 +121,10 @@ class ContactsScreen extends State<Contacts> {
         for (int i = 0; i < chats1.length; i++) {
           for (int j = 0; j < chats2.length; j++) {
             if (chats1[i] == chats2[j]) {
-              push_chat = chats1[i];
+              var chat = await Firestore.instance.collection('chats').document(chats1[i].documentID).get();
+              if(chat['type'] == "P") {
+                push_chat = chats1[i];
+              }
             }
           }
         }
