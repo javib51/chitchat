@@ -21,6 +21,12 @@ class MyApp extends StatelessWidget {
 
   MyApp({@required this.prefs});
 
+  Future<bool> isUserAuthenticated() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    FirebaseUser user = await auth.currentUser();
+    return (user != null)? true : false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -28,7 +34,19 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primaryColor: Colors.amber,
       ),
-      home: this.prefs.get("id") == null ? LoginScreen(prefs: this.prefs,) : MainScreen(currentUserId: this.prefs.get("id"), prefs: this.prefs,),
+      home: FutureBuilder(
+        future: isUserAuthenticated(),
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              return (!snapshot.data)
+                  ? LoginScreen(prefs: this.prefs,)
+                  : MainScreen(
+                currentUserId: this.prefs.get("id"), prefs: this.prefs,);
+            } else {
+              return Container();
+            }
+          }
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
