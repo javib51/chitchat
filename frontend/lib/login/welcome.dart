@@ -138,6 +138,7 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         'translation_mode': TranslationMode.onDemand.toString(),                //By default, on-demand translation is selected
         'translation_language': TranslationLanguage.english.toString(),         //By default, translation to english is selected
       });
+    
     } else {
       Firestore.instance
           .collection('users')
@@ -149,13 +150,12 @@ class WelcomeScreenState extends State<WelcomeScreen> {
         'translation_mode': TranslationMode.onDemand.toString(),
         'translation_language': TranslationLanguage.english.toString()
       }).then((data) async {
-        prefs.setString('nickname', nickController.text.trim());
         prefs.setString('photoUrl', photoUrl);
         prefs.setString('translation_mode', TranslationMode.onDemand.toString());
         prefs.setString('translation_language', TranslationLanguage.english.toString());
         });
       }
-
+      prefs.setString('nickname', nickController.text.trim());
       setState(() {
         isLoading = false;
       });
