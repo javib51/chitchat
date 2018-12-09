@@ -1002,7 +1002,7 @@ class ChatScreenState extends State<ChatScreen> {
                           textEditingController.text + emoji["value"];
                     },
                     child: Container(
-                      color: Colors.green,
+                      color: Colors.white,
                       margin: new EdgeInsets.all(1.0),
                       child: new Center(
                         child: new Text(
