@@ -35,12 +35,7 @@ import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 
 import 'package:random_string/random_string.dart';
 
-
-
-enum ChatSide {
-  left, right
-}
-
+enum ChatSide { left, right }
 
 const CHAT_SETTINGS_TEXT = "Settings/Members";
 
@@ -55,13 +50,13 @@ class Chat extends StatefulWidget {
 
   Chat(
       {Key key,
-        @required this.currentUserId,
-        @required this.chatId,
-        @required this.chatAvatar,
-        @required this.userNickname,
-        @required this.chatType,
-        @required this.joinDate,
-        @required this.chatName})
+      @required this.currentUserId,
+      @required this.chatId,
+      @required this.chatAvatar,
+      @required this.userNickname,
+      @required this.chatType,
+      @required this.joinDate,
+      @required this.chatName})
       : super(key: key);
 
   @override
@@ -86,12 +81,12 @@ class ChatState extends State<Chat> {
 
   ChatState(
       {Key key,
-        @required this.currentUserId,
-        @required this.chatId,
-        @required this.chatAvatar,
-        @required this.userNickname,
-        @required this.chatType,
-        @required this.joinDate}) {
+      @required this.currentUserId,
+      @required this.chatId,
+      @required this.chatAvatar,
+      @required this.userNickname,
+      @required this.chatType,
+      @required this.joinDate}) {
     this.streamMessage = _getMessages();
   }
 
@@ -196,13 +191,13 @@ class ChatScreen extends StatefulWidget {
 
   ChatScreen(
       {Key key,
-        @required this.currentUserId,
-        @required this.chatId,
-        @required this.chatAvatar,
-        @required this.userNickname,
-        @required this.chatType,
-        this.streamMessage,
-        this.chatUsers})
+      @required this.currentUserId,
+      @required this.chatId,
+      @required this.chatAvatar,
+      @required this.userNickname,
+      @required this.chatType,
+      this.streamMessage,
+      this.chatUsers})
       : super(key: key);
 
   @override
@@ -215,7 +210,6 @@ class ChatScreen extends StatefulWidget {
 }
 
 class ChatScreenState extends State<ChatScreen> {
-
   String currentUserId;
   String chatId;
   String chatAvatar;
@@ -224,11 +218,11 @@ class ChatScreenState extends State<ChatScreen> {
 
   ChatScreenState(
       {Key key,
-        @required this.currentUserId,
-        @required this.chatId,
-        @required this.chatAvatar,
-        @required this.userNickname,
-        @required this.chatType});
+      @required this.currentUserId,
+      @required this.chatId,
+      @required this.chatAvatar,
+      @required this.userNickname,
+      @required this.chatType});
 
   var listMessage;
   String groupChatId;
@@ -248,7 +242,7 @@ class ChatScreenState extends State<ChatScreen> {
   List<Asset> images = List<Asset>();
 
   final TextEditingController textEditingController =
-  new TextEditingController();
+      new TextEditingController();
   ImageResolution _imageResolutionSet;
 
   final ScrollController listScrollController = new ScrollController();
@@ -263,7 +257,6 @@ class ChatScreenState extends State<ChatScreen> {
     isLoading = false;
     isShowSticker = false;
     isShowEmoji = false;
-
 
     readLocal();
   }
@@ -305,12 +298,16 @@ class ChatScreenState extends State<ChatScreen> {
       .labelDetector(LabelDetectorOptions(confidenceThreshold: 0.75));
 
   Future<String> _getLabel(File file) async {
-    var options = ["Food", "Technology", "Screenshot"];
     final List<Label> labels =
-    await _detector.detectInImage(FirebaseVisionImage.fromFile(file));
-    String label = labels.first.label;
-    if (!options.contains(label)) label = "Others";
-    return label;
+        await _detector.detectInImage(FirebaseVisionImage.fromFile(file));
+    if (labels.contains("Food"))
+      return "Food";
+    else if (labels.contains("Screenshot"))
+      return "Screenshot";
+    else if (labels.contains("Technology"))
+      return "Technology";
+    else
+      return "Others";
   }
 
   void onSendMessage(String payload, String type, String label) async {
@@ -323,7 +320,7 @@ class ChatScreenState extends State<ChatScreen> {
 
       Map<String, dynamic> messagePayload = {
         'userFrom':
-        Firestore.instance.collection('users').document(currentUserId),
+            Firestore.instance.collection('users').document(currentUserId),
         'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
         'payload': payload,
         'type': type,
@@ -380,28 +377,28 @@ class ChatScreenState extends State<ChatScreen> {
               print("Downloaded an image using the old way of sending data.");
             } else {
               ImageResolution pictureImageResolutionMax =
-              getEnumFromString(imageResolutionMaxStringPicture);
+                  getEnumFromString(imageResolutionMaxStringPicture);
               ImageResolution localMaxResolution = this._imageResolutionSet;
               String prefixToPrepend =
-              getPrefix(localMaxResolution, pictureImageResolutionMax);
+                  getPrefix(localMaxResolution, pictureImageResolutionMax);
               completeImageName = "$prefixToPrepend$completeImageName";
             }
 
             print("Image name: $imageName");
 
             Future.delayed(Duration(seconds: side == ChatSide.left ? 1 : 0),
-                    () {
-                  //One second of delay because scaled-down image is not immediately ready to be downloaded.
-                  print("Timer expired.");
-                  FirebaseStorage.instance
-                      .ref()
-                      .child(completeImageName)
-                      .getDownloadURL()
-                      .then((downloadURL) {
-                    print("URL fetched. URL: $downloadURL");
-                    this.setState(() => this.pictureURLs[imageName] = downloadURL);
-                  });
-                });
+                () {
+              //One second of delay because scaled-down image is not immediately ready to be downloaded.
+              print("Timer expired.");
+              FirebaseStorage.instance
+                  .ref()
+                  .child(completeImageName)
+                  .getDownloadURL()
+                  .then((downloadURL) {
+                print("URL fetched. URL: $downloadURL");
+                this.setState(() => this.pictureURLs[imageName] = downloadURL);
+              });
+            });
 
             return Container(
               child: CircularProgressIndicator(
@@ -422,12 +419,12 @@ class ChatScreenState extends State<ChatScreen> {
                 "Image already fetched previously. Downloading the image from cloud storage.");
 
             return GestureDetector(
-              onTap: (){
+              onTap: () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ChatImage(this.pictureURLs[imageName]))
-                );
+                        builder: (context) =>
+                            ChatImage(this.pictureURLs[imageName])));
               },
               child: CachedNetworkImage(
                 placeholder: Container(
@@ -472,31 +469,32 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget buildItem(int index, DocumentSnapshot document) {
-    print("buildItem called with index ${index} and document.data ${document.data}");
+    print(
+        "buildItem called with index ${index} and document.data ${document.data}");
     if (document['userFrom'].documentID == currentUserId) {
       // Right (my message)
       return Row(
         children: <Widget>[
           document['type'] == "text"
-          // Text
+              // Text
               ? this._buildMessageText(
-              index, document, this.isLastMessageRight(index))
+                  index, document, this.isLastMessageRight(index))
               : document['type'] == "photo"
-          // Image
-              ? this._buildImageContainer(
-              document, isLastMessageRight(index), ChatSide.right)
-          // Sticker
-              : Container(
-            child: new Image.asset(
-              'images/${document['payload']}.gif',
-              width: 100.0,
-              height: 100.0,
-              fit: BoxFit.cover,
-            ),
-            margin: EdgeInsets.only(
-                bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                right: 10.0),
-          ),
+                  // Image
+                  ? this._buildImageContainer(
+                      document, isLastMessageRight(index), ChatSide.right)
+                  // Sticker
+                  : Container(
+                      child: new Image.asset(
+                        'images/${document['payload']}.gif',
+                        width: 100.0,
+                        height: 100.0,
+                        fit: BoxFit.cover,
+                      ),
+                      margin: EdgeInsets.only(
+                          bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                          right: 10.0),
+                    ),
         ],
         mainAxisAlignment: MainAxisAlignment.end,
       );
@@ -509,81 +507,81 @@ class ChatScreenState extends State<ChatScreen> {
               children: <Widget>[
                 isLastMessageLeft(index)
                     ? FutureBuilder(
-                    future: widget.chatUsers,
-                    builder:
-                        (BuildContext context, AsyncSnapshot snapshot) {
-                      if (snapshot.hasData && snapshot.data != null) {
-                        return Material(
-                          child: CachedNetworkImage(
-                            placeholder: Container(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.0,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    themeColor),
+                        future: widget.chatUsers,
+                        builder:
+                            (BuildContext context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasData && snapshot.data != null) {
+                            return Material(
+                              child: CachedNetworkImage(
+                                placeholder: Container(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.0,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        themeColor),
+                                  ),
+                                  width: 35.0,
+                                  height: 35.0,
+                                  padding: EdgeInsets.all(10.0),
+                                ),
+                                imageUrl: snapshot
+                                        .data[document['userFrom'].documentID]
+                                    ["photoUrl"],
+                                width: 35.0,
+                                height: 35.0,
+                                fit: BoxFit.cover,
                               ),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(18.0),
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                            );
+                          } else {
+                            return Container(
                               width: 35.0,
                               height: 35.0,
-                              padding: EdgeInsets.all(10.0),
-                            ),
-                            imageUrl: snapshot
-                                .data[document['userFrom'].documentID]
-                            ["photoUrl"],
-                            width: 35.0,
-                            height: 35.0,
-                            fit: BoxFit.cover,
-                          ),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(18.0),
-                          ),
-                          clipBehavior: Clip.hardEdge,
-                        );
-                      } else {
-                        return Container(
-                          width: 35.0,
-                          height: 35.0,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 1.0,
-                            valueColor:
-                            AlwaysStoppedAnimation<Color>(themeColor),
-                          ),
-                        );
-                      }
-                    })
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.0,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(themeColor),
+                              ),
+                            );
+                          }
+                        })
                     : Container(width: 35.0),
                 document['type'] == "text"
                     ? this._buildMessageText(
-                    index, document, this.isLastMessageLeft(index))
+                        index, document, this.isLastMessageLeft(index))
                     : document['type'] == "photo"
-                    ? this._buildImageContainer(
-                    document, isLastMessageLeft(index), ChatSide.left)
-                    : Container(
-                  child: new Image.asset(
-                    'images/${document['payload']}.gif',
-                    width: 100.0,
-                    height: 100.0,
-                    fit: BoxFit.cover,
-                  ),
-                  margin: EdgeInsets.only(
-                      bottom: isLastMessageLeft(index) ? 20.0 : 10.0,
-                      right: 10.0),
-                ),
+                        ? this._buildImageContainer(
+                            document, isLastMessageLeft(index), ChatSide.left)
+                        : Container(
+                            child: new Image.asset(
+                              'images/${document['payload']}.gif',
+                              width: 100.0,
+                              height: 100.0,
+                              fit: BoxFit.cover,
+                            ),
+                            margin: EdgeInsets.only(
+                                bottom: isLastMessageLeft(index) ? 20.0 : 10.0,
+                                right: 10.0),
+                          ),
               ],
             ),
 
             // Time
             isLastMessageLeft(index)
                 ? Container(
-              child: Text(
-                DateFormat('dd MMM kk:mm').format(
-                    DateTime.fromMillisecondsSinceEpoch(
-                        int.parse(document['timestamp']))),
-                style: TextStyle(
-                    color: greyColor,
-                    fontSize: 12.0,
-                    fontStyle: FontStyle.italic),
-              ),
-              margin: EdgeInsets.only(left: 50.0, top: 5.0, bottom: 5.0),
-            )
+                    child: Text(
+                      DateFormat('dd MMM kk:mm').format(
+                          DateTime.fromMillisecondsSinceEpoch(
+                              int.parse(document['timestamp']))),
+                      style: TextStyle(
+                          color: greyColor,
+                          fontSize: 12.0,
+                          fontStyle: FontStyle.italic),
+                    ),
+                    margin: EdgeInsets.only(left: 50.0, top: 5.0, bottom: 5.0),
+                  )
                 : Container()
           ],
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,27 +592,34 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessageText(int index, DocumentSnapshot document, bool isLast) {
-    print("_buildMessageText with index $index, snapshot data ${document.data}, isLast: $isLast");
+    print(
+        "_buildMessageText with index $index, snapshot data ${document.data}, isLast: $isLast");
     String text = document["payload"];
     String url = document["url"];
 
-    TranslationLanguage translationLanguage = getTranslationLanguageFromString(this.prefs.getString("translation_language"));
-    bool isTranslationAutomatic = this.prefs.getString("translation_mode") == TranslationMode.automatic.toString();
+    TranslationLanguage translationLanguage = getTranslationLanguageFromString(
+        this.prefs.getString("translation_language"));
+    bool isTranslationAutomatic = this.prefs.getString("translation_mode") ==
+        TranslationMode.automatic.toString();
 
-    if (url != null) {        //If there is a URL, it will take care of properly render the information on the UI.
-      return LinkPreview(text, document["matchStart"], document["matchEnd"], isLast, translationLanguage, isTranslationAutomatic);
+    if (url != null) {
+      //If there is a URL, it will take care of properly render the information on the UI.
+      return LinkPreview(text, document["matchStart"], document["matchEnd"],
+          isLast, translationLanguage, isTranslationAutomatic);
     } else {
-      var element = TextChatElement(text, isLast, translationLanguage, isTranslationAutomatic);
-      print("returning TextChatElement with fields ${element.text} - ${element.isLast} - ${element.isTranslationAutomatic} - ${element.translationLanguage}");
+      var element = TextChatElement(
+          text, isLast, translationLanguage, isTranslationAutomatic);
+      print(
+          "returning TextChatElement with fields ${element.text} - ${element.isLast} - ${element.isTranslationAutomatic} - ${element.translationLanguage}");
       return element;
     }
   }
 
   bool isLastMessageLeft(int index) {
     if ((index > 0 &&
-        listMessage != null &&
-        listMessage[index - 1]['userFrom'].documentID !=
-            listMessage[index]['userFrom'].documentID) ||
+            listMessage != null &&
+            listMessage[index - 1]['userFrom'].documentID !=
+                listMessage[index]['userFrom'].documentID) ||
         index == 0) {
       return true;
     } else {
@@ -624,8 +629,8 @@ class ChatScreenState extends State<ChatScreen> {
 
   bool isLastMessageRight(int index) {
     if ((index > 0 &&
-        listMessage != null &&
-        listMessage[index - 1]['userFrom'].documentID != currentUserId) ||
+            listMessage != null &&
+            listMessage[index - 1]['userFrom'].documentID != currentUserId) ||
         index == 0) {
       return true;
     } else {
@@ -645,7 +650,7 @@ class ChatScreenState extends State<ChatScreen> {
     return Future.value(false);
   }
 
-  void startRecorder() async{
+  void startRecorder() async {
     this.setState(() {
       _isRecording = true;
     });
@@ -654,10 +659,12 @@ class ChatScreenState extends State<ChatScreen> {
     var path = await CanaryRecorder.initializeRecorder('recordertester.wav');
     await CanaryRecorder.startRecording();
 
-    setState(() { _outputFile = path; });
+    setState(() {
+      _outputFile = path;
+    });
   }
 
-  void stopRecorder() async{
+  void stopRecorder() async {
     this.setState(() {
       isLoading = true;
       _isRecording = false;
@@ -667,16 +674,25 @@ class ChatScreenState extends State<ChatScreen> {
     File testFile = new File(_outputFile);
     List<int> bytes = testFile.readAsBytesSync();
     String base64 = base64Encode(bytes);
-    var url = "https://speech.googleapis.com/v1/speech:recognize?key=AIzaSyDsrc2qBpvk2XzFvRN1yD-gYr5eSZnzUmA";
-    await http.post(url, body:json.encode({"config":{"languageCode":"en_US","enableWordTimeOffsets":false,"enableAutomaticPunctuation":true,"model":"video"},"audio":{"content": base64}}))
-
+    var url =
+        "https://speech.googleapis.com/v1/speech:recognize?key=AIzaSyDsrc2qBpvk2XzFvRN1yD-gYr5eSZnzUmA";
+    await http
+        .post(url,
+            body: json.encode({
+              "config": {
+                "languageCode": "en_US",
+                "enableWordTimeOffsets": false,
+                "enableAutomaticPunctuation": true,
+                "model": "video"
+              },
+              "audio": {"content": base64}
+            }))
         .then((response) {
-      if(response.body.length != 3) {
+      if (response.body.length != 3) {
         var jon = Response.fromJson(json.decode(response.body));
         textEditingController.text =
             jon.results.first.alternatives.first.transcript;
-      }
-      else{
+      } else {
         Fluttertoast.showToast(msg: "recognition unsuccessful");
       }
     });
@@ -817,7 +833,7 @@ class ChatScreenState extends State<ChatScreen> {
       ),
       decoration: new BoxDecoration(
           border:
-          new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
+              new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
           color: Colors.white),
       padding: EdgeInsets.all(5.0),
       height: 180.0,
@@ -828,12 +844,12 @@ class ChatScreenState extends State<ChatScreen> {
     return Positioned(
       child: isLoading
           ? Container(
-        child: Center(
-          child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
-        ),
-        color: Colors.white.withOpacity(0.8),
-      )
+              child: Center(
+                child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(themeColor)),
+              ),
+              color: Colors.white.withOpacity(0.8),
+            )
           : Container(),
     );
   }
@@ -867,14 +883,16 @@ class ChatScreenState extends State<ChatScreen> {
               child: new IconButton(
                 icon: new Icon(Icons.mic),
                 onPressed: () {
-
                   if (!this._isRecording) {
                     return this.startRecorder();
                   }
                   this.stopRecorder();
-
                 },
-                color: this._isRecording?Colors.red:(Theme.of(context).brightness == Brightness.dark?Colors.white:Colors.black),
+                color: this._isRecording
+                    ? Colors.red
+                    : (Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black),
               ),
             ),
           ),
@@ -882,7 +900,11 @@ class ChatScreenState extends State<ChatScreen> {
           Flexible(
             child: Container(
               child: TextField(
-                style: TextStyle(color: Theme.of(context).brightness == Brightness.dark?Colors.white:Colors.black, fontSize: 15.0),
+                style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                    fontSize: 15.0),
                 controller: textEditingController,
                 decoration: InputDecoration.collapsed(
                   hintText: 'Type your message...',
@@ -909,8 +931,7 @@ class ChatScreenState extends State<ChatScreen> {
       width: double.infinity,
       height: 50.0,
       decoration: new BoxDecoration(
-          border:
-          new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
+        border: new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
       ),
     );
   }
@@ -919,31 +940,31 @@ class ChatScreenState extends State<ChatScreen> {
     return Flexible(
       child: groupChatId == ''
           ? Center(
-          child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(themeColor)))
+              child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(themeColor)))
           : StreamBuilder(
-        stream: widget.streamMessage,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(
-                child: CircularProgressIndicator(
-                    valueColor:
-                    AlwaysStoppedAnimation<Color>(themeColor)));
-          } else {
-            listMessage = snapshot.data.documents;
-            print("listMessages = ${snapshot.data}");
-            return ListView.builder(
-              key: Key(randomString(10)),
-              padding: EdgeInsets.all(10.0),
-              itemBuilder: (context, index) =>
-                  buildItem(index, snapshot.data.documents[index]),
-              itemCount: snapshot.data.documents.length,
-              reverse: true,
-              controller: listScrollController,
-            );
-          }
-        },
-      ),
+              stream: widget.streamMessage,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(
+                      child: CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(themeColor)));
+                } else {
+                  listMessage = snapshot.data.documents;
+                  print("listMessages = ${snapshot.data}");
+                  return ListView.builder(
+                    key: Key(randomString(10)),
+                    padding: EdgeInsets.all(10.0),
+                    itemBuilder: (context, index) =>
+                        buildItem(index, snapshot.data.documents[index]),
+                    itemCount: snapshot.data.documents.length,
+                    reverse: true,
+                    controller: listScrollController,
+                  );
+                }
+              },
+            ),
     );
   }
 
@@ -955,7 +976,7 @@ class ChatScreenState extends State<ChatScreen> {
       ]),
       decoration: new BoxDecoration(
           border:
-          new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
+              new Border(top: new BorderSide(color: greyColor2, width: 0.5)),
           color: Colors.white),
       padding: EdgeInsets.all(5.0),
       height: 180.0,
@@ -1077,6 +1098,7 @@ class ChatScreenState extends State<ChatScreen> {
   Future _uploadFile(File file, ImageResolution resolution) async {
     String contentType = lookupMimeType(file.path);
     String label = await this._getLabel(file);
+    print("label: "+label);
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
     StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
 
