@@ -96,6 +96,12 @@ class LoginScreenState extends State<LoginScreen> {
     FirebaseUser firebaseUser;
     if (logintype == 'google') {
       GoogleSignInAccount googleUser = await googleSignIn.signIn();
+      if(googleUser == null){
+        this.setState(() {
+          isLoading = false;
+        });
+        return;
+      }
       GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       firebaseUser = await firebaseAuth.signInWithGoogle(
         accessToken: googleAuth.accessToken,
