@@ -1,7 +1,8 @@
 # Chat Demo
+This is a chat application implemented in [__Flutter__](https://flutter.io/) and [__Firebase__](https://firebase.google.com). It is a fork of [duytq94 flutter chat](https://github.com/duytq94/flutter-chat-demo) with structural changes. Originally, this application was an university project for the course __Mobile Cloud Computing__ at [__Aalto University__](https://www.aalto.fi/).
 
 ## Description:
-We developed the required chatting application using the very recent cross-platform development tool [Flutter](https://flutter.io/). Flutter is a tool developed by Google that makes use of the Dart language. Very recently, and in the middle of our developement process, official version 1.0 has been released, making it actually out of the beta phase.
+We developed the required chatting application using the very recent cross-platform development tool [__Flutter__](https://flutter.io/). Flutter is a tool developed by Google that makes use of the Dart language. Very recently, and in the middle of our developement process, official version 1.0 has been released, making it actually out of the beta phase.
 
 The app fulfills all the required basic functionalities, as well as implements some of the extra ones.
 
@@ -21,9 +22,14 @@ Such extra functionalities are:
 The repository contains the following files/folders:
 
 - _README.md_: this file;
-- _deploy.sh_: the deployment bash script needed to deploy cloud functions on GCP and build and run the flutter application on an Android target device;
-- _backend_: contains firebase-specific configuration files needed to correctly deploy the cloud functions.Then, the subfolder _functions_ contains the NodeJS functions to be deployed;
-- _frontend_: contains Flutter-specific files representing the mobile application. For more info about how Flutter projects are structured, please visit the [official website](https://flutter.io/).
+- _deploy.sh_: basic bash script for a quick installation of the requirements.
+- _backend_: contains firebase project.
+- _frontend_: contains flutter project.
+
+## Supported platforms
+
+- In __Android__ is completally operative.
+- In __IOS__ is not currently working. There is needed some configuration to make it work in this _platform_.
 
 ## How to run the deployment script
 
