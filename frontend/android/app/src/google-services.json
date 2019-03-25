@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "294872029197",
+    "firebase_url": "https://mcc-fall-2018-g05-231106.firebaseio.com",
+    "project_id": "mcc-fall-2018-g05-231106",
+    "storage_bucket": "mcc-fall-2018-g05-231106.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:294872029197:android:ade0d5458244876f",
+        "android_client_info": {
+          "package_name": "com.aalto.chitchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "294872029197-nlljr9pgt2v4if5gib5cfa6tv17s4n77.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQgBdsxW9YYAyQLVs_uW1bwXoajrkiLlo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
